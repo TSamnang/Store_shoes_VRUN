@@ -277,7 +277,10 @@ def init_db():
     if app.config['DB_INITIALIZED']:
         return
 
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    try:
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    except OSError:
+        pass  # Vercel serverless has a read-only filesystem, ignore if we can't create dirs
     db = get_db()
 
     db.users.create_index('email', unique=True)
