@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order - Nike Summer Collection</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <!-- Early theme apply (prevents flash) -->
+    <script>if(localStorage.getItem('vrun-theme')==='light'){document.documentElement.setAttribute('data-theme','light');}else{document.documentElement.removeAttribute('data-theme');}</script>
+</head>
+<body>
+
+    {% include 'front/navbar.html' %}
+
+    <div class="container order-container">
+        <div class="page-heading">
+            <p class="mb-2">Review your bag and complete checkout</p>
+            <h2 class="text-warning fw-bold">YOUR ORDER</h2>
+        </div>
+
+        <!-- Order Progress -->
+        <div class="order-progress mb-5">
+            <div class="progress-container">
+                <div class="progress-step active">
+                    <div class="step-circle">
+                        <i class="fa-solid fa-shopping-cart"></i>
+                    </div>
+                    <span class="step-label">Order</span>
+                </div>
+                <div class="progress-line"></div>
+                <div class="progress-step">
+                    <div class="step-circle">
+                        <i class="fa-solid fa-truck"></i>
+                    </div>
+                    <span class="step-label">Delivery</span>
+                </div>
+                <div class="progress-line"></div>
+                <div class="progress-step">
+                    <div class="step-circle">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                    <span class="step-label">Complete</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-5">
+            <div class="col-lg-8">
+                <div class="order-card mb-4">
+                    <h5 class="mb-4">Order Summary</h5>
+
+                    <div class="product-list-item d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-3">
+                            <img src="{{ url_for('static', filename='images/Air Jordan 1 Retro High OG.png') }}" class="product-thumb">
+                            <div>
+                                <h6 class="mb-0 text-warning">Air Jordan 1 Retro High OG</h6>
+                                <small class="text-muted">Size: 42 | Color: Red</small>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-4">
+                            <input type="number" value="1" class="qty-input">
+                            <span class="fw-bold">$180.00</span>
+                            <i class="fa-solid fa-trash text-danger"></i>
+                        </div>
+                    </div>
+
+                    <div class="product-list-item d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-3">
+                            <img src="{{ url_for('static', filename='images/Gold Nike.png') }}" class="product-thumb">
+                            <div>
+                                <h6 class="mb-0 text-warning">Nike Summer Edition Gold</h6>
+                                <small class="text-muted">Size: 40 | Color: Gold</small>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-4">
+                            <input type="number" value="1" class="qty-input">
+                            <span class="fw-bold">$210.00</span>
+                            <i class="fa-solid fa-trash text-danger"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="order-card">
+                    <h5 class="mb-4">Shipping Information</h5>
+                    <form class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Full Name</label>
+                            <input type="text" class="form-control" placeholder="Enter your name">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Phone Number</label>
+                            <input type="text" class="form-control" placeholder="+855 ...">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-muted small">Shipping Address</label>
+                            <textarea class="form-control" rows="3" placeholder="Street name, House number..."></textarea>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="order-card mb-4">
+                    <h5 class="mb-4">Payment Method</h5>
+                    <div class="payment-option d-flex align-items-center gap-3 active">
+                        <i class="fa-solid fa-truck text-warning"></i>
+                        <span>Cash on Delivery</span>
+                    </div>
+                    <div class="payment-option d-flex align-items-center gap-3">
+                        <i class="fa-solid fa-credit-card"></i>
+                        <span>ABA Pay / Wing</span>
+                    </div>
+                </div>
+
+                <div class="order-card">
+                    <h5 class="mb-4">Total Amount</h5>
+                    <div class="summary-row">
+                        <span class="text-muted">Subtotal</span>
+                        <span>$390.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="text-muted">Delivery Fee</span>
+                        <span>$2.50</span>
+                    </div>
+                    <hr class="border-secondary">
+                    <div class="summary-row mb-4">
+                        <span class="fw-bold fs-5">Total</span>
+                        <span class="text-warning fw-bold fs-5">$392.50</span>
+                    </div>
+                    <button class="btn btn-checkout">CONFIRM ORDER</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-darker pt-5 pb-3">
+        <div class="container text-center">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" height="30" class="mb-3">
+            <p class="small text-muted">© 2026 We Run | Step into Speed. Walk with Style.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Theme Toggle JS -->
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+</body>
+</html>

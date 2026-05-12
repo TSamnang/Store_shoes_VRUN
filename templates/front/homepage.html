@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nike's Summer Collection</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <!-- Early theme apply (prevents flash) -->
+    <script>if(localStorage.getItem('vrun-theme')==='light'){document.documentElement.setAttribute('data-theme','light');}else{document.documentElement.removeAttribute('data-theme');}</script>
+</head>
+<body>
+
+    {% include 'front/navbar.html' %}
+    {% include 'front/flash_messages.html' %}
+
+    <!-- Hero Section -->
+    <section class="container hero-section my-5">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="text-warning fw-bold">NIKE'S SUMMER</h1>
+                <h2 class="text-white mb-4">Collection 2026</h2>
+                <p class="text-light-grey mb-4">Our website offers a wide selection of high-quality shoes for men, women, and kids. Customers can easily browse different styles such as sports shoes, casual shoes, and formal shoes.</p>
+                <div class="d-flex gap-3">
+                    <a href="{{ url_for('product') }}" class="btn btn-warning px-4 py-2 rounded-pill fw-bold">Shop Now</a>
+                    <a href="{{ url_for('category') }}" class="btn btn-warning px-4 py-2 rounded-pill fw-bold">View More</a>
+                </div>
+            </div>
+            <div class="col-md-6 position-relative text-center mt-5 mt-md-0">
+                <div class="hero-circle mx-auto">
+                    <img src="{{ url_for('static', filename='images/Gold Nike.png') }}" alt="Gold Nike Shoe" class="img-fluid hero-shoe">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% include 'front/flash_messages.html' %}
+
+    <!-- Popular Products -->
+    <section class="container my-5">
+        <h4 class="text-warning mb-4">POPULAR PRODUCTS</h4>
+        <div class="row g-4">
+            {% for product in featured_products %}
+            <div class="col-md-3">
+                <div class="card product-card" data-product-id="{{ product.id }}">
+                    <div class="img-container">
+                        <img src="{{ url_for('static', filename=product.image) }}" class="card-img-top" alt="{{ product.name }}">
+                    </div>
+                    <div class="card-body text-center">
+                        <h6 class="text-warning">{{ product.name }}</h6>
+                        <p class="small text-muted mb-2">{{ product.description }}</p>
+                        <p class="fw-bold text-white">Price: ${{ '%.2f'|format(product.price) }}</p>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-warning btn-sm rounded-pill px-3">View</a>
+                            <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-warning btn-sm rounded-pill px-3">Add to cart</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% if featured_products|length == 0 %}
+            <div class="col-12 text-center text-white">No featured products available.</div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Latest Arrivals -->
+    <section class="container my-5 pb-4">
+        <h4 class="text-warning mb-4">LATEST ARRIVALS</h4>
+        <div class="row g-4">
+            {% for product in latest_products %}
+            <div class="col-md-3">
+                <div class="arrival-card">
+                    <a href="{{ url_for('product_detail', product_id=product.id) }}" class="text-decoration-none">
+                        <div class="arrival-img-box" style="background-color: var(--input-bg);">
+                            <img src="{{ url_for('static', filename=product.image) }}" alt="{{ product.name }}" class="img-fluid">
+                        </div>
+                    </a>
+                    <div class="arrival-card-body">
+                        <div class="arrival-meta">
+                            <a href="{{ url_for('product_detail', product_id=product.id) }}" class="text-decoration-none"><p class="arrival-name">{{ product.name }}</p></a>
+                            <span class="arrival-rating">{{ product.category }} <i class="fa-solid fa-star text-warning"></i></span>
+                        </div>
+                        <p class="arrival-price">${{ '%.2f'|format(product.price) }}</p>
+                        <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-warning btn-sm mt-1 px-3 rounded-pill">Add to cart</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% if latest_products|length == 0 %}
+            <div class="col-12 text-center text-white">No arrivals available.</div>
+            {% endif %}
+        </div>
+    </section>
+
+
+    <!-- Banner -->
+    <section class="container my-5">
+        <div class="promo-banner p-5 rounded row align-items-center">
+            <div class="col-md-6 text-center text-md-start">
+                <h2 class="text-white fw-bold">NIKE SPORTS</h2>
+                <h2 class="text-white fw-bold">COLLECTION</h2>
+                <h3 class="text-warning mb-4">UPTO 50% OFF</h3>
+                <a href="{{ url_for('product') }}" class="btn btn-warning rounded-pill px-4 py-2 fw-bold">View more</a>
+            </div>
+            <div class="col-md-6 mt-4 mt-md-0 text-center">
+                <img src="{{ url_for('static', filename='images/penaldo.jpg') }}" alt="CR7 Cleats" class="img-fluid banner-img">
+            </div>
+        </div>
+    </section>
+
+    <!-- Visual Grid -->
+    <section class="container my-5">
+        <div class="row g-4 mb-4">
+            <!-- Large Image 1 -->
+            <div class="col-md-6">
+                <div class="grid-img-container rounded position-relative">
+                    <img src="{{ url_for('static', filename='images/label-1 (1).jpg') }}" alt="Soccer Shoes" class="img-fluid rounded w-100 object-fit-cover">
+                    <i class="fa-solid fa-heart text-danger position-absolute top-0 start-0 m-3 fs-4"></i>
+                    <a href="{{ url_for('product') }}" class="btn btn-light position-absolute bottom-0 start-50 translate-middle-x mb-4 rounded-pill px-4 fw-bold text-dark opacity-75 hover-opacity-100">Shop Now</a>
+                </div>
+            </div>
+            <!-- Large Image 2 -->
+            <div class="col-md-6">
+                <div class="grid-img-container rounded position-relative">
+                    <img src="{{ url_for('static', filename='images/label-2 (1).jpg') }}" alt="Basketball Shoes" class="img-fluid rounded w-100 object-fit-cover">
+                    <i class="fa-solid fa-heart text-danger position-absolute top-0 end-0 m-3 fs-4"></i>
+                    <a href="{{ url_for('product') }}" class="btn btn-light position-absolute bottom-0 start-50 translate-middle-x mb-4 rounded-pill px-4 fw-bold text-dark opacity-75 hover-opacity-100">Shop Now</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Small Grid 1 -->
+            <div class="col-md-3">
+                <div class="arrival-card">
+                    <div class="arrival-img-box" style="background-color: #0d1b2a;">
+                        <img src="{{ url_for('static', filename='images/Nike Mercurial Superfly.jpg') }}" alt="Mercurial" class="img-fluid rounded">
+                    </div>
+                    <div class="arrival-card-body">
+                        <div class="arrival-meta">
+                            <p class="arrival-name">Nike Mercurial</p>
+                            <span class="arrival-rating">4.9 <i class="fa-solid fa-star text-warning"></i></span>
+                        </div>
+                        <p class="arrival-price">$ 100</p>
+                        <a href="{{ url_for('product') }}" class="btn btn-warning btn-sm mt-1 px-3 rounded-pill">Browse Products</a>
+                    </div>
+                </div>
+            </div>
+            <!-- Small Grid 2 -->
+            <div class="col-md-3">
+                <div class="arrival-card">
+                    <div class="arrival-img-box" style="background-color: #ffb5a7;">
+                        <img src="{{ url_for('static', filename='images/Nike Air Zoom.png') }}" alt="Air Zoom" class="img-fluid">
+                    </div>
+                    <div class="arrival-card-body">
+                        <div class="arrival-meta">
+                            <p class="arrival-name">Nike Air Zoom</p>
+                            <span class="arrival-rating">4.9 <i class="fa-solid fa-star text-warning"></i></span>
+                        </div>
+                        <p class="arrival-price">$ 115</p>
+                        <a href="{{ url_for('product') }}" class="btn btn-warning btn-sm mt-1 px-3 rounded-pill">Browse Products</a>
+                    </div>
+                </div>
+            </div>
+            <!-- Small Grid 3 -->
+            <div class="col-md-3">
+                <div class="arrival-card">
+                    <div class="arrival-img-box" style="background-color: #457b9d;">
+                        <img src="{{ url_for('static', filename='images/Men\'s Sneakers.png') }}" alt="Mens Sneakers" class="img-fluid">
+                    </div>
+                    <div class="arrival-card-body">
+                        <div class="arrival-meta">
+                            <p class="arrival-name">Men's Sneakers</p>
+                            <span class="arrival-rating">4.8 <i class="fa-solid fa-star text-warning"></i></span>
+                        </div>
+                        <p class="arrival-price">$ 130</p>
+                        <a href="{{ url_for('product') }}" class="btn btn-warning btn-sm mt-1 px-3 rounded-pill">Browse Products</a>
+                    </div>
+                </div>
+            </div>
+            <!-- Small Grid 4 -->
+            <div class="col-md-3">
+                <div class="arrival-card">
+                    <div class="arrival-img-box" style="background-color: #8b5a5a;">
+                        <img src="{{ url_for('static', filename='images/Zapatos Nike.png') }}" alt="Zapatos" class="img-fluid">
+                    </div>
+                    <div class="arrival-card-body">
+                        <div class="arrival-meta">
+                            <p class="arrival-name">Zapatos Nike</p>
+                            <span class="arrival-rating">4.8 <i class="fa-solid fa-star text-warning"></i></span>
+                        </div>
+                        <p class="arrival-price">$ 150</p>
+                        <a href="{{ url_for('product') }}" class="btn btn-warning btn-sm mt-1 px-3 rounded-pill">Browse Products</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- We Run About Section -->
+    <section class="container text-center my-5 py-5">
+        <h2 class="text-warning fw-bold mb-4">We Run</h2>
+        <p class="text-light-grey px-md-5 mx-md-5 mb-3">At We Run, we believe every step matters. Our store is dedicated to bringing you the best in athletic footwear designed for comfort, performance, and everyday confidence. Whether you're an athlete chasing speed or someone who values casual style, We Run has the perfect pair for you.</p>
+        <p class="text-light-grey px-md-5 mx-md-5 mb-3">We carefully select high-quality shoes from trusted brands to ensure durability, innovation, and modern design. From the court to the streets to running sneakers and lifestyle shoes, our collection is built to match your lifestyle.</p>
+        <p class="text-light-grey px-md-5 mx-md-5 mb-4">At We Run, it's not just about shoes — it's about helping you move forward with confidence, style, and purpose.</p>
+        <p class="text-warning fw-bold fst-italic">We Run — Step into Speed. Walk with Style.</p>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-darker text-white pt-5 pb-3">
+        <div class="container border-bottom border-secondary pb-4">
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" height="100" class="mb-3">
+                    <p class="small text-muted mb-1">Step into comfort and style</p>
+                    <p class="small text-muted">Your destination for the latest sneakers and footwear.</p>
+                </div>
+                <div class="col-md-2">
+                    <h6 class="text-white mb-3">Quick Links</h6>
+                    <ul class="list-unstyled small text-muted">
+                        <li class="mb-2"><a href="#" class="text-muted text-decoration-none hover-warning">Home</a></li>
+                        <li class="mb-2"><a href="#" class="text-muted text-decoration-none hover-warning">Category</a></li>
+                        <li class="mb-2"><a href="#" class="text-muted text-decoration-none hover-warning">Popular</a></li>
+                        <li class="mb-2"><a href="#" class="text-muted text-decoration-none hover-warning">Orders</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="text-white mb-3">Contact Us</h6>
+                    <ul class="list-unstyled small text-muted">
+                        <li class="mb-2"><i class="fa-solid fa-location-dot me-2"></i>Phnom Penh, Cambodia</li>
+                        <li class="mb-2"><i class="fa-solid fa-phone me-2"></i>+855 XXX XXXX</li>
+                        <li class="mb-2"><i class="fa-solid fa-envelope me-2"></i>werun123@gmail.com</li>
+                    </ul>
+                </div>
+                <div class="col-md-2">
+                    <h6 class="text-white mb-3">Customer Service</h6>
+                    <ul class="list-unstyled small text-muted">
+                        <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Shipping Info</a></li>
+                        <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Return Policy</a></li>
+                        <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Size Guide</a></li>
+                        <li class="mb-2"><a href="#" class="text-muted text-decoration-none">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2">
+                    <h6 class="text-white mb-3">Follow Us</h6>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="text-white fs-5"><i class="fa-brands fa-facebook"></i></a>
+                        <a href="#" class="text-white fs-5"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="#" class="text-white fs-5"><i class="fa-brands fa-tiktok"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Footer -->
+        <div class="container pt-3">
+            <div class="row align-items-center">
+                <div class="col-md-6 d-flex align-items-center gap-3 mb-3 mb-md-0">
+                    <span class="small text-muted">Payment Methods:</span>
+                    <!-- Placeholder boxes for payment icons -->
+                    <div class="bg-primary text-white rounded px-2 small">VISA</div>
+                    <div class="bg-success text-white rounded px-2 small">WING</div>
+                    <div class="bg-warning text-dark rounded px-2 small"><i class="fa-solid fa-money-bill"></i></div>
+                    <span class="small text-muted ms-2">Cash on delivery</span>
+                </div>
+                <div class="col-md-6">
+                    <div class="input-group input-group-sm">
+                        <input type="email" class="form-control bg-dark border-secondary text-white" placeholder="Enter your email">
+                        <button class="btn btn-warning px-4" type="button">Subscribe</button>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-4">
+                <p class="small text-muted mb-0">© 2026 We Run | <a href="#" class="text-muted text-decoration-none">Privacy Policy</a> | <a href="#" class="text-muted text-decoration-none">Terms & Condition</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Theme Toggle JS -->
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+</body>
+</html>

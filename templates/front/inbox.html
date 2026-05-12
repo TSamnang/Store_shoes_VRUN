@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inbox - We Run Shoes Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <script>if(localStorage.getItem('vrun-theme')==='light'){document.documentElement.setAttribute('data-theme','light');}else{document.documentElement.removeAttribute('data-theme');}</script>
+    <style>
+        .status-pill {
+            display: inline-block;
+            padding: 0.25em 0.75em;
+            border-radius: 50px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #fff;
+        }
+        .s-Received   { background: #0d6efd; }
+        .s-Processing { background: #fd7e14; }
+        .s-Shipped    { background: #20c997; }
+        .s-Delivered  { background: #198754; }
+        .s-Cancelled  { background: #dc3545; }
+        .inbox-table tbody tr { transition: background 0.15s; }
+        .inbox-table tbody tr:hover { background: rgba(255,193,7,0.06); }
+        .stat-card {
+            border-radius: 14px;
+            padding: 1.2rem 1.4rem;
+            border: 1px solid rgba(255,193,7,0.2);
+        }
+    </style>
+</head>
+<body>
+    {% include 'front/navbar.html' %}
+    {% include 'front/flash_messages.html' %}
+
+    <div class="container my-5">
+
+        <!-- Header -->
+        <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+            <div>
+                <h1 class="text-warning fw-bold mb-1">
+                    <i class="fa-solid fa-inbox me-2"></i>Order Inbox
+                </h1>
+                <p class="text-muted mb-0">All customer orders — view, manage, and cancel from here.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('admin') }}" class="btn btn-outline-warning">
+                    <i class="fa-solid fa-box me-2"></i>Products
+                </a>
+            </div>
+        </div>
+
+        <!-- Stats Row -->
+        {% set ns = namespace(total=0, received=0, processing=0, shipped=0, delivered=0, cancelled=0) %}
+        {% for o in all_orders %}
+            {% set ns.total = ns.total + 1 %}
+            {% if o.status == 'Received' %}{% set ns.received = ns.received + 1 %}
+            {% elif o.status == 'Processing' %}{% set ns.processing = ns.processing + 1 %}
+            {% elif o.status == 'Shipped' %}{% set ns.shipped = ns.shipped + 1 %}
+            {% elif o.status == 'Delivered' %}{% set ns.delivered = ns.delivered + 1 %}
+            {% elif o.status == 'Cancelled' %}{% set ns.cancelled = ns.cancelled + 1 %}
+            {% endif %}
+        {% endfor %}
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-2">
+                <div class="stat-card bg-darker text-center">
+                    <p class="text-muted small mb-1">Total</p>
+                    <h4 class="text-white fw-bold mb-0">{{ ns.total }}</h4>
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <div class="stat-card bg-darker text-center">
+                    <p class="text-muted small mb-1">Received</p>
+                    <h4 class="fw-bold mb-0" style="color:#0d6efd;">{{ ns.received }}</h4>
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <div class="stat-card bg-darker text-center">
+                    <p class="text-muted small mb-1">Processing</p>
+                    <h4 class="fw-bold mb-0" style="color:#fd7e14;">{{ ns.processing }}</h4>
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <div class="stat-card bg-darker text-center">
+                    <p class="text-muted small mb-1">Shipped</p>
+                    <h4 class="fw-bold mb-0" style="color:#20c997;">{{ ns.shipped }}</h4>
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <div class="stat-card bg-darker text-center">
+                    <p class="text-muted small mb-1">Delivered</p>
+                    <h4 class="fw-bold mb-0" style="color:#198754;">{{ ns.delivered }}</h4>
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <div class="stat-card bg-darker text-center">
+                    <p class="text-muted small mb-1">Cancelled</p>
+                    <h4 class="fw-bold mb-0" style="color:#dc3545;">{{ ns.cancelled }}</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="card bg-darker border-secondary">
+            <div class="card-header bg-dark border-secondary d-flex align-items-center justify-content-between">
+                <h5 class="text-warning mb-0"><i class="fa-solid fa-list-ul me-2"></i>All Orders</h5>
+                <span class="text-muted small">{{ ns.total }} order{{ 's' if ns.total != 1 else '' }} total</span>
+            </div>
+            <div class="card-body p-0">
+                {% if not all_orders %}
+                <div class="text-center py-5 text-muted">
+                    <i class="fa-solid fa-inbox" style="font-size:3rem;"></i>
+                    <p class="mt-3 mb-0">No orders yet.</p>
+                </div>
+                {% else %}
+                <div class="table-responsive">
+                    <table class="table text-white align-middle mb-0 inbox-table">
+                        <thead class="border-bottom border-secondary">
+                            <tr>
+                                <th class="ps-3 text-warning">#</th>
+                                <th class="text-warning">Customer</th>
+                                <th class="text-warning">Date</th>
+                                <th class="text-warning">Shipping Method</th>
+                                <th class="text-warning">Total</th>
+                                <th class="text-warning">Status</th>
+                                <th class="text-warning text-end pe-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in all_orders %}
+                            <tr>
+                                <td class="ps-3 text-muted fw-bold">#{{ order.id }}</td>
+                                <td>
+                                    <p class="mb-0 fw-semibold text-white">{{ order.username }}</p>
+                                    <p class="mb-0 text-muted" style="font-size:0.78rem;">{{ order.email }}</p>
+                                </td>
+                                <td class="text-muted small">
+                                    {{ order.created_at.strftime('%b %d, %Y') if order.created_at else 'N/A' }}
+                                </td>
+                                <td class="text-muted small">{{ order.shipping_method }}</td>
+                                <td class="text-warning fw-bold">${{ "%.2f"|format(order.total) }}</td>
+                                <td>
+                                    <span class="status-pill s-{{ order.status }}">{{ order.status }}</span>
+                                </td>
+                                <td class="text-end pe-3">
+                                    <div class="d-flex gap-2 justify-content-end align-items-center">
+                                        <a href="{{ url_for('order_receipt', order_id=order.id) }}"
+                                           class="btn btn-sm btn-outline-warning">
+                                            <i class="fa-solid fa-receipt me-1"></i>Receipt
+                                        </a>
+                                        {% if order.status != 'Cancelled' %}
+                                        <form action="{{ url_for('order_delete', order_id=order.id) }}" method="post"
+                                              onsubmit="return confirm('Cancel order #{{ order.id }} for {{ order.username }}?');">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="fa-solid fa-ban me-1"></i>Cancel
+                                            </button>
+                                        </form>
+                                        {% else %}
+                                        <span class="btn btn-sm btn-danger disabled" style="opacity:0.65;pointer-events:none;">
+                                            <i class="fa-solid fa-ban me-1"></i>Cancelled
+                                        </span>
+                                        {% endif %}
+                                        <form action="{{ url_for('order_hard_delete', order_id=order.id) }}" method="post"
+                                              onsubmit="return confirm('Permanently delete order #{{ order.id }}? This CANNOT be undone.');">
+                                            <button type="submit" class="btn btn-sm btn-danger" title="Delete permanently">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-darker mt-5 py-4">
+        <div class="container text-center">
+            <p class="text-muted small mb-0">&copy; 2026 We Run Shoes &mdash; Admin Panel</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+</body>
+</html>

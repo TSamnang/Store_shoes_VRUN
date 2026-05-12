@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Categories - We Run Shoes</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <!-- Early theme apply (prevents flash) -->
+    <script>if(localStorage.getItem('vrun-theme')==='light'){document.documentElement.setAttribute('data-theme','light');}else{document.documentElement.removeAttribute('data-theme');}</script>
+</head>
+<body>
+
+    {% include 'front/navbar.html' %}
+
+    <!-- Page Title -->
+    <section class="container my-5">
+        <h1 class="text-warning fw-bold mb-4">Shop by Category</h1>
+        {% set image_map = {
+            'Sneaker Shoes':'images/Sneaker_category.png',
+            'Sport Shoes':'images/sport-category.png',
+            'Casual Shoes':'images/casual_category.png'
+        } %}
+        <div class="row g-3 mb-5">
+            {% for cat in categories %}
+            <div class="col-md-4">
+                <div class="arrival-card">
+                    <div class="arrival-img-box" style="background-color: #1e1e1e;">
+                        <img src="{{ url_for('static', filename=image_map.get(cat.category, 'images/Sneaker_category.png')) }}" alt="{{ cat.category }}" class="img-fluid">
+                    </div>
+                    <div class="arrival-card-body">
+                        <div class="arrival-meta">
+                            <p class="arrival-name">{{ cat.category }}</p>
+                            <span class="arrival-rating">{{ cat.count }} Products</span>
+                        </div>
+                        <a href="{{ url_for('category', category=cat.category) }}" class="btn btn-warning btn-sm mt-1 w-100 rounded-pill">View Category</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% if categories|length == 0 %}
+            <div class="col-12 text-center text-white">No categories available.</div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Featured Products -->
+    <section class="container my-5">
+        <h2 class="text-warning fw-bold mb-4">Featured Products</h2>
+        <div class="row g-4">
+            {% for product in products %}
+                <div class="col-md-3 col-sm-6">
+                    <div class="arrival-card">
+                        <a href="{{ url_for('product_detail', product_id=product.id) }}" class="text-decoration-none">
+                            <div class="arrival-img-box" style="background-color: var(--input-bg);">
+                                <img src="{{ url_for('static', filename=product.image) }}" class="img-fluid" alt="{{ product.name }}">
+                            </div>
+                        </a>
+                        <div class="arrival-card-body">
+                            <div class="arrival-meta">
+                                <a href="{{ url_for('product_detail', product_id=product.id) }}" class="text-decoration-none"><p class="arrival-name">{{ product.name }}</p></a>
+                                <span class="arrival-rating">{{ product.category }} <i class="fa-solid fa-star text-warning"></i></span>
+                            </div>
+                            <p class="arrival-price">${{ '%.2f'|format(product.price) }}</p>
+                            <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-warning btn-sm mt-1 w-100 rounded-pill">Add to cart</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+            {% if products|length == 0 %}
+                <div class="col-12 text-center text-white">No products found.</div>
+            {% endif %}
+        </div>
+    </section>
+
+
+    <!-- Footer -->
+    <footer class="bg-darker mt-5 py-5">
+        <div class="container">
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <h5 class="text-warning mb-3">Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('homepage') }}" class="text-white text-decoration-none hover-warning">Home</a></li>
+                        <li><a href="{{ url_for('category') }}" class="text-white text-decoration-none hover-warning">Category</a></li>
+                        <li><a href="{{ url_for('product') }}" class="text-white text-decoration-none hover-warning">Products</a></li>
+                        <li><a href="{{ url_for('order') }}" class="text-white text-decoration-none hover-warning">Orders</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5 class="text-warning mb-3">Contact Us</h5>
+                    <p class="text-white"><i class="fa-solid fa-location-dot text-warning"></i> Phnom Penh, Cambodia</p>
+                    <p class="text-white"><i class="fa-solid fa-phone text-warning"></i> +855 087 500 962</p>
+                    <p class="text-white"><i class="fa-solid fa-envelope text-warning"></i> werun@gmail.com</p>
+                </div>
+                <div class="col-md-3">
+                    <h5 class="text-warning mb-3">Customer Service</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white text-decoration-none hover-warning">Shipping Info</a></li>
+                        <li><a href="#" class="text-white text-decoration-none hover-warning">Return Policy</a></li>
+                        <li><a href="#" class="text-white text-decoration-none hover-warning">Size Guide</a></li>
+                        <li><a href="#" class="text-white text-decoration-none hover-warning">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5 class="text-warning mb-3">Follow Us</h5>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="text-white text-decoration-none"><i class="fa-brands fa-facebook fs-5"></i></a>
+                        <a href="#" class="text-white text-decoration-none"><i class="fa-brands fa-instagram fs-5"></i></a>
+                        <a href="#" class="text-white text-decoration-none"><i class="fa-brands fa-twitter fs-5"></i></a>
+                        <a href="#" class="text-white text-decoration-none"><i class="fa-brands fa-tiktok fs-5"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="border-secondary">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="text-white mb-0"><small>&copy; 2026 We Run. All rights reserved.</small></p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <p class="text-white mb-0"><small><a href="#" class="text-white text-decoration-none hover-warning">Privacy Policy</a> | <a href="#" class="text-white text-decoration-none hover-warning">Terms & Condition</a></small></p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Theme Toggle JS -->
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard – VRUN</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+<script>if(localStorage.getItem('vrun-theme')==='light'){document.documentElement.setAttribute('data-theme','light')}else{document.documentElement.removeAttribute('data-theme')}</script>
+    <style>
+        /* ===== Color Variables ===== */
+        :root {
+            --gold: #ffc107;
+            --gold-dim: rgba(255, 193, 7, .12);
+            --gold-glow: rgba(255, 193, 7, .25);
+        }
+
+        /* ===== Dashboard Layout ===== */
+        .dash-wrap {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            min-height: calc(100vh - 60px);
+        }
+
+        .dash-side {
+            background: var(--card-bg);
+            border-right: 1px solid var(--border-color);
+            padding: 24px 12px;
+        }
+
+        .dash-main {
+            padding: 32px 28px;
+            background: var(--body-bg);
+        }
+
+        /* ===== Sidebar Navigation ===== */
+        .side-label {
+            font-size: .68rem;
+            font-weight: 700;
+            letter-spacing: .12em;
+            color: var(--muted-text);
+            text-transform: uppercase;
+            padding: 0 12px;
+            margin: 18px 0 6px;
+        }
+
+        .side-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            color: var(--body-text);
+            font-weight: 500;
+            text-decoration: none;
+            transition: .2s;
+            font-size: .88rem;
+        }
+
+        .side-link:hover,
+        .side-link.active {
+            background: var(--gold-dim);
+            color: var(--gold);
+        }
+
+        .side-link i {
+            width: 18px;
+            text-align: center;
+        }
+
+        /* ===== Stat Cards ===== */
+        .stat-card {
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            position: relative;
+            overflow: hidden;
+            transition: .25s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--gold);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px var(--gold-glow);
+        }
+
+        .stat-num {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--gold);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: .75rem;
+            color: var(--muted-text);
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+        }
+
+        .stat-icon {
+            font-size: 1.8rem;
+            opacity: .2;
+            color: var(--gold);
+        }
+
+        /* ===== Page Header ===== */
+        .page-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--gold);
+            margin: 0;
+        }
+
+        /* ===== Add Product Button ===== */
+        .btn-add-product {
+            background: linear-gradient(135deg, #ffc107, #e6a800);
+            color: #000;
+            font-weight: 700;
+            border: none;
+            border-radius: 12px;
+            padding: 10px 22px;
+            font-size: .88rem;
+            transition: .2s;
+            box-shadow: 0 4px 14px var(--gold-glow);
+        }
+
+        .btn-add-product:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--gold-glow);
+            color: #000;
+        }
+
+        /* ===== Product Table ===== */
+        .tbl-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            overflow: hidden;
+        }
+
+        .tbl-card .card-header {
+            background: transparent;
+            border-bottom: 1px solid var(--border-color);
+            padding: 18px 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .tbl-card table thead th {
+            background: var(--gold-dim);
+            color: var(--gold);
+            font-size: .72rem;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 700;
+        }
+
+        .tbl-card table tbody td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+            font-size: .87rem;
+        }
+
+        .tbl-card table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .tbl-card table tbody tr:hover td {
+            background: var(--gold-dim);
+        }
+
+        /* ===== Product Thumbnail ===== */
+        .prod-thumb {
+            width: 46px;
+            height: 46px;
+            object-fit: contain;
+            border-radius: 10px;
+            background: rgba(255, 193, 7, .06);
+            border: 1px solid rgba(255, 193, 7, .15);
+            padding: 3px;
+        }
+
+        /* ===== Badges ===== */
+        .badge-cat {
+            background: rgba(99, 102, 241, .15);
+            color: #a78bfa;
+            border-radius: 6px;
+            padding: 3px 10px;
+            font-size: .72rem;
+            font-weight: 600;
+        }
+
+        .stock-low {
+            color: #f87171;
+            font-weight: 700;
+        }
+
+        .stock-ok {
+            color: #34d399;
+            font-weight: 600;
+        }
+
+        /* ===== Action Buttons (Edit / Delete) ===== */
+        .btn-action {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: .2s;
+            font-size: .8rem;
+        }
+
+        .btn-edit {
+            background: rgba(255, 193, 7, .15);
+            color: #ffc107;
+        }
+
+        .btn-edit:hover {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .btn-del {
+            background: rgba(220, 53, 69, .12);
+            color: #f87171;
+        }
+
+        .btn-del:hover {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        /* ===== Search Bar ===== */
+        .search-wrap {
+            position: relative;
+        }
+
+        .search-wrap input {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 8px 14px 8px 36px;
+            color: var(--body-text);
+            font-size: .85rem;
+            width: 220px;
+            transition: .2s;
+        }
+
+        .search-wrap input:focus {
+            outline: none;
+            border-color: var(--gold);
+            width: 260px;
+        }
+
+        .search-wrap i {
+            position: absolute;
+            left: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted-text);
+            font-size: .8rem;
+        }
+
+        /* ===== Modal Styles ===== */
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+        }
+
+        .modal-header {
+            border-bottom: 1px solid var(--border-color);
+            padding: 20px 24px;
+        }
+
+        .modal-title {
+            font-weight: 700;
+            color: var(--gold);
+            font-size: 1.05rem;
+        }
+
+        .modal-footer {
+            border-top: 1px solid var(--border-color);
+            padding: 16px 24px;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        /* ===== Form Field Groups ===== */
+        .field-grp {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            transition: .2s;
+        }
+
+        .field-grp:focus-within {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px var(--gold-glow);
+        }
+
+        .field-grp label {
+            display: block;
+            font-size: .68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: var(--muted-text);
+            margin-bottom: 3px;
+        }
+
+        .field-grp input,
+        .field-grp textarea,
+        .field-grp select {
+            width: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--body-text);
+            font-size: .9rem;
+            font-family: inherit;
+        }
+
+        .field-grp textarea {
+            resize: vertical;
+            min-height: 68px;
+        }
+
+        /* ===== Image Upload Zone ===== */
+        .upload-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: .3s;
+            position: relative;
+            overflow: hidden;
+            background: var(--input-bg);
+        }
+
+        .upload-zone:hover,
+        .upload-zone.drag-over {
+            border-color: var(--gold);
+            background: var(--gold-dim);
+        }
+
+        .upload-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        .upload-zone .upload-placeholder {
+            pointer-events: none;
+        }
+
+        .upload-zone .upload-placeholder i {
+            font-size: 2.2rem;
+            color: rgba(255, 193, 7, .4);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .upload-zone .upload-placeholder p {
+            margin: 0;
+            font-size: .82rem;
+            color: var(--muted-text);
+        }
+
+        .upload-zone .upload-placeholder span {
+            font-size: .72rem;
+            color: rgba(255, 193, 7, .7);
+        }
+
+        /* ===== Image Preview Box ===== */
+        .img-preview-box {
+            display: none;
+            position: relative;
+            border-radius: 14px;
+            overflow: hidden;
+            border: 2px solid var(--gold);
+            background: #0a0a14;
+        }
+
+        .img-preview-box img {
+            width: 100%;
+            height: 180px;
+            object-fit: contain;
+            display: block;
+            padding: 8px;
+        }
+
+        .img-preview-box .preview-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, .8));
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .img-preview-box .preview-filename {
+            font-size: .72rem;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 75%;
+        }
+
+        .img-preview-box .preview-change {
+            font-size: .72rem;
+            color: var(--gold);
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        .img-preview-box .preview-change:hover {
+            text-decoration: underline;
+        }
+
+        .img-preview-box .preview-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 193, 7, .9);
+            color: #000;
+            font-size: .65rem;
+            font-weight: 700;
+            border-radius: 6px;
+            padding: 3px 8px;
+        }
+
+        /* ===== Delete Modal ===== */
+        .delete-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(220, 53, 69, .12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 1.6rem;
+            color: #f87171;
+        }
+
+        /* ===== Empty State ===== */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted-text);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: rgba(255, 193, 7, .2);
+            display: block;
+            margin-bottom: 16px;
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 992px) {
+            .dash-wrap {
+                grid-template-columns: 1fr;
+            }
+
+            .dash-side {
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .dash-main {
+                padding: 20px 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    {% include 'front/navbar.html' %}
+    {% include 'front/flash_messages.html' %}
+
+    <div class="dash-wrap">
+
+        <!-- ===== SIDEBAR ===== -->
+        <aside class="dash-side">
+            <p class="side-label">Overview</p>
+            <a href="{{ url_for('admin') }}" class="side-link active">
+                <i class="fa-solid fa-gauge"></i> Dashboard
+            </a>
+            <a href="{{ url_for('inbox') }}" class="side-link">
+                <i class="fa-solid fa-inbox"></i> Order Inbox
+            </a>
+
+            <p class="side-label">Account</p>
+            <a href="{{ url_for('profile') }}" class="side-link">
+                <i class="fa-solid fa-user"></i> My Profile
+            </a>
+            <a href="{{ url_for('settings') }}" class="side-link">
+                <i class="fa-solid fa-gear"></i> Settings
+            </a>
+            <a href="{{ url_for('logout') }}" class="side-link text-danger">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </a>
+        </aside>
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <main class="dash-main">
+
+            <!-- Page Header -->
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+                <div>
+                    <h1 class="page-title">
+                        <i class="fa-solid fa-gauge me-2"></i> Admin Dashboard
+                    </h1>
+                    <p class="text-muted small mb-0">Manage products, inventory and your store.</p>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge"
+                        style="background: rgba(255,193,7,.15); color: #ffc107; padding: 8px 14px; border-radius: 8px; font-size: .78rem;">
+                        <i class="fa-solid fa-shield me-1"></i> Admin
+                    </span>
+                    <button class="btn-add-product" data-bs-toggle="modal" data-bs-target="#productModal"
+                        onclick="openAddModal()">
+                        <i class="fa-solid fa-plus me-2"></i> Add Product
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stat Cards Row -->
+            <div class="row g-3 mb-4">
+                <!-- Total Products -->
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-num">{{ products|length }}</div>
+                                <div class="stat-label">Total Products</div>
+                            </div>
+                            <i class="fa-solid fa-boxes-stacked stat-icon"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- In Stock -->
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-num">{{ products|selectattr('stock','gt',0)|list|length }}</div>
+                                <div class="stat-label">In Stock</div>
+                            </div>
+                            <i class="fa-solid fa-circle-check stat-icon"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Low Stock -->
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-num" style="color: #f87171;">
+                                    {{ products|selectattr('stock','le',5)|list|length }}
+                                </div>
+                                <div class="stat-label">Low Stock (≤5)</div>
+                            </div>
+                            <i class="fa-solid fa-triangle-exclamation stat-icon" style="color: #f87171;"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Categories -->
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                {% set cats = [] %}
+                                {% for p in products %}
+                                    {% if p.category not in cats %}
+                                        {% set _ = cats.append(p.category) %}
+                                    {% endif %}
+                                {% endfor %}
+                                <div class="stat-num">{{ cats|length }}</div>
+                                <div class="stat-label">Categories</div>
+                            </div>
+                            <i class="fa-solid fa-tags stat-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== PRODUCT TABLE ===== -->
+            <div class="tbl-card">
+
+                <!-- Table Header with Search -->
+                <div class="card-header">
+                    <div style="font-size: .95rem; font-weight: 700; color: var(--gold); display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-boxes-stacked"></i> Product Catalog
+                        <span class="text-muted fw-normal" style="font-size: .75rem;">
+                            {{ products|length }} items
+                        </span>
+                    </div>
+                    <div class="search-wrap">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" placeholder="Search products…" oninput="filterTable(this.value)">
+                    </div>
+                </div>
+
+                <!-- Table Body -->
+                <div class="table-responsive">
+                    <table class="table mb-0 text-white" id="prodTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in products %}
+                            <tr data-name="{{ p.name|lower }}">
+                                <td class="text-muted small">{{ loop.index }}</td>
+
+                                <!-- Product Name + Image -->
+                                <td>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <img src="{{ url_for('static', filename=p.image) }}"
+                                            alt="{{ p.name }}" class="prod-thumb">
+                                        <div>
+                                            <div style="font-size: .87rem; font-weight: 600;">{{ p.name }}</div>
+                                            <div class="text-muted"
+                                                style="font-size: .72rem; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                                {{ p.description }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td><span class="badge-cat">{{ p.category }}</span></td>
+                                <td style="color: #ffc107; font-weight: 700;">${{ '%.2f'|format(p.price) }}</td>
+
+                                <!-- Stock with warning icon if low -->
+                                <td>
+                                    <span class="{{ 'stock-low' if p.stock <= 5 else 'stock-ok' }}">
+                                        {{ p.stock }}
+                                        {% if p.stock <= 5 %}
+                                            <i class="fa-solid fa-triangle-exclamation small"></i>
+                                        {% endif %}
+                                    </span>
+                                </td>
+
+                                <!-- Edit / Delete buttons -->
+                                <td class="text-end">
+                                    <button class="btn-action btn-edit me-1" title="Edit"
+                                        onclick="openEditModal({{ p.id }}, '{{ p.name|e }}', '{{ p.category|e }}', {{ p.price }}, {{ p.stock }}, {{ p.description|tojson }}, {{ (p.detail or '')|tojson }}, '{{ p.image|e }}')">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                    <button class="btn-action btn-del" title="Delete"
+                                        onclick="openDeleteModal({{ p.id }}, '{{ p.name|e }}')">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+
+                            {% else %}
+                            <!-- Empty state when no products -->
+                            <tr>
+                                <td colspan="6">
+                                    <div class="empty-state">
+                                        <i class="fa-solid fa-box-open"></i>
+                                        No products yet.
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+<!-- ══ ADD/EDIT MODAL ══ -->
+    <div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">
+                        <i class="fa-solid fa-plus-circle me-2"></i> Add New Product
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <!-- Modal Form -->
+                <form id="productForm" method="post" enctype="multipart/form-data" action="{{ url_for('admin') }}">
+                    <div class="modal-body">
+                        <div class="row g-0">
+
+                            <!-- Left Column: Form Fields -->
+                            <div class="col-md-7 pe-md-3">
+
+                                <!-- Product Name -->
+                                <div class="field-grp">
+                                    <label>Product Name *</label>
+                                    <input type="text" name="name" id="f_name" required
+                                        placeholder="e.g. Air Jordan 1 Retro">
+                                </div>
+
+                                <!-- Category -->
+                                <div class="field-grp">
+                                    <label>Category *</label>
+                                    <input type="text" name="category" id="f_category" required
+                                        placeholder="Sneaker, Sport, Casual…">
+                                </div>
+
+                                <!-- Price & Stock (side by side) -->
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <div class="field-grp">
+                                            <label>Price ($) *</label>
+                                            <input type="number" step="0.01" min="0" name="price" id="f_price"
+                                                required placeholder="0.00">
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="field-grp">
+                                            <label>Stock *</label>
+                                            <input type="number" min="0" name="stock" id="f_stock"
+                                                required placeholder="0">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Short Description -->
+                                <div class="field-grp">
+                                    <label>
+                                        Description *
+                                        <span style="font-weight: 400; color: var(--muted-text)">(short summary)</span>
+                                    </label>
+                                    <textarea name="description" id="f_description" required
+                                        placeholder="Short product description…"></textarea>
+                                </div>
+
+                                <!-- Product Detail -->
+                                <div class="field-grp">
+                                    <label>
+                                        Product Detail
+                                        <span style="font-weight: 400; color: var(--muted-text)">(shown on product detail page)</span>
+                                    </label>
+                                    <textarea name="detail" id="f_detail" style="min-height: 100px;"
+                                        placeholder="Full product detail — features, materials, technology…"></textarea>
+                                </div>
+
+                                <!-- Image Path (manual) -->
+                                <div class="field-grp">
+                                    <label>
+                                        Image Path
+                                        <span style="font-weight: 400; color: var(--muted-text)">(or paste path)</span>
+                                    </label>
+                                    <input type="text" name="image_path" id="f_image_path"
+                                        placeholder="images/example.png" oninput="previewFromPath(this.value)">
+                                </div>
+                            </div>
+
+                            <!-- Right Column: Image Upload -->
+                            <div class="col-md-5 ps-md-3 d-flex flex-column" style="gap: 12px;">
+
+                                <div style="font-size: .72rem; font-weight: 700; text-transform: uppercase;
+                                    letter-spacing: .08em; color: var(--muted-text); margin-bottom: 2px;">
+                                    <i class="fa-solid fa-image me-1"></i> Product Image
+                                </div>
+
+                                <!-- Upload Drop Zone (visible when no image selected) -->
+                                <div class="upload-zone" id="uploadZone">
+                                    <input type="file" name="image_file" id="f_image_file"
+                                        accept="image/*" onchange="handleImageUpload(this)">
+                                    <div class="upload-placeholder">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                                        <p><strong>Click or drag &amp; drop</strong></p>
+                                        <span>PNG, JPG, GIF — max 5MB</span>
+                                    </div>
+                                </div>
+
+                                <!-- Image Preview (visible after selecting image) -->
+                                <div class="img-preview-box" id="imgPreviewBox">
+                                    <span class="preview-badge">
+                                        <i class="fa-solid fa-check me-1"></i> Selected
+                                    </span>
+                                    <img id="imgPreviewImg" src="" alt="Preview">
+                                    <div class="preview-overlay">
+                                        <span class="preview-filename" id="previewFilename">filename.png</span>
+                                        <button type="button" class="preview-change" onclick="resetUpload()">
+                                            <i class="fa-solid fa-rotate me-1"></i> Change
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Current Image (shown in edit mode) -->
+                                <div id="currentImgWrap" style="display: none;">
+                                    <div style="font-size: .7rem; color: var(--muted-text); margin-bottom: 4px;">
+                                        <i class="fa-solid fa-image me-1"></i> Current Image
+                                    </div>
+                                    <img id="currentImg" src="" alt="Current"
+                                        style="width: 100%; height: 100px; object-fit: contain;
+                                        border-radius: 10px; border: 1px solid var(--border-color);
+                                        background: #0a0a14; padding: 6px;">
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary rounded-pill px-4"
+                            data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn-add-product" id="modalSubmitBtn">
+                            <i class="fa-solid fa-floppy-disk me-2"></i> Save Product
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== DELETE CONFIRMATION MODAL ===== -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center py-4 px-4">
+                    <div class="delete-icon">
+                        <i class="fa-solid fa-trash"></i>
+                    </div>
+                    <h5 class="fw-bold mb-1">Delete Product?</h5>
+                    <p class="text-muted small mb-0" id="deleteProductName"></p>
+                    <p class="text-muted small mt-1">This cannot be undone.</p>
+
+                    <div class="d-flex gap-2 justify-content-center mt-3">
+                        <button type="button" class="btn btn-secondary rounded-pill px-4"
+                            data-bs-dismiss="modal">Cancel</button>
+                        <form id="deleteForm" method="post">
+                            <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold">
+                                <i class="fa-solid fa-trash me-1"></i> Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== SCRIPTS ===== -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+
+    <script>
+        // ===== DOM Element References =====
+        const uploadZone = document.getElementById('uploadZone');
+        const previewBox = document.getElementById('imgPreviewBox');
+        const previewImg = document.getElementById('imgPreviewImg');
+        const previewFilename = document.getElementById('previewFilename');
+        const fileInput = document.getElementById('f_image_file');
+        const currentImgWrap = document.getElementById('currentImgWrap');
+        const currentImg = document.getElementById('currentImg');
+
+
+        // ===== Image Upload Handler =====
+        // Reads the selected file and shows a preview
+        function handleImageUpload(input) {
+            if (!input.files || !input.files[0]) return;
+
+            const file = input.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                previewImg.src = e.target.result;
+                previewFilename.textContent = file.name;
+                uploadZone.style.display = 'none';
+                previewBox.style.display = 'block';
+                // Clear path field since uploaded file takes priority
+                document.getElementById('f_image_path').value = '';
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+
+        // ===== Preview from Path =====
+        // When user types an image path manually
+        function previewFromPath(path) {
+            if (!path) return;
+            resetUpload(false);
+        }
+
+
+        // ===== Reset Upload Zone =====
+        // Hides preview and shows the upload zone again
+        function resetUpload(resetInput = true) {
+            previewBox.style.display = 'none';
+            uploadZone.style.display = 'block';
+
+            if (resetInput) {
+                fileInput.value = '';
+                previewImg.src = '';
+            }
+        }
+
+
+        // ===== Drag & Drop Support =====
+        uploadZone.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            uploadZone.classList.add('drag-over');
+        });
+
+        uploadZone.addEventListener('dragleave', function () {
+            uploadZone.classList.remove('drag-over');
+        });
+
+        uploadZone.addEventListener('drop', function (e) {
+            e.preventDefault();
+            uploadZone.classList.remove('drag-over');
+
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleImageUpload(fileInput);
+            }
+        });
+
+
+        // ===== Open Add Product Modal =====
+        function openAddModal() {
+            document.getElementById('modalTitle').innerHTML =
+                '<i class="fa-solid fa-plus-circle me-2"></i> Add New Product';
+            document.getElementById('productForm').action = "{{ url_for('admin') }}";
+            document.getElementById('modalSubmitBtn').innerHTML =
+                '<i class="fa-solid fa-plus me-2"></i> Save Product';
+
+            // Clear all form fields
+            var fieldIds = ['f_name', 'f_category', 'f_price', 'f_stock', 'f_description', 'f_detail', 'f_image_path'];
+            fieldIds.forEach(function (id) {
+                document.getElementById(id).value = '';
+            });
+
+            resetUpload();
+            currentImgWrap.style.display = 'none';
+        }
+
+
+        // ===== Open Edit Product Modal =====
+        function openEditModal(id, name, category, price, stock, description, detail, image) {
+            document.getElementById('modalTitle').innerHTML =
+                '<i class="fa-solid fa-pen-to-square me-2"></i> Edit Product';
+            document.getElementById('productForm').action = '/admin/edit/' + id;
+            document.getElementById('modalSubmitBtn').innerHTML =
+                '<i class="fa-solid fa-floppy-disk me-2"></i> Update Product';
+
+            // Fill form with existing product data
+            document.getElementById('f_name').value = name;
+            document.getElementById('f_category').value = category;
+            document.getElementById('f_price').value = price;
+            document.getElementById('f_stock').value = stock;
+            document.getElementById('f_description').value = description;
+            document.getElementById('f_detail').value = detail || '';
+            document.getElementById('f_image_path').value = image;
+
+            resetUpload();
+
+            // Show the current product image
+            if (image) {
+                currentImg.src = '/static/' + image;
+                currentImgWrap.style.display = 'block';
+            } else {
+                currentImgWrap.style.display = 'none';
+            }
+
+            new bootstrap.Modal(document.getElementById('productModal')).show();
+        }
+
+
+        // ===== Open Delete Confirmation Modal =====
+        function openDeleteModal(id, name) {
+            document.getElementById('deleteProductName').textContent = '"' + name + '"';
+            document.getElementById('deleteForm').action = '/admin/delete/' + id;
+            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+        }
+
+
+        // ===== Table Search Filter =====
+        // Filters product rows by name as user types
+        function filterTable(query) {
+            var rows = document.querySelectorAll('#prodTable tbody tr[data-name]');
+            rows.forEach(function (row) {
+                var matches = row.dataset.name.includes(query.toLowerCase());
+                row.style.display = matches ? '' : 'none';
+            });
+        }
+
+
+        // ===== Auto-Open Edit Modal (when redirected from edit route) =====
+        {% if edit_product %}
+        window.addEventListener('DOMContentLoaded', function () {
+            openEditModal(
+                {{ edit_product.id }},
+                {{ edit_product.name|tojson }},
+                {{ edit_product.category|tojson }},
+                {{ edit_product.price }},
+                {{ edit_product.stock }},
+                {{ edit_product.description|tojson }},
+                {{ (edit_product.detail or '')|tojson }},
+                {{ edit_product.image|tojson }}
+            );
+        });
+        {% endif %}
+    </script>
+
+</body>
+</html>

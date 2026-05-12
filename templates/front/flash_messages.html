@@ -1,0 +1,20 @@
+<!-- SweetAlert Flash Messages -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        {% for category, message in messages %}
+          Swal.fire({
+            icon: '{{ 'success' if category == 'success' else 'warning' if category == 'warning' else 'error' if category == 'danger' else 'info' }}',
+            title: '{{ 'Success!' if category == 'success' else 'Warning' if category == 'warning' else 'Error' if category == 'danger' else 'Info' }}',
+            text: '{{ message }}',
+            confirmButtonColor: '#ffc107',
+            background: '#1a1a1a',
+            color: '#fff'
+          });
+        {% endfor %}
+      });
+    </script>
+  {% endif %}
+{% endwith %}
