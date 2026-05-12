@@ -45,9 +45,20 @@ def get_db():
     Returns the active database connection.
     """
     global mongo_client
-    if mongo_client is None:
-        mongo_client = MongoClient(app.config['MONGO_URI'])
-    return mongo_client[app.config['MONGO_DBNAME']]
+    try:
+        if mongo_client is None:
+            # Set a 5 second timeout so it doesn't hang Vercel
+            mongo_client = MongoClient(app.config['MONGO_URI'], serverSelectionTimeoutMS=5000)
+            # Force a connection test
+            mongo_client.admin.command('ping')
+        return mongo_client[app.config['MONGO_DBNAME']]
+    except Exception as e:
+        import traceback
+        error_msg = f"Database Connection Error: {str(e)}\n\nTraceback:\n{traceback.format_exc()}"
+        print(error_msg)
+        # If we are in a web request, we can abort with 500 and the message
+        from flask import make_response
+        abort(make_response(f"<pre>Error connecting to MongoDB. Did you whitelist IP 0.0.0.0/0 in Atlas?\n\n{error_msg}</pre>", 500))
 
 def format_doc(doc):
     """Converts MongoDB document to use string 'id' instead of '_id'."""
