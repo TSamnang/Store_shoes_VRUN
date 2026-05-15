@@ -714,7 +714,7 @@
 <!-- ══ ADD/EDIT MODAL ══ -->
     <div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content">
+            <form id="productForm" method="post" enctype="multipart/form-data" action="{{ url_for('admin') }}" class="modal-content">
 
                 <!-- Modal Header -->
                 <div class="modal-header">
@@ -724,9 +724,7 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
 
-                <!-- Modal Form -->
-                <form id="productForm" method="post" enctype="multipart/form-data" action="{{ url_for('admin') }}">
-                    <div class="modal-body">
+                <div class="modal-body">
                         <div class="row g-0">
 
                             <!-- Left Column: Form Fields -->
@@ -851,8 +849,8 @@
                             <i class="fa-solid fa-floppy-disk me-2"></i> Save Product
                         </button>
                     </div>
-                </form>
-            </div>
+                    </div>
+            </form>
         </div>
     </div>
 

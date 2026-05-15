@@ -100,10 +100,11 @@
                     </a>
                     <div class="arrival-card-body">
                         <div class="arrival-meta">
-                            <a href="{{ url_for('product_detail', product_id=product.id) }}" class="text-decoration-none"><p class="arrival-name">{{ product.name }}</p></a>
-                            <span class="arrival-rating">{{ product.category }} <i class="fa-solid fa-star text-warning"></i></span>
+                            <a href="{{ url_for('product_detail', product_id=product.id) }}" class="text-decoration-none" style="flex: 1; min-width: 0;"><p class="arrival-name text-truncate m-0" title="{{ product.name }}">{{ product.name }}</p></a>
+                            <span class="arrival-rating ms-2" style="white-space: nowrap; font-size: 0.75rem;">{{ product.category }}</span>
                         </div>
-                        <p class="arrival-price">${{ '%.2f'|format(product.price) }}</p>
+                        <p class="small text-muted mb-1 text-truncate" title="{{ product.description }}">{{ product.description }}</p>
+                        <p class="arrival-price m-0">${{ '%.2f'|format(product.price) }}</p>
                         <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-warning btn-sm mt-1 px-3 rounded-pill">Add to cart</a>
                     </div>
                 </div>
