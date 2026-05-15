@@ -131,17 +131,23 @@
                                 <i class="fa-solid fa-credit-card text-warning me-2"></i> Credit / Debit Card
                             </label>
                         </div>
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="radio" name="payment" value="PayPal" id="paypal">
-                            <label class="form-check-label text-white" for="paypal">
-                                <i class="fa-brands fa-paypal text-warning me-2"></i> PayPal
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="payment" value="KHQR" id="khqr">
+                            <label class="form-check-label text-white" for="khqr">
+                                <i class="fa-solid fa-qrcode text-warning me-2"></i> KHQR
                             </label>
                         </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="payment" value="Bank Transfer" id="transfer">
-                            <label class="form-check-label text-white" for="transfer">
-                                <i class="fa-solid fa-building text-warning me-2"></i> Bank Transfer
-                            </label>
+
+                        <!-- KHQR Details (appears when KHQR selected) -->
+                        <div class="mt-4 text-center" id="khqr-details" style="display: none;">
+                            <h6 class="text-white mb-3">Scan to Pay with KHQR</h6>
+                            <div class="bg-white p-3 rounded d-inline-block mb-3" style="max-width: 300px;">
+                                <img src="{{ url_for('static', filename='images/qr.jpg') }}" alt="KHQR Code" class="img-fluid rounded">
+                            </div>
+                            <p class="text-muted small">Please scan the QR code to complete your payment.</p>
+                            <button type="button" class="btn btn-sm btn-outline-warning mt-2" id="btn-mock-scan">
+                                <i class="fa-solid fa-camera me-1"></i> I have scanned and paid
+                            </button>
                         </div>
 
                         <!-- Card Details (appears when card selected) -->
@@ -304,6 +310,9 @@
         const cardDetails = document.getElementById('card-details');
         const cardInputs = cardDetails.querySelectorAll('input');
         
+        const khqrRadio = document.getElementById('khqr');
+        const khqrDetails = document.getElementById('khqr-details');
+        
         document.querySelectorAll('input[name="payment"]').forEach(radio => {
             radio.addEventListener('change', function() {
                 if (cardRadio.checked) {
@@ -314,7 +323,21 @@
                         input.value = ''; // clear values
                     });
                 }
+                
+                if (khqrRadio.checked) {
+                    khqrDetails.style.display = 'block';
+                } else {
+                    khqrDetails.style.display = 'none';
+                }
             });
+        });
+
+        // Mock Scan Success
+        document.getElementById('btn-mock-scan').addEventListener('click', function() {
+            this.classList.remove('btn-outline-warning');
+            this.classList.add('btn-success', 'text-white', 'border-success');
+            this.innerHTML = '<i class="fa-solid fa-check me-1"></i> Payment Verified!';
+            alert('Success! Your payment via KHQR has been verified.');
         });
     </script>
     <!-- Theme Toggle JS -->

@@ -33,16 +33,25 @@
         .status-badge-Shipped     { background: #20c997; }
         .status-badge-Delivered   { background: #198754; }
         .status-badge-Cancelled   { background: #dc3545; }
+        
+        @media print {
+            body { background: white !important; color: black !important; }
+            .text-white, .text-warning, .text-muted { color: black !important; }
+            .card, .card-header, .card-body, .bg-dark, .bg-darker { background: white !important; border-color: #ddd !important; box-shadow: none !important; }
+            .badge { border: 1px solid black !important; color: black !important; background: white !important; }
+        }
     </style>
 </head>
 <body>
-    {% include 'front/navbar.html' %}
-    {% include 'front/flash_messages.html' %}
+    <div class="d-print-none">
+        {% include 'front/navbar.html' %}
+        {% include 'front/flash_messages.html' %}
+    </div>
 
     <div class="container my-5">
 
         <!-- ===== Success Banner ===== -->
-        <div class="text-center mb-5">
+        <div class="text-center mb-5 d-print-none">
             <div class="mb-3" style="animation: bounceIn 0.6s ease;">
                 <i class="fa-solid fa-circle-check text-warning" style="font-size: 5rem;"></i>
             </div>
@@ -54,7 +63,7 @@
         </div>
 
         <!-- ===== Progress Steps ===== -->
-        <div class="mb-5">
+        <div class="mb-5 d-print-none">
             <div class="d-flex align-items-center justify-content-center">
                 <div class="checkout-step active text-center">
                     <div class="step-circle"><i class="fa-solid fa-map-pin"></i></div>
@@ -176,7 +185,7 @@
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="d-flex gap-3 flex-wrap">
+                <div class="d-flex gap-3 flex-wrap d-print-none">
                     <a href="{{ url_for('product') }}" class="btn btn-warning fw-bold">
                         <i class="fa-solid fa-bag-shopping me-2"></i>Continue Shopping
                     </a>
@@ -274,7 +283,7 @@
                         </div>
 
                         <!-- Print / Share -->
-                        <button class="btn btn-outline-secondary w-100" onclick="window.print()">
+                        <button class="btn btn-outline-secondary w-100 d-print-none" onclick="window.print()">
                             <i class="fa-solid fa-print me-2"></i>Print Receipt
                         </button>
                     </div>
@@ -284,7 +293,7 @@
     </div>
 
     <!-- Footer -->
-    <footer class="bg-darker mt-5 py-5">
+    <footer class="bg-darker mt-5 py-5 d-print-none">
         <div class="container">
             <div class="row g-4 mb-4">
                 <div class="col-md-3">

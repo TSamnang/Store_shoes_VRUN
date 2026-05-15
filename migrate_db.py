@@ -5,9 +5,9 @@ import sys
 # --- CONFIGURATION ---
 # IMPORTANT: Replace the string below with your actual connection string from MongoDB Atlas!
 # Example: "mongodb+srv://admin:mysecretpassword@cluster0.abc.mongodb.net/?retryWrites=true&w=majority"
-ATLAS_URI = "mongodb+srv://TSamnang:<db_password>@shoesstore.eptj53w.mongodb.net/?appName=shoesStore"
+ATLAS_URI = "mongodb+srv://TSamnang:admin123@shoesstore.eptj53w.mongodb.net/?appName=shoesStore"
 
-LOCAL_URI = "mongodb+srv://TSamnang:<db_password>@shoesstore.eptj53w.mongodb.net/?appName=shoesStore"
+LOCAL_URI = "mongodb+srv://TSamnang:admin123@shoesstore.eptj53w.mongodb.net/?appName=shoesStore"
 DB_NAME = "StoreShoes"
 
 def migrate():
