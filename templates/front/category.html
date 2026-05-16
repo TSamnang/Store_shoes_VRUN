@@ -20,9 +20,9 @@
     <!-- Page Title -->
     <section class="container my-5">
         <h1 class="text-warning fw-bold mb-4">Shop by Category</h1>
-        <div class="row g-3 mb-5">
+        <div class="row g-3 g-md-3 mb-5">
             {% for cat in categories %}
-            <div class="col-md-4">
+            <div class="col-6 col-md-4">
                 <div class="arrival-card">
                     <div class="arrival-img-box" style="background-color: var(--input-bg);">
                         {% set cat_img = category_images.get(cat.category, '') %}
@@ -53,9 +53,9 @@
     <!-- Featured Products -->
     <section class="container my-5">
         <h2 class="text-warning fw-bold mb-4">Featured Products</h2>
-        <div class="row g-4">
+        <div class="row g-3 g-md-4">
             {% for product in products %}
-                <div class="col-md-3 col-sm-6">
+                <div class="col-6 col-md-3">
                     <div class="arrival-card">
                         <a href="{{ url_for('product_detail', product_id=product.id) }}" class="text-decoration-none">
                             <div class="arrival-img-box" style="background-color: var(--input-bg);">
