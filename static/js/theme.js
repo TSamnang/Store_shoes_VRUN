@@ -82,67 +82,85 @@
 
 
         /* ── AJAX Add to Cart ── */
-        document.querySelectorAll('a[href^="/add-to-cart/"]').forEach(link => {
-            link.addEventListener('click', function(e) {
-                // Let the cart page reload normally so totals and lists update
-                if (window.location.pathname === '/cart') return;
+        window.addToCartAjax = function(url, qty = 1, btnElement = null) {
+            const formData = new FormData();
+            formData.append('quantity', qty);
+            
+            let originalHtml = '';
+            let hadBtnWarning = false;
+            let hadBtnOutline = false;
+            
+            if (btnElement) {
+                originalHtml = btnElement.innerHTML;
+                hadBtnWarning = btnElement.classList.contains('btn-warning');
+                hadBtnOutline = btnElement.classList.contains('btn-outline-warning');
                 
-                e.preventDefault();
-                const originalHtml = this.innerHTML;
-                const originalWidth = this.offsetWidth;
-                const hadBtnWarning = this.classList.contains('btn-warning');
-                const hadBtnOutline = this.classList.contains('btn-outline-warning');
-                
-                // Show loading state
-                this.style.width = originalWidth + 'px';
-                this.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-                
-                fetch(this.href)
-                    .then(() => {
-                        // Update the cart badge
-                        const cartBadge = document.querySelector('.cart-icon .badge');
-                        if (cartBadge) {
-                            let current = parseInt(cartBadge.innerText);
-                            cartBadge.innerText = current + 1;
-                        } else {
-                            // Create badge if it didn't exist
-                            const cartIcon = document.querySelector('.cart-icon');
-                            if (cartIcon) {
-                                cartIcon.insertAdjacentHTML('beforeend', '<span class="badge rounded-pill bg-danger" style="position: absolute; top: -8px; right: -8px; font-size: 0.65rem; padding: 0.3rem 0.45rem;">1</span>');
-                            }
-                        }
-                        
-                        // Show success state
-                        this.innerHTML = '<i class="fa-solid fa-check"></i>';
-                        this.classList.add('btn-success');
-                        this.classList.remove('btn-warning', 'btn-outline-warning');
-                        
-                        // Trigger SweetAlert popup
-                        if (window.Swal) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success!',
-                                text: 'Item added to your cart.',
-                                confirmButtonColor: '#ffc107',
-                                background: '#1a1a1a',
-                                color: '#fff',
-                                timer: 2000,
-                                timerProgressBar: true
-                            });
-                        }
-                        
-                        setTimeout(() => {
-                            this.innerHTML = originalHtml;
-                            this.style.width = 'auto';
-                            this.classList.remove('btn-success');
-                            if (hadBtnWarning) this.classList.add('btn-warning');
-                            if (hadBtnOutline) this.classList.add('btn-outline-warning');
-                        }, 1500);
-                    })
-                    .catch(err => {
-                        console.error('Error adding to cart:', err);
-                        this.innerHTML = originalHtml;
+                btnElement.style.width = btnElement.offsetWidth + 'px';
+                btnElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            }
+            
+            fetch(url, {
+                method: 'POST',
+                headers: { 
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    // Update all cart badges
+                    document.querySelectorAll('.cart-badge-count').forEach(el => {
+                        el.innerText = data.cart_count;
+                        el.style.display = 'inline-block';
                     });
+                    
+                    if (btnElement) {
+                        btnElement.innerHTML = '<i class="fa-solid fa-check"></i>';
+                        btnElement.classList.add('btn-success');
+                        btnElement.classList.remove('btn-warning', 'btn-outline-warning');
+                    }
+                    
+                    const bgColor = document.documentElement.getAttribute('data-theme') === 'light' ? '#fff' : '#1f2937';
+                    const textColor = document.documentElement.getAttribute('data-theme') === 'light' ? '#000' : '#fff';
+                    
+                    if (window.Swal) {
+                        Swal.fire({
+                            toast: true, position: 'top-end', icon: 'success',
+                            title: data.message, showConfirmButton: false,
+                            timer: 2000, timerProgressBar: true,
+                            background: bgColor, color: textColor, iconColor: '#198754'
+                        });
+                    }
+                    
+                    if (btnElement) {
+                        setTimeout(() => {
+                            btnElement.innerHTML = originalHtml;
+                            btnElement.style.width = 'auto';
+                            btnElement.classList.remove('btn-success');
+                            if (hadBtnWarning) btnElement.classList.add('btn-warning');
+                            if (hadBtnOutline) btnElement.classList.add('btn-outline-warning');
+                        }, 1500);
+                    }
+                } else {
+                    if (btnElement) btnElement.innerHTML = originalHtml;
+                    if (window.Swal) Swal.fire({ icon: 'error', title: 'Oops...', text: data.message });
+                    else alert(data.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                if (btnElement) btnElement.innerHTML = originalHtml;
+            });
+        };
+
+        // Attach to all Add to Cart links
+        document.querySelectorAll('a[href*="/add-to-cart/"]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (window.location.pathname === '/cart') return; // Allow normal reload on Cart page
+                e.preventDefault();
+                window.addToCartAjax(this.href, 1, this);
             });
         });
     });

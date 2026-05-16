@@ -17,9 +17,7 @@
             <!-- Cart -->
             <a href="{{ url_for('cart') }}" class="cart-icon position-relative" aria-label="Cart">
                 <i class="fa-solid fa-shopping-cart"></i>
-                {% if cart_count and cart_count > 0 %}
-                    <span class="badge rounded-pill bg-danger" style="position: absolute; top: -6px; right: -6px; font-size: 0.6rem; padding: 0.25rem 0.4rem;">{{ cart_count }}</span>
-                {% endif %}
+                <span class="badge rounded-pill bg-danger cart-badge-count" style="position: absolute; top: -6px; right: -6px; font-size: 0.6rem; padding: 0.25rem 0.4rem; display: {{ 'inline-block' if cart_count and cart_count > 0 else 'none' }};">{{ cart_count|default(0) }}</span>
             </a>
             <!-- User dropdown -->
             <div class="dropdown">
@@ -41,7 +39,7 @@
                             <small class="text-muted">{{ current_user.email }}</small>
                         </li>
                         {% if is_admin %}
-                            <li><a class="dropdown-item" href="{{ url_for('inbox') }}"><i class="fa-solid fa-inbox me-1"></i>Inbox</a></li>
+                            <!-- Inbox now embedded in Admin Dashboard -->
                         {% else %}
                             <li><a class="dropdown-item" href="{{ url_for('order') }}">My Orders</a></li>
                         {% endif %}
@@ -86,9 +84,7 @@
             </div>
             <a href="{{ url_for('cart') }}" class="cart-icon position-relative" aria-label="Cart">
                 <i class="fa-solid fa-shopping-cart"></i>
-                {% if cart_count and cart_count > 0 %}
-                    <span class="badge rounded-pill bg-danger" style="position: absolute; top: -8px; right: -8px; font-size: 0.65rem; padding: 0.3rem 0.45rem;">{{ cart_count }}</span>
-                {% endif %}
+                <span class="badge rounded-pill bg-danger cart-badge-count" style="position: absolute; top: -8px; right: -8px; font-size: 0.65rem; padding: 0.3rem 0.45rem; display: {{ 'inline-block' if cart_count and cart_count > 0 else 'none' }};">{{ cart_count|default(0) }}</span>
             </a>
             <div class="dropdown">
                 <div class="user-icon" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="User account" style="cursor: pointer; display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; border-radius: 50%; background-color: {% if current_user %}#ffc107{% else %}rgba(255,193,7,0.1){% endif %}; color: {% if current_user %}#000{% else %}#ffc107{% endif %}; font-weight: bold; font-size: 1.2rem; text-decoration: none; border: 1px solid rgba(255,193,7,0.3);">
@@ -109,7 +105,7 @@
                             <small class="text-muted">{{ current_user.email }}</small>
                         </li>
                         {% if is_admin %}
-                            <li><a class="dropdown-item" href="{{ url_for('inbox') }}"><i class="fa-solid fa-inbox me-1"></i>Inbox</a></li>
+                            <!-- Inbox now embedded in Admin Dashboard -->
                         {% else %}
                             <li><a class="dropdown-item" href="{{ url_for('order') }}">My Orders</a></li>
                         {% endif %}

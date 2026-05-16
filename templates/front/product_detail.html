@@ -62,13 +62,23 @@
                 <div class="mb-4">
                     <div class="d-flex align-items-center gap-3">
                         <div>
-                            <i class="fa-solid fa-star text-warning"></i>
-                            <i class="fa-solid fa-star text-warning"></i>
-                            <i class="fa-solid fa-star text-warning"></i>
-                            <i class="fa-solid fa-star text-warning"></i>
-                            <i class="fa-solid fa-star-half text-warning"></i>
+                            {% for i in range(1, 6) %}
+                                {% if avg_rating >= i %}
+                                    <i class="fa-solid fa-star text-warning"></i>
+                                {% elif avg_rating >= i - 0.5 %}
+                                    <i class="fa-solid fa-star-half-stroke text-warning"></i>
+                                {% else %}
+                                    <i class="fa-regular fa-star text-warning"></i>
+                                {% endif %}
+                            {% endfor %}
                         </div>
-                        <span class="text-muted">Rated for comfort and style</span>
+                        <a href="#reviews" class="text-muted text-decoration-none" style="font-size:.9rem;">
+                            {% if review_count > 0 %}
+                                {{ avg_rating }}/5 &nbsp;·&nbsp; {{ review_count }} review{{ 's' if review_count != 1 else '' }}
+                            {% else %}
+                                No reviews yet
+                            {% endif %}
+                        </a>
                     </div>
                 </div>
 
@@ -123,16 +133,16 @@
                 <div class="mb-4">
                     <h5 class="text-white mb-3">Quantity</h5>
                     <div class="input-group" style="max-width: 150px;">
-                        <button class="btn btn-outline-warning" type="button">-</button>
-                        <input type="number" class="form-control bg-dark text-white border-warning text-center" value="1" min="1">
-                        <button class="btn btn-outline-warning" type="button">+</button>
+                        <button class="btn btn-outline-warning" type="button" onclick="document.getElementById('qtyInput').stepDown()">-</button>
+                        <input type="number" id="qtyInput" class="form-control bg-dark text-white border-warning text-center" value="1" min="1">
+                        <button class="btn btn-outline-warning" type="button" onclick="document.getElementById('qtyInput').stepUp()">+</button>
                     </div>
                 </div>
 
                 <div class="d-flex gap-3 mb-5">
-                    <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-warning px-5 py-2 fw-bold" style="text-decoration: none;">
+                    <button type="button" onclick="window.addToCartAjax('/add-to-cart/{{ product.id }}', document.getElementById('qtyInput').value, this)" class="btn btn-warning px-5 py-2 fw-bold">
                         <i class="fa-solid fa-shopping-cart me-2"></i> Add To Cart
-                    </a>
+                    </button>
                     <button class="btn btn-outline-warning px-4 py-2">
                         <i class="fa-solid fa-heart"></i>
                     </button>
@@ -184,6 +194,145 @@
                     <div class="col-12 text-center text-white">No related products found.</div>
                 {% endif %}
             </div>
+        </div>
+
+        <!-- ==================== REVIEWS SECTION ==================== -->
+        <div id="reviews" class="mt-5 pt-3">
+            <h3 class="text-warning fw-bold mb-4"><i class="fa-solid fa-star me-2"></i>Customer Reviews</h3>
+
+            <div class="row g-4 mb-5">
+                <!-- Rating Summary Card -->
+                <div class="col-md-4">
+                    <div class="review-summary-card">
+                        <div class="text-center mb-3">
+                            <div class="review-avg-score">{{ avg_rating }}</div>
+                            <div class="review-stars-display mb-1">
+                                {% for i in range(1, 6) %}
+                                    {% if avg_rating >= i %}
+                                        <i class="fa-solid fa-star text-warning"></i>
+                                    {% elif avg_rating >= i - 0.5 %}
+                                        <i class="fa-solid fa-star-half-stroke text-warning"></i>
+                                    {% else %}
+                                        <i class="fa-regular fa-star text-warning"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <p class="text-muted mb-0">Based on {{ review_count }} review{{ 's' if review_count != 1 else '' }}</p>
+                        </div>
+                        <!-- Rating Breakdown Bars -->
+                        <div class="rating-breakdown">
+                            {% for star in [5, 4, 3, 2, 1] %}
+                            {% set count = rating_counts[star] %}
+                            {% set pct = ((count / review_count * 100) | int) if review_count > 0 else 0 %}
+                            <div class="rating-bar-row">
+                                <span class="rating-bar-label">{{ star }}<i class="fa-solid fa-star text-warning ms-1" style="font-size:.7rem;"></i></span>
+                                <div class="rating-bar-track">
+                                    <div class="rating-bar-fill" style="width: {{ pct }}%;"></div>
+                                </div>
+                                <span class="rating-bar-count">{{ count }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Write a Review -->
+                <div class="col-md-8">
+                    {% if current_user %}
+                    <div class="review-form-card">
+                        <h5 class="text-white mb-3 fw-bold">
+                            {% if user_review %}<i class="fa-solid fa-pen-to-square me-2 text-warning"></i>Edit Your Review{% else %}<i class="fa-solid fa-pen-nib me-2 text-warning"></i>Write a Review{% endif %}
+                        </h5>
+                        <form action="{{ url_for('submit_review', product_id=product.id) }}" method="POST" id="reviewForm">
+                            <!-- Star Rating Input -->
+                            <div class="mb-3">
+                                <label class="form-label text-white">Your Rating <span class="text-danger">*</span></label>
+                                <div class="star-rating-input" id="starRatingInput">
+                                    {% for i in [1,2,3,4,5] %}
+                                    <button type="button" class="star-btn" data-value="{{ i }}" id="star-btn-{{ i }}" aria-label="{{ i }} star{{ 's' if i > 1 else '' }}">
+                                        <i class="fa-regular fa-star"></i>
+                                    </button>
+                                    {% endfor %}
+                                    <input type="hidden" name="rating" id="ratingInput" value="{{ user_review.rating if user_review else '' }}">
+                                    <span class="rating-label ms-2 text-muted" id="ratingLabel">
+                                        {% if user_review %}{{ ['','Terrible','Poor','Average','Good','Excellent'][user_review.rating] }}{% else %}Click to rate{% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                            <!-- Comment -->
+                            <div class="mb-3">
+                                <label class="form-label text-white" for="reviewComment">Your Review <span class="text-danger">*</span></label>
+                                <textarea id="reviewComment" name="comment" rows="4" class="form-control review-textarea" placeholder="Share your experience with this product…" maxlength="1000">{{ user_review.comment if user_review else '' }}</textarea>
+                                <div class="form-text text-muted mt-1"><span id="charCount">{{ user_review.comment|length if user_review else 0 }}</span>/1000</div>
+                            </div>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button type="submit" class="btn btn-warning fw-bold px-4" id="submitReviewBtn">
+                                    <i class="fa-solid fa-paper-plane me-2"></i>{{ 'Update Review' if user_review else 'Submit Review' }}
+                                </button>
+                                {% if user_review %}
+                                <form action="{{ url_for('delete_review', review_id=user_review.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete your review?');">
+                                    <button type="submit" class="btn btn-outline-danger px-4">
+                                        <i class="fa-solid fa-trash me-2"></i>Delete
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </form>
+                    </div>
+                    {% else %}
+                    <div class="review-form-card d-flex flex-column align-items-center justify-content-center py-4">
+                        <i class="fa-solid fa-lock text-warning mb-3" style="font-size:2.5rem;"></i>
+                        <p class="text-white mb-3">Log in to leave a review for this product.</p>
+                        <a href="{{ url_for('login', next=request.path) }}" class="btn btn-warning fw-bold px-5">
+                            <i class="fa-solid fa-right-to-bracket me-2"></i>Log In to Review
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Review List -->
+            {% if reviews %}
+            <div class="review-list">
+                {% for review in reviews %}
+                <div class="review-card {% if current_user and review.user_id == current_user.id %}review-card--own{% endif %}">
+                    <div class="review-card-header">
+                        <div class="review-avatar">{{ review.username[0] | upper }}</div>
+                        <div class="review-meta">
+                            <span class="review-username">{{ review.username }}</span>
+                            {% if current_user and review.user_id == current_user.id %}
+                            <span class="badge bg-warning text-dark ms-2" style="font-size:.65rem;">You</span>
+                            {% endif %}
+                            <div class="review-stars">
+                                {% for i in range(1, 6) %}
+                                    <i class="fa-solid fa-star {% if i <= review.rating %}text-warning{% else %}text-secondary{% endif %}"></i>
+                                {% endfor %}
+                                <span class="review-rating-text">{{ ['','Terrible','Poor','Average','Good','Excellent'][review.rating] }}</span>
+                            </div>
+                        </div>
+                        <div class="review-date ms-auto text-muted">
+                            <small>{{ review.created_at.strftime('%b %d, %Y') if review.created_at and not review.created_at is string else (review.created_at[:10] if review.created_at else '') }}</small>
+                        </div>
+                    </div>
+                    <p class="review-comment">{{ review.comment }}</p>
+                    {% if current_user and (review.user_id == current_user.id or is_admin) %}
+                    <div class="review-actions">
+                        <form action="{{ url_for('delete_review', review_id=review.id) }}" method="POST" onsubmit="return confirm('Delete this review?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger review-delete-btn">
+                                <i class="fa-solid fa-trash-can me-1"></i>Delete
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="review-empty">
+                <i class="fa-regular fa-comment-dots"></i>
+                <p>No reviews yet. Be the first to share your thoughts!</p>
+            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -294,7 +443,74 @@
                     }
                 });
             }
+
+            // ===== STAR RATING INPUT =====
+            const starBtns = document.querySelectorAll('.star-btn');
+            const ratingInput = document.getElementById('ratingInput');
+            const ratingLabel = document.getElementById('ratingLabel');
+            const ratingLabels = ['', 'Terrible', 'Poor', 'Average', 'Good', 'Excellent'];
+
+            function setStars(value, isHover) {
+                starBtns.forEach(btn => {
+                    const v = parseInt(btn.dataset.value);
+                    const icon = btn.querySelector('i');
+                    if (v <= value) {
+                        icon.classList.remove('fa-regular');
+                        icon.classList.add('fa-solid');
+                        btn.classList.add('star-btn--active');
+                    } else {
+                        icon.classList.remove('fa-solid');
+                        icon.classList.add('fa-regular');
+                        btn.classList.remove('star-btn--active');
+                    }
+                });
+                if (!isHover && ratingLabel) {
+                    ratingLabel.textContent = value ? ratingLabels[value] : 'Click to rate';
+                    ratingLabel.classList.toggle('text-warning', !!value);
+                    ratingLabel.classList.toggle('text-muted', !value);
+                }
+            }
+
+            // Pre-fill existing rating
+            const existingRating = parseInt(ratingInput ? ratingInput.value : 0) || 0;
+            if (existingRating) setStars(existingRating, false);
+
+            starBtns.forEach(btn => {
+                btn.addEventListener('mouseenter', () => setStars(parseInt(btn.dataset.value), true));
+                btn.addEventListener('mouseleave', () => setStars(parseInt(ratingInput.value) || 0, true));
+                btn.addEventListener('click', () => {
+                    const val = parseInt(btn.dataset.value);
+                    ratingInput.value = val;
+                    setStars(val, false);
+                });
+            });
+
+            // ===== CHAR COUNTER =====
+            const textarea = document.getElementById('reviewComment');
+            const charCount = document.getElementById('charCount');
+            if (textarea && charCount) {
+                textarea.addEventListener('input', () => {
+                    charCount.textContent = textarea.value.length;
+                });
+            }
+
+            // ===== SUBMIT GUARD =====
+            const reviewForm = document.getElementById('reviewForm');
+            if (reviewForm) {
+                reviewForm.addEventListener('submit', function(e) {
+                    if (!ratingInput.value) {
+                        e.preventDefault();
+                        ratingLabel.textContent = '← Please select a rating!';
+                        ratingLabel.classList.add('text-danger');
+                        ratingLabel.classList.remove('text-muted', 'text-warning');
+                    }
+                });
+            }
         });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Use global window.addToCartAjax from theme.js
     </script>
 </body>
 </html>

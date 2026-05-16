@@ -101,6 +101,27 @@
         .dash-side { border-right:none; border-bottom:1px solid var(--border-color); }
         .dash-main { padding:20px 16px; }
     }
+
+    /* Inbox badge */
+    .side-badge {
+        margin-left: auto;
+        background: #ef4444;
+        color: #fff;
+        font-size: .62rem;
+        font-weight: 800;
+        min-width: 20px;
+        height: 20px;
+        border-radius: 99px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 5px;
+        animation: badgePulse 2s ease-in-out infinite;
+    }
+    @keyframes badgePulse {
+        0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.5); }
+        50%      { box-shadow: 0 0 0 5px rgba(239,68,68,0); }
+    }
 </style>
 </head>
 <body>
@@ -112,9 +133,15 @@
     <!-- SIDEBAR -->
     <aside class="dash-side">
         <p class="side-label">Overview</p>
+        <a href="{{ url_for('inbox') }}" class="side-link" style="position:relative;">
+            <i class="fa-solid fa-inbox"></i> Order Inbox
+            {% if inbox_count > 0 %}
+            <span class="side-badge">{{ inbox_count }}</span>
+            {% endif %}
+        </a>
         <a href="{{ url_for('admin') }}" class="side-link active"><i class="fa-solid fa-gauge"></i> Dashboard</a>
         <a href="{{ url_for('admin_categories') }}" class="side-link"><i class="fa-solid fa-tags"></i> Categories</a>
-        <a href="{{ url_for('inbox') }}" class="side-link"><i class="fa-solid fa-inbox"></i> Order Inbox</a>
+        <a href="{{ url_for('admin_reviews') }}" class="side-link"><i class="fa-solid fa-star"></i> Reviews</a>
         <p class="side-label">Account</p>
         <a href="{{ url_for('profile') }}" class="side-link"><i class="fa-solid fa-user"></i> My Profile</a>
         <a href="{{ url_for('settings') }}" class="side-link"><i class="fa-solid fa-gear"></i> Settings</a>
@@ -170,7 +197,7 @@
                 <div class="stat-card">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            {% set cats = [] %}{% for p in products %}{% if p.category not in cats %}{% set _ = cats.append(p.category) %}{% endif %}{% endfor %}
+                            {% set cats = [] %}{% for p in products %}{% for c in p.category %}{% if c and c not in cats %}{% set _ = cats.append(c) %}{% endif %}{% endfor %}{% endfor %}
                             <div class="stat-num">{{ cats|length }}</div><div class="stat-label">Categories</div>
                         </div>
                         <i class="fa-solid fa-tags stat-icon"></i>
@@ -179,7 +206,7 @@
             </div>
         </div>
 
-        <!-- Product Table -->
+        <!-- ===== PRODUCT CATALOG ===== -->
         <div class="tbl-card">
             <div class="card-header">
                 <div style="font-size:.95rem;font-weight:700;color:var(--gold);display:flex;align-items:center;gap:8px;">
@@ -221,7 +248,14 @@
                                     </div>
                                 </div>
                             </td>
-                            <td><span class="badge-cat">{{ p.category }}</span></td>
+                            <td>
+                                {% set cats = p.category | select | list %}
+                                {% if cats %}
+                                    {% for c in cats %}<span class="badge-cat me-1">{{ c }}</span>{% endfor %}
+                                {% else %}
+                                    <span class="text-muted" style="font-size:.75rem;">—</span>
+                                {% endif %}
+                            </td>
                             <td style="color:#ffc107;font-weight:700;">${{ '%.2f'|format(p.price) }}</td>
                             <td>
                                 <span class="{{ 'stock-low' if p.stock <= 5 else 'stock-ok' }}">

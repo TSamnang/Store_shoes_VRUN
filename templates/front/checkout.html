@@ -22,23 +22,52 @@
     <div class="container my-5">
         <h1 class="text-warning fw-bold mb-4">Checkout</h1>
 
-        <!-- Progress Steps -->
-        <div class="row mb-5">
-            <div class="col-12">
-                <div class="d-flex justify-content-between mb-4">
-                    <div class="checkout-step active">
-                        <div class="step-circle"><i class="fa-solid fa-map-pin"></i></div>
-                        <p class="small text-warning mt-2">Shipping</p>
-                    </div>
-                    <div class="checkout-step">
-                        <div class="step-circle"><i class="fa-solid fa-credit-card"></i></div>
-                        <p class="small text-muted mt-2">Payment</p>
-                    </div>
-                    <div class="checkout-step">
-                        <div class="step-circle"><i class="fa-solid fa-check"></i></div>
-                        <p class="small text-muted mt-2">Confirmation</p>
-                    </div>
+        <!-- ===== Progress Steps ===== -->
+        <div class="mb-5 d-print-none">
+            <div class="d-flex align-items-center justify-content-center flex-nowrap mx-auto" style="max-width: 650px;">
+                
+                <!-- Step 1: Ordering -->
+                <div class="checkout-step active text-center">
+                    <div class="step-circle"><i class="fa-solid fa-cart-shopping"></i></div>
+                    <p class="step-text text-warning">Ordering</p>
                 </div>
+                
+                <!-- Connector 1 (Pulsing / connecting to Payment) -->
+                <div class="step-connector active-connector"></div>
+                
+                <!-- Step 2: Payment -->
+                <div class="checkout-step active pulsing text-center">
+                    <div class="step-circle"><i class="fa-solid fa-credit-card"></i></div>
+                    <p class="step-text text-warning">Payment</p>
+                </div>
+                
+                <!-- Connector 2 -->
+                <div class="step-connector"></div>
+                
+                <!-- Step 3: Processing -->
+                <div class="checkout-step text-center">
+                    <div class="step-circle"><i class="fa-solid fa-gears"></i></div>
+                    <p class="step-text text-muted">Processing</p>
+                </div>
+                
+                <!-- Connector 3 -->
+                <div class="step-connector"></div>
+                
+                <!-- Step 4: Shipped -->
+                <div class="checkout-step text-center">
+                    <div class="step-circle"><i class="fa-solid fa-truck-fast"></i></div>
+                    <p class="step-text text-muted">Shipped</p>
+                </div>
+                
+                <!-- Connector 4 -->
+                <div class="step-connector"></div>
+                
+                <!-- Step 5: Delivered -->
+                <div class="checkout-step text-center">
+                    <div class="step-circle"><i class="fa-solid fa-house-circle-check"></i></div>
+                    <p class="step-text text-muted">Delivered</p>
+                </div>
+                
             </div>
         </div>
 

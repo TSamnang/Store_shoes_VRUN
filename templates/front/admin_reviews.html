@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Management – VRUN</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <script>if(localStorage.getItem('vrun-theme')==='light'){document.documentElement.setAttribute('data-theme','light')}else{document.documentElement.removeAttribute('data-theme')}</script>
+    <style>
+        :root { --gold:#ffc107; --gold-dim:rgba(255,193,7,.12); --gold-glow:rgba(255,193,7,.25); }
+
+        .dash-wrap { display:grid; grid-template-columns:220px 1fr; min-height:calc(100vh - 60px); }
+        .dash-side  { background:var(--card-bg); border-right:1px solid var(--border-color); padding:24px 12px; }
+        .dash-main  { padding:32px 28px; background:var(--body-bg); }
+
+        .side-label { font-size:.68rem; font-weight:700; letter-spacing:.12em; color:var(--muted-text); text-transform:uppercase; padding:0 12px; margin:18px 0 6px; }
+        .side-link  { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:10px; color:var(--body-text); font-weight:500; text-decoration:none; transition:.2s; font-size:.88rem; }
+        .side-link:hover, .side-link.active { background:var(--gold-dim); color:var(--gold); }
+        .side-link i { width:18px; text-align:center; }
+
+        .page-title { font-size:1.6rem; font-weight:800; color:var(--gold); margin:0; }
+
+        .stat-card { border-radius:16px; padding:20px; border:1px solid var(--border-color); background:var(--card-bg); transition:.25s; }
+        .stat-card:hover { border-color:var(--gold); transform:translateY(-2px); box-shadow:0 8px 24px var(--gold-glow); }
+        .stat-num  { font-size:2rem; font-weight:800; color:var(--gold); line-height:1; }
+        .stat-label { font-size:.75rem; color:var(--muted-text); margin-top:4px; text-transform:uppercase; letter-spacing:.06em; }
+
+        .search-wrap { position:relative; }
+        .search-wrap input { background:var(--input-bg); border:1px solid var(--border-color); border-radius:10px; padding:8px 14px 8px 36px; color:var(--body-text); font-size:.85rem; width:220px; transition:.2s; }
+        .search-wrap input:focus { outline:none; border-color:var(--gold); width:260px; }
+        .search-wrap i { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--muted-text); font-size:.8rem; }
+
+        .tbl-card { background:var(--card-bg); border:1px solid var(--border-color); border-radius:18px; overflow:hidden; }
+        .tbl-card .card-header { background:transparent; border-bottom:1px solid var(--border-color); padding:18px 22px; display:flex; align-items:center; justify-content:space-between; }
+
+        .btn-action { width:32px; height:32px; border-radius:8px; border:none; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:.2s; font-size:.8rem; }
+        .btn-del  { background:rgba(220,53,69,.12); color:#f87171; }
+        .btn-del:hover { background:#dc3545; color:#fff; }
+        .btn-edit { background:rgba(255,193,7,.15); color:#ffc107; }
+        .btn-edit:hover { background:#ffc107; color:#000; }
+        .empty-state { text-align:center; padding:60px 20px; color:var(--muted-text); }
+        .empty-state i { font-size:3rem; color:rgba(255,193,7,.2); display:block; margin-bottom:16px; }
+
+        .side-badge {
+            margin-left: auto;
+            background: #ef4444;
+            color: #fff;
+            font-size: .62rem;
+            font-weight: 800;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 99px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+            animation: badgePulse 2s ease-in-out infinite;
+        }
+        @keyframes badgePulse {
+            0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.5); }
+            50%      { box-shadow: 0 0 0 5px rgba(239,68,68,0); }
+        }
+
+        @media (max-width:992px) {
+            .dash-wrap { grid-template-columns:1fr; }
+            .dash-side { border-right:none; border-bottom:1px solid var(--border-color); }
+            .dash-main { padding:20px 16px; }
+        }
+    </style>
+</head>
+<body>
+{% include 'front/navbar.html' %}
+{% include 'front/flash_messages.html' %}
+
+<div class="dash-wrap">
+
+    <!-- SIDEBAR -->
+    <aside class="dash-side">
+        <p class="side-label">Overview</p>
+        <a href="{{ url_for('inbox') }}" class="side-link">
+            <i class="fa-solid fa-inbox"></i> Order Inbox
+            {% if inbox_count > 0 %}
+            <span class="side-badge">{{ inbox_count }}</span>
+            {% endif %}
+        </a>
+        <a href="{{ url_for('admin') }}" class="side-link"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+        <a href="{{ url_for('admin_categories') }}" class="side-link"><i class="fa-solid fa-tags"></i> Categories</a>
+        <a href="{{ url_for('admin_reviews') }}" class="side-link active"><i class="fa-solid fa-star"></i> Reviews</a>
+        <p class="side-label">Account</p>
+        <a href="{{ url_for('profile') }}" class="side-link"><i class="fa-solid fa-user"></i> My Profile</a>
+        <a href="{{ url_for('settings') }}" class="side-link"><i class="fa-solid fa-gear"></i> Settings</a>
+        <a href="{{ url_for('logout') }}" class="side-link text-danger"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="dash-main">
+        <!-- Header -->
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+            <div>
+                <h1 class="page-title"><i class="fa-solid fa-star me-2"></i>Review Management</h1>
+                <p class="text-muted small mb-0">{{ reviews|length }} total review{{ 's' if reviews|length != 1 else '' }} across all products</p>
+            </div>
+        </div>
+
+        <!-- Stats Row -->
+        {% set total = reviews|length %}
+        {% set avg_all = (reviews | map(attribute='rating') | sum / total) if total > 0 else 0 %}
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-num">{{ total }}</div>
+                    <div class="stat-label">Total Reviews</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-num">{{ "%.1f"|format(avg_all) }}</div>
+                    <div style="font-size:.85rem;">
+                        {% for i in range(1,6) %}<i class="fa-solid fa-star {% if avg_all >= i %}text-warning{% else %}text-secondary{% endif %}" style="font-size:.7rem;"></i>{% endfor %}
+                    </div>
+                    <div class="stat-label">Avg Rating</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-num text-success">{{ reviews | selectattr('rating', 'ge', 4) | list | length }}</div>
+                    <div class="stat-label">Positive (4–5 ★)</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-num text-danger">{{ reviews | selectattr('rating', 'le', 2) | list | length }}</div>
+                    <div class="stat-label">Negative (1–2 ★)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter / Search Bar -->
+        <div class="tbl-card mb-4">
+            <div class="card-header flex-wrap gap-3">
+                <div style="font-size:.95rem;font-weight:700;color:var(--gold);display:flex;align-items:center;gap:8px;">
+                    <i class="fa-solid fa-filter"></i> Filter by Rating
+                </div>
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <button class="btn btn-sm btn-warning filter-btn" data-filter="all">All</button>
+                    {% for star in [5,4,3,2,1] %}
+                    <button class="btn btn-sm btn-outline-warning filter-btn" data-filter="{{ star }}">
+                        {{ star }} <i class="fa-solid fa-star text-warning" style="font-size:.65rem;"></i>
+                    </button>
+                    {% endfor %}
+                    <div class="search-wrap ms-2">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="searchInput" placeholder="Search product or user…">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Review List -->
+        {% if reviews %}
+        <div class="review-list" id="reviewList">
+            {% for review in reviews %}
+            <div class="review-card admin-review-row" data-rating="{{ review.rating }}"
+                 data-search="{{ (review.product_name ~ ' ' ~ review.username ~ ' ' ~ review.comment) | lower }}">
+                <div class="review-card-header flex-wrap gap-2">
+                    <div class="review-avatar">{{ review.username[0] | upper }}</div>
+                    <div class="review-meta">
+                        <span class="review-username">{{ review.username }}</span>
+                        <div class="review-stars mt-1">
+                            {% for i in range(1, 6) %}
+                                <i class="fa-solid fa-star {% if i <= review.rating %}text-warning{% else %}text-secondary{% endif %}"></i>
+                            {% endfor %}
+                            <span class="review-rating-text ms-1">{{ ['','Terrible','Poor','Average','Good','Excellent'][review.rating] }}</span>
+                        </div>
+                    </div>
+                    <div class="ms-auto d-flex flex-column align-items-end gap-1">
+                        <span class="badge" style="background:rgba(255,193,7,.15);color:#ffc107;border-radius:8px;">
+                            <i class="fa-solid fa-shoe-prints me-1"></i>{{ review.product_name }}
+                        </span>
+                        <small class="text-muted">
+                            {{ review.created_at.strftime('%b %d, %Y') if review.created_at and not review.created_at is string else (review.created_at[:10] if review.created_at else '') }}
+                        </small>
+                    </div>
+                </div>
+                <p class="review-comment mt-2 mb-3">{{ review.comment }}</p>
+                <div class="review-actions d-flex gap-2 justify-content-between flex-wrap">
+                    <a href="{{ url_for('product_detail', product_id=review.product_id) }}#reviews"
+                       class="btn btn-sm btn-outline-warning" target="_blank">
+                        <i class="fa-solid fa-arrow-up-right-from-square me-1"></i>View Product
+                    </a>
+                    <form action="{{ url_for('delete_review', review_id=review.id) }}" method="POST"
+                          onsubmit="return confirm('Permanently delete this review by {{ review.username }}?');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger review-delete-btn">
+                            <i class="fa-solid fa-trash-can me-1"></i>Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div id="noResults" class="review-empty d-none mt-4">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <p>No reviews match your filter.</p>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fa-regular fa-comment-dots"></i>
+            <p>No reviews have been submitted yet.</p>
+        </div>
+        {% endif %}
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const rows = document.querySelectorAll('.admin-review-row');
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const searchInput = document.getElementById('searchInput');
+    const noResults = document.getElementById('noResults');
+    let currentFilter = 'all';
+
+    function applyFilters() {
+        const q = searchInput ? searchInput.value.toLowerCase() : '';
+        let visible = 0;
+        rows.forEach(row => {
+            const ratingMatch = currentFilter === 'all' || row.dataset.rating === currentFilter;
+            const searchMatch = !q || row.dataset.search.includes(q);
+            if (ratingMatch && searchMatch) { row.style.display = ''; visible++; }
+            else { row.style.display = 'none'; }
+        });
+        if (noResults) noResults.classList.toggle('d-none', visible > 0);
+    }
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            filterBtns.forEach(b => { b.classList.remove('btn-warning'); b.classList.add('btn-outline-warning'); });
+            this.classList.remove('btn-outline-warning');
+            this.classList.add('btn-warning');
+            currentFilter = this.dataset.filter;
+            applyFilters();
+        });
+    });
+    if (searchInput) searchInput.addEventListener('input', applyFilters);
+});
+</script>
+</body>
+</html>

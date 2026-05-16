@@ -20,15 +20,7 @@
         .item-row:hover {
             background: rgba(255,193,7,0.05);
         }
-        .step-connector {
-            flex: 1;
-            height: 2px;
-            background: #ffc107;
-            margin: 0 8px;
-            align-self: center;
-            margin-bottom: 22px;
-        }
-        .status-badge-Received    { background: #0d6efd; }
+        .status-badge-Ordering    { background: #0d6efd; }
         .status-badge-Processing  { background: #fd7e14; }
         .status-badge-Shipped     { background: #20c997; }
         .status-badge-Delivered   { background: #198754; }
@@ -64,21 +56,53 @@
 
         <!-- ===== Progress Steps ===== -->
         <div class="mb-5 d-print-none">
-            <div class="d-flex align-items-center justify-content-center">
+            <div class="d-flex align-items-center justify-content-center flex-nowrap mx-auto" style="max-width: 650px;">
+                
+                <!-- Step 1: Ordering -->
                 <div class="checkout-step active text-center">
-                    <div class="step-circle"><i class="fa-solid fa-map-pin"></i></div>
-                    <p class="small text-warning mt-2 mb-0">Shipping</p>
+                    <div class="step-circle"><i class="fa-solid fa-cart-shopping"></i></div>
+                    <p class="step-text text-warning">Ordering</p>
                 </div>
-                <div class="step-connector"></div>
+                
+                <!-- Connector 1 -->
+                <div class="step-connector active-connector"></div>
+                
+                <!-- Step 2: Payment -->
                 <div class="checkout-step active text-center">
                     <div class="step-circle"><i class="fa-solid fa-credit-card"></i></div>
-                    <p class="small text-warning mt-2 mb-0">Payment</p>
+                    <p class="step-text text-warning">Payment</p>
                 </div>
-                <div class="step-connector"></div>
-                <div class="checkout-step active text-center">
-                    <div class="step-circle"><i class="fa-solid fa-check"></i></div>
-                    <p class="small text-warning mt-2 mb-0">Confirmed</p>
+                
+                <!-- Connector 2 (Active if Processing or beyond) -->
+                {% set past_ordering = order.status in ['Processing', 'Shipped', 'Delivered'] %}
+                <div class="step-connector {{ 'active-connector' if past_ordering else '' }}"></div>
+                
+                <!-- Step 3: Processing -->
+                <div class="checkout-step {{ 'active' if past_ordering else '' }} text-center">
+                    <div class="step-circle"><i class="fa-solid fa-gears"></i></div>
+                    <p class="step-text {{ 'text-warning' if past_ordering else 'text-muted' }}">Processing</p>
                 </div>
+                
+                <!-- Connector 3 (Active if Shipped or beyond) -->
+                {% set past_processing = order.status in ['Shipped', 'Delivered'] %}
+                <div class="step-connector {{ 'active-connector' if past_processing else '' }}"></div>
+                
+                <!-- Step 4: Shipped -->
+                <div class="checkout-step {{ 'active' if past_processing else '' }} text-center">
+                    <div class="step-circle"><i class="fa-solid fa-truck-fast"></i></div>
+                    <p class="step-text {{ 'text-warning' if past_processing else 'text-muted' }}">Shipped</p>
+                </div>
+                
+                <!-- Connector 4 (Active if Delivered) -->
+                {% set is_delivered = order.status == 'Delivered' %}
+                <div class="step-connector {{ 'active-connector' if is_delivered else '' }}"></div>
+                
+                <!-- Step 5: Delivered -->
+                <div class="checkout-step {{ 'active' if is_delivered else '' }} text-center">
+                    <div class="step-circle"><i class="fa-solid fa-box-open"></i></div>
+                    <p class="step-text {{ 'text-warning' if is_delivered else 'text-muted' }}">Delivered</p>
+                </div>
+
             </div>
         </div>
 
@@ -268,7 +292,7 @@
                             </p>
                             <p class="text-white small mb-0">
                                 Your order is currently <strong class="text-warning">{{ order.status }}</strong>.
-                                {% if order.status == 'Received' %}
+                                {% if order.status == 'Ordering' %}
                                     We are reviewing your order.
                                 {% elif order.status == 'Processing' %}
                                     Your order is being packed.
@@ -346,6 +370,53 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    
+    {% if order.status == 'Processing' %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                fetch("{{ url_for('order_demo_ship', order_id=order.id) }}", { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        // Activate the connector between Processing and Shipped
+                        const connectors = document.querySelectorAll('.step-connector');
+                        if (connectors.length > 2) {
+                            connectors[2].classList.add('active-connector');
+                        }
+                        
+                        // Activate the Shipped step
+                        const steps = document.querySelectorAll('.checkout-step');
+                        if (steps.length > 3) {
+                            steps[3].classList.add('active');
+                            const text = steps[3].querySelector('.step-text');
+                            if (text) text.classList.replace('text-muted', 'text-warning');
+                        }
+                        
+                        // Show sweet alert toast
+                        const bgColor = document.documentElement.getAttribute('data-theme') === 'light' ? '#fff' : '#1f2937';
+                        const textColor = document.documentElement.getAttribute('data-theme') === 'light' ? '#000' : '#fff';
+                        if (window.Swal) {
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'info',
+                                title: 'Your order has been shipped!',
+                                showConfirmButton: false,
+                                timer: 4000,
+                                timerProgressBar: true,
+                                background: bgColor,
+                                color: textColor,
+                                iconColor: '#20c997'
+                            });
+                        }
+                    }
+                });
+            }, 3000);
+        });
+    </script>
+    {% endif %}
 </body>
 </html>

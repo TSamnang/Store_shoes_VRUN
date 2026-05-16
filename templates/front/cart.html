@@ -53,11 +53,11 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="input-group" style="max-width: 100px;">
-                                        <a href="{{ url_for('add_to_cart', product_id=item.id) }}" class="btn btn-outline-warning btn-sm">+</a>
-                                        <input type="number" class="form-control bg-dark text-white border-warning text-center" value="{{ item.quantity }}" min="1" readonly>
-                                        <a href="{{ url_for('cart_remove', product_id=item.id) }}" class="btn btn-outline-danger btn-sm">-</a>
-                                    </div>
+                                    <form action="{{ url_for('cart_update', product_id=item.id) }}" method="post" class="d-flex align-items-center justify-content-center" style="max-width: 120px; margin: 0 auto;">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm" onclick="this.form.quantity.value = Math.max(1, parseInt(this.form.quantity.value) - 1)">-</button>
+                                        <input type="number" name="quantity" class="form-control bg-dark text-white border-warning text-center px-1 mx-1" value="{{ item.quantity }}" min="1" onchange="this.form.submit()">
+                                        <button type="submit" class="btn btn-outline-warning btn-sm" onclick="this.form.quantity.value = parseInt(this.form.quantity.value) + 1">+</button>
+                                    </form>
                                 </td>
                                 <td class="text-warning text-end fw-bold">${{ '%.2f'|format(item.total) }}</td>
                                 <td class="text-center">
@@ -102,11 +102,11 @@
                                         {% endif %}
                                     </div>
                                     <div class="d-flex justify-content-between align-items-center mt-3">
-                                        <div class="input-group" style="max-width: 110px;">
-                                            <a href="{{ url_for('add_to_cart', product_id=item.id) }}" class="btn btn-outline-warning btn-sm">+</a>
-                                            <input type="number" class="form-control bg-dark text-white border-warning text-center" value="{{ item.quantity }}" min="1" readonly style="font-size: 0.9rem;">
-                                            <a href="{{ url_for('cart_remove', product_id=item.id) }}" class="btn btn-outline-danger btn-sm">-</a>
-                                        </div>
+                                        <form action="{{ url_for('cart_update', product_id=item.id) }}" method="post" class="d-flex align-items-center" style="max-width: 120px;">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm px-2" onclick="this.form.quantity.value = Math.max(1, parseInt(this.form.quantity.value) - 1)">-</button>
+                                            <input type="number" name="quantity" class="form-control bg-dark text-white border-warning text-center px-1 mx-1" value="{{ item.quantity }}" min="1" onchange="this.form.submit()" style="font-size: 0.9rem;">
+                                            <button type="submit" class="btn btn-outline-warning btn-sm px-2" onclick="this.form.quantity.value = parseInt(this.form.quantity.value) + 1">+</button>
+                                        </form>
                                         <div class="d-flex align-items-center gap-3">
                                             <span class="text-warning fw-bold">${{ '%.2f'|format(item.total) }}</span>
                                             <a href="{{ url_for('cart_remove', product_id=item.id) }}" class="btn btn-sm btn-danger"><i class="fa-solid fa-trash"></i></a>

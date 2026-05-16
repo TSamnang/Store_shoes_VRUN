@@ -3,60 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inbox - We Run Shoes Admin</title>
+    <title>Order Inbox – VRUN Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    <script>if(localStorage.getItem('vrun-theme')==='light'){document.documentElement.setAttribute('data-theme','light');}else{document.documentElement.removeAttribute('data-theme');}</script>
+    <script>if(localStorage.getItem('vrun-theme')==='light'){document.documentElement.setAttribute('data-theme','light')}else{document.documentElement.removeAttribute('data-theme')}</script>
     <style>
-        .status-pill {
-            display: inline-block;
-            padding: 0.25em 0.75em;
-            border-radius: 50px;
-            font-size: 0.78rem;
-            font-weight: 600;
+        :root { --gold:#ffc107; --gold-dim:rgba(255,193,7,.12); --gold-glow:rgba(255,193,7,.25); }
+
+        .dash-wrap { display:grid; grid-template-columns:220px 1fr; min-height:calc(100vh - 60px); }
+        .dash-side  { background:var(--card-bg); border-right:1px solid var(--border-color); padding:24px 12px; }
+        .dash-main  { padding:32px 28px; background:var(--body-bg); }
+
+        .side-label { font-size:.68rem; font-weight:700; letter-spacing:.12em; color:var(--muted-text); text-transform:uppercase; padding:0 12px; margin:18px 0 6px; }
+        .side-link  { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:10px; color:var(--body-text); font-weight:500; text-decoration:none; transition:.2s; font-size:.88rem; }
+        .side-link:hover, .side-link.active { background:var(--gold-dim); color:var(--gold); }
+        .side-link i { width:18px; text-align:center; }
+
+        .page-title { font-size:1.6rem; font-weight:800; color:var(--gold); margin:0; }
+
+        .stat-card { border-radius:16px; padding:20px; border:1px solid var(--border-color); background:var(--card-bg); transition:.25s; text-align: center; }
+        .stat-card:hover { border-color:var(--gold); transform:translateY(-2px); box-shadow:0 8px 24px var(--gold-glow); }
+        .stat-num  { font-size:1.8rem; font-weight:800; color:var(--gold); line-height:1; }
+        .stat-label { font-size:.75rem; color:var(--muted-text); margin-top:8px; text-transform:uppercase; letter-spacing:.06em; }
+
+        .tbl-card { background:var(--card-bg); border:1px solid var(--border-color); border-radius:18px; overflow:hidden; }
+        .tbl-card .card-header { background:transparent; border-bottom:1px solid var(--border-color); padding:18px 22px; display:flex; align-items:center; justify-content:space-between; }
+
+        .btn-action { width:32px; height:32px; border-radius:8px; border:none; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:.2s; font-size:.8rem; }
+        .btn-del  { background:rgba(220,53,69,.12); color:#f87171; }
+        .btn-del:hover { background:#dc3545; color:#fff; }
+        .btn-edit { background:rgba(255,193,7,.15); color:#ffc107; }
+        .btn-edit:hover { background:#ffc107; color:#000; }
+        .empty-state { text-align:center; padding:60px 20px; color:var(--muted-text); }
+        .empty-state i { font-size:3rem; color:rgba(255,193,7,.2); display:block; margin-bottom:16px; }
+
+        .side-badge {
+            margin-left: auto;
+            background: #ef4444;
             color: #fff;
+            font-size: .62rem;
+            font-weight: 800;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 99px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+            animation: badgePulse 2s ease-in-out infinite;
         }
-        .s-Received   { background: #0d6efd; }
+        @keyframes badgePulse {
+            0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.5); }
+            50%      { box-shadow: 0 0 0 5px rgba(239,68,68,0); }
+        }
+
+        .status-pill { display: inline-block; padding: 0.25em 0.75em; border-radius: 50px; font-size: 0.78rem; font-weight: 600; color: #fff; }
+        .s-Ordering   { background: #0d6efd; }
         .s-Processing { background: #fd7e14; }
         .s-Shipped    { background: #20c997; }
         .s-Delivered  { background: #198754; }
         .s-Cancelled  { background: #dc3545; }
-        .inbox-table tbody tr { transition: background 0.15s; }
-        .inbox-table tbody tr:hover { background: rgba(255,193,7,0.06); }
-        .stat-card {
-            border-radius: 14px;
-            padding: 1.2rem 1.4rem;
-            border: 1px solid rgba(255,193,7,0.2);
+
+        @media (max-width:992px) {
+            .dash-wrap { grid-template-columns:1fr; }
+            .dash-side { border-right:none; border-bottom:1px solid var(--border-color); }
+            .dash-main { padding:20px 16px; }
         }
     </style>
 </head>
 <body>
-    {% include 'front/navbar.html' %}
-    {% include 'front/flash_messages.html' %}
+{% include 'front/navbar.html' %}
+{% include 'front/flash_messages.html' %}
 
-    <div class="container my-5">
+<div class="dash-wrap">
+    <!-- SIDEBAR -->
+    <aside class="dash-side">
+        <p class="side-label">Overview</p>
+        <a href="{{ url_for('inbox') }}" class="side-link active">
+            <i class="fa-solid fa-inbox"></i> Order Inbox
+        </a>
+        <a href="{{ url_for('admin') }}" class="side-link"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+        <a href="{{ url_for('admin_categories') }}" class="side-link"><i class="fa-solid fa-tags"></i> Categories</a>
+        <a href="{{ url_for('admin_reviews') }}" class="side-link"><i class="fa-solid fa-star"></i> Reviews</a>
+        <p class="side-label">Account</p>
+        <a href="{{ url_for('profile') }}" class="side-link"><i class="fa-solid fa-user"></i> My Profile</a>
+        <a href="{{ url_for('settings') }}" class="side-link"><i class="fa-solid fa-gear"></i> Settings</a>
+        <a href="{{ url_for('logout') }}" class="side-link text-danger"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+    </aside>
 
-        <!-- Header -->
-        <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+    <!-- MAIN -->
+    <main class="dash-main">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
             <div>
-                <h1 class="text-warning fw-bold mb-1">
-                    <i class="fa-solid fa-inbox me-2"></i>Order Inbox
-                </h1>
-                <p class="text-muted mb-0">All customer orders — view, manage, and cancel from here.</p>
-            </div>
-            <div class="d-flex gap-2">
-                <a href="{{ url_for('admin') }}" class="btn btn-outline-warning">
-                    <i class="fa-solid fa-box me-2"></i>Products
-                </a>
+                <h1 class="page-title"><i class="fa-solid fa-inbox me-2"></i>Order Inbox</h1>
+                <p class="text-muted small mb-0">All customer orders — view, manage, and process from here.</p>
             </div>
         </div>
 
-        <!-- Stats Row -->
         {% set ns = namespace(total=0, received=0, processing=0, shipped=0, delivered=0, cancelled=0) %}
         {% for o in all_orders %}
             {% set ns.total = ns.total + 1 %}
-            {% if o.status == 'Received' %}{% set ns.received = ns.received + 1 %}
+            {% if o.status == 'Ordering' %}{% set ns.received = ns.received + 1 %}
             {% elif o.status == 'Processing' %}{% set ns.processing = ns.processing + 1 %}
             {% elif o.status == 'Shipped' %}{% set ns.shipped = ns.shipped + 1 %}
             {% elif o.status == 'Delivered' %}{% set ns.delivered = ns.delivered + 1 %}
@@ -66,130 +114,132 @@
 
         <div class="row g-3 mb-4">
             <div class="col-6 col-md-2">
-                <div class="stat-card bg-darker text-center">
-                    <p class="text-muted small mb-1">Total</p>
-                    <h4 class="text-white fw-bold mb-0">{{ ns.total }}</h4>
+                <div class="stat-card">
+                    <div class="stat-num">{{ ns.total }}</div>
+                    <div class="stat-label">Total</div>
                 </div>
             </div>
             <div class="col-6 col-md-2">
-                <div class="stat-card bg-darker text-center">
-                    <p class="text-muted small mb-1">Received</p>
-                    <h4 class="fw-bold mb-0" style="color:#0d6efd;">{{ ns.received }}</h4>
+                <div class="stat-card" style="border-color:#0d6efd;">
+                    <div class="stat-num" style="color:#0d6efd;">{{ ns.received }}</div>
+                    <div class="stat-label">Ordering</div>
                 </div>
             </div>
             <div class="col-6 col-md-2">
-                <div class="stat-card bg-darker text-center">
-                    <p class="text-muted small mb-1">Processing</p>
-                    <h4 class="fw-bold mb-0" style="color:#fd7e14;">{{ ns.processing }}</h4>
+                <div class="stat-card" style="border-color:#fd7e14;">
+                    <div class="stat-num" style="color:#fd7e14;">{{ ns.processing }}</div>
+                    <div class="stat-label">Processing</div>
                 </div>
             </div>
             <div class="col-6 col-md-2">
-                <div class="stat-card bg-darker text-center">
-                    <p class="text-muted small mb-1">Shipped</p>
-                    <h4 class="fw-bold mb-0" style="color:#20c997;">{{ ns.shipped }}</h4>
+                <div class="stat-card" style="border-color:#20c997;">
+                    <div class="stat-num" style="color:#20c997;">{{ ns.shipped }}</div>
+                    <div class="stat-label">Shipped</div>
                 </div>
             </div>
             <div class="col-6 col-md-2">
-                <div class="stat-card bg-darker text-center">
-                    <p class="text-muted small mb-1">Delivered</p>
-                    <h4 class="fw-bold mb-0" style="color:#198754;">{{ ns.delivered }}</h4>
+                <div class="stat-card" style="border-color:#198754;">
+                    <div class="stat-num" style="color:#198754;">{{ ns.delivered }}</div>
+                    <div class="stat-label">Delivered</div>
                 </div>
             </div>
             <div class="col-6 col-md-2">
-                <div class="stat-card bg-darker text-center">
-                    <p class="text-muted small mb-1">Cancelled</p>
-                    <h4 class="fw-bold mb-0" style="color:#dc3545;">{{ ns.cancelled }}</h4>
+                <div class="stat-card" style="border-color:#dc3545;">
+                    <div class="stat-num" style="color:#dc3545;">{{ ns.cancelled }}</div>
+                    <div class="stat-label">Cancelled</div>
                 </div>
             </div>
         </div>
 
-        <!-- Orders Table -->
-        <div class="card bg-darker border-secondary">
-            <div class="card-header bg-dark border-secondary d-flex align-items-center justify-content-between">
-                <h5 class="text-warning mb-0"><i class="fa-solid fa-list-ul me-2"></i>All Orders</h5>
-                <span class="text-muted small">{{ ns.total }} order{{ 's' if ns.total != 1 else '' }} total</span>
+        <div class="tbl-card">
+            <div class="card-header">
+                <div style="font-size:.95rem;font-weight:700;color:var(--gold);display:flex;align-items:center;gap:8px;">
+                    <i class="fa-solid fa-list-ul"></i> All Orders
+                </div>
             </div>
-            <div class="card-body p-0">
-                {% if not all_orders %}
-                <div class="text-center py-5 text-muted">
-                    <i class="fa-solid fa-inbox" style="font-size:3rem;"></i>
-                    <p class="mt-3 mb-0">No orders yet.</p>
-                </div>
-                {% else %}
-                <div class="table-responsive">
-                    <table class="table text-white align-middle mb-0 inbox-table">
-                        <thead class="border-bottom border-secondary">
-                            <tr>
-                                <th class="ps-3 text-warning">#</th>
-                                <th class="text-warning">Customer</th>
-                                <th class="text-warning">Date</th>
-                                <th class="text-warning">Shipping Method</th>
-                                <th class="text-warning">Total</th>
-                                <th class="text-warning">Status</th>
-                                <th class="text-warning text-end pe-3">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for order in all_orders %}
-                            <tr>
-                                <td class="ps-3 text-muted fw-bold">#{{ order.id }}</td>
-                                <td>
-                                    <p class="mb-0 fw-semibold text-white">{{ order.username }}</p>
-                                    <p class="mb-0 text-muted" style="font-size:0.78rem;">{{ order.email }}</p>
-                                </td>
-                                <td class="text-muted small">
-                                    {{ order.created_at.strftime('%b %d, %Y') if order.created_at else 'N/A' }}
-                                </td>
-                                <td class="text-muted small">{{ order.shipping_method }}</td>
-                                <td class="text-warning fw-bold">${{ "%.2f"|format(order.total) }}</td>
-                                <td>
-                                    <span class="status-pill s-{{ order.status }}">{{ order.status }}</span>
-                                </td>
-                                <td class="text-end pe-3">
-                                    <div class="d-flex gap-2 justify-content-end align-items-center">
-                                        <a href="{{ url_for('order_receipt', order_id=order.id) }}"
-                                           class="btn btn-sm btn-outline-warning">
-                                            <i class="fa-solid fa-receipt me-1"></i>Receipt
-                                        </a>
-                                        {% if order.status != 'Cancelled' %}
-                                        <form action="{{ url_for('order_delete', order_id=order.id) }}" method="post"
-                                              onsubmit="return confirm('Cancel order #{{ order.id }} for {{ order.username }}?');">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                <i class="fa-solid fa-ban me-1"></i>Cancel
-                                            </button>
-                                        </form>
-                                        {% else %}
-                                        <span class="btn btn-sm btn-danger disabled" style="opacity:0.65;pointer-events:none;">
-                                            <i class="fa-solid fa-ban me-1"></i>Cancelled
-                                        </span>
-                                        {% endif %}
-                                        <form action="{{ url_for('order_hard_delete', order_id=order.id) }}" method="post"
-                                              onsubmit="return confirm('Permanently delete order #{{ order.id }}? This CANNOT be undone.');">
-                                            <button type="submit" class="btn btn-sm btn-danger" title="Delete permanently">
-                                                <i class="fa-solid fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% endif %}
+            <div class="table-responsive">
+                <table class="table mb-0 text-white">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Customer</th>
+                            <th>Date</th>
+                            <th>Shipping</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in all_orders %}
+                        <tr>
+                            <td class="text-muted small fw-bold">#{{ order.id[:8] }}…</td>
+                            <td>
+                                <div style="font-size:.87rem;font-weight:600;">{{ order.username }}</div>
+                                <div class="text-muted" style="font-size:.72rem;">{{ order.email }}</div>
+                            </td>
+                            <td class="text-muted small">{{ order.created_at.strftime('%b %d, %Y') if order.created_at else 'N/A' }}</td>
+                            <td class="text-muted small">{{ order.shipping_method }}</td>
+                            <td style="color:#ffc107;font-weight:700;">${{ '%.2f'|format(order.total) }}</td>
+                            <td><span class="status-pill s-{{ order.status }}">{{ order.status }}</span></td>
+                            <td class="text-end">
+                                <div class="d-flex gap-1 justify-content-end">
+                                    {% if order.status in ['Ordering', 'Processing', 'Shipped'] %}
+                                    {% set next_status = 'Processing' if order.status == 'Ordering' else ('Shipped' if order.status == 'Processing' else 'Delivered') %}
+                                    {% set btn_title = 'Confirm' if order.status == 'Ordering' else ('Ship' if order.status == 'Processing' else 'Deliver') %}
+                                    <form action="{{ url_for('order_advance_status', order_id=order.id) }}" method="post" onsubmit="confirmAction(event, this, '{{ btn_title }} Order?', 'Move order #{{ order.id[:8] }} to {{ next_status }}?', 'Yes, do it', '#198754');" style="display:inline;">
+                                        <button type="submit" class="btn-action" style="background:rgba(25,135,84,.15);color:#198754;" title="{{ btn_title }}"><i class="fa-solid fa-check"></i></button>
+                                    </form>
+                                    {% endif %}
+                                    <a href="{{ url_for('order_receipt', order_id=order.id) }}" class="btn-action btn-edit" title="Receipt"><i class="fa-solid fa-receipt"></i></a>
+                                    {% if order.status != 'Cancelled' %}
+                                    <form action="{{ url_for('order_delete', order_id=order.id) }}" method="post" onsubmit="confirmAction(event, this, 'Cancel order #{{ order.id[:8] }}?', 'Are you sure you want to cancel this order?', 'Yes, cancel it', '#fd7e14');" style="display:inline;">
+                                        <button type="submit" class="btn-action btn-del" title="Cancel"><i class="fa-solid fa-ban"></i></button>
+                                    </form>
+                                    {% endif %}
+                                    <form action="{{ url_for('order_hard_delete', order_id=order.id) }}" method="post" onsubmit="confirmAction(event, this, 'Permanently delete this order?', 'This action cannot be undone.', 'Yes, delete it!', '#dc3545');" style="display:inline;">
+                                        <button type="submit" class="btn-action btn-del" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-inbox"></i>No orders yet.</div></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
+    </main>
+</div>
 
-    </div>
-
-    <!-- Footer -->
-    <footer class="bg-darker mt-5 py-4">
-        <div class="container text-center">
-            <p class="text-muted small mb-0">&copy; 2026 We Run Shoes &mdash; Admin Panel</p>
-        </div>
-    </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+<script>
+function confirmAction(event, form, title, text, confirmButtonText, confirmColor) {
+    event.preventDefault();
+    const isDark = document.documentElement.hasAttribute('data-theme') ? false : true; // Inverted logic based on current theme.js setup if data-theme='light' is set
+    // Wait, the project defaults to dark mode unless data-theme='light' is set
+    const bgColor = document.documentElement.getAttribute('data-theme') === 'light' ? '#fff' : '#1f2937';
+    const textColor = document.documentElement.getAttribute('data-theme') === 'light' ? '#000' : '#fff';
+    
+    Swal.fire({
+        title: title,
+        text: text,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: confirmColor,
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: confirmButtonText,
+        background: bgColor,
+        color: textColor
+    }).then((result) => {
+        if (result.isConfirmed) {
+            form.submit();
+        }
+    });
+}
+</script>
 </body>
 </html>

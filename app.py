@@ -258,7 +258,7 @@ def get_order_items(order_id):
         item['price'] = Decimal(str(item['price']))
     return items
 
-def create_order(user_id, shipping_address, shipping_method, total, items, payment_method='COD', status='Received'):
+def create_order(user_id, shipping_address, shipping_method, total, items, payment_method='COD', status='Ordering'):
     """
     Creates a new order in the database.
     Order items and payment details are embedded directly inside the order document.
@@ -296,6 +296,18 @@ def get_reviews(product_id):
     reviews = list(db.reviews.find({'product_id': str(product_id)}).sort('created_at', -1))
     return [format_doc(r) for r in reviews]
 
+def get_product_avg_rating(product_id):
+    """Calculates the average star rating for a product."""
+    db = get_db()
+    pipeline = [
+        {'$match': {'product_id': str(product_id)}},
+        {'$group': {'_id': None, 'avg': {'$avg': '$rating'}, 'count': {'$sum': 1}}}
+    ]
+    result = list(db.reviews.aggregate(pipeline))
+    if result:
+        return round(result[0]['avg'], 1), result[0]['count']
+    return 0.0, 0
+
 def get_coupon(code):
     db = get_db()
     coupon = db.coupons.find_one({'code': code.upper(), 'active': True})
@@ -321,6 +333,7 @@ def init_db():
 
     db.users.create_index('email', unique=True)
     db.coupons.create_index('code', unique=True)
+    db.reviews.create_index([('product_id', 1), ('user_id', 1)])
 
     if db.users.count_documents({}) == 0:
         create_user('admin', 'admin@werun.com', '@admin', role='admin')
@@ -384,11 +397,19 @@ def load_current_user():
         g.user = get_user_by_id(session['user_id'])
 
 def common_context(active_page=None):
+    inbox_count = 0
+    if g.user and g.user.get('role') == 'admin':
+        try:
+            db = get_db()
+            inbox_count = db.orders.count_documents({'status': 'Ordering', 'is_read': {'$ne': True}})
+        except Exception:
+            inbox_count = 0
     return {
         'current_user': g.user,
         'is_admin': bool(g.user and g.user.get('role') == 'admin'),
         'cart_count': sum(session.get('cart', {}).values()),
         'active_page': active_page,
+        'inbox_count': inbox_count,
     }
 
 # =============================================================================
@@ -469,12 +490,29 @@ def product_detail(product_id):
     ]
     
     reviews = get_reviews(product_id)
+    avg_rating, review_count = get_product_avg_rating(product_id)
+
+    # Check if current user already submitted a review
+    user_review = None
+    if g.user:
+        db = get_db()
+        ur = db.reviews.find_one({'product_id': str(product_id), 'user_id': str(g.user['id'])})
+        user_review = format_doc(ur) if ur else None
+
+    # Rating breakdown counts
+    rating_counts = {i: 0 for i in range(1, 6)}
+    for r in reviews:
+        rating_counts[r.get('rating', 0)] = rating_counts.get(r.get('rating', 0), 0) + 1
     
     return render_template(
         'front/product_detail.html',
         product=product,
         related_products=related_products,
         reviews=reviews,
+        avg_rating=avg_rating,
+        review_count=review_count,
+        user_review=user_review,
+        rating_counts=rating_counts,
         **common_context()
     )
 
@@ -545,17 +583,34 @@ def apply_coupon():
         'discount_amount': discount_amt
     })
 
-@app.route('/add-to-cart/<product_id>')
+@app.route('/add-to-cart/<product_id>', methods=['GET', 'POST'])
 def add_to_cart(product_id):
+    from flask import jsonify
     product = get_product_by_id(product_id)
     if not product:
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
+        if is_ajax:
+            return jsonify({'success': False, 'message': 'Product not found.'})
         flash('Product not found.', 'danger')
         return redirect(request.referrer or url_for('product'))
         
     cart = session.get('cart', {})
-    cart[str(product_id)] = cart.get(str(product_id), 0) + 1
+    
+    quantity = 1
+    if request.method == 'POST':
+        try:
+            quantity = int(request.form.get('quantity', 1))
+        except ValueError:
+            pass
+            
+    cart[str(product_id)] = cart.get(str(product_id), 0) + quantity
     session['cart'] = cart
     
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
+    if is_ajax:
+        cart_count = sum(cart.values())
+        return jsonify({'success': True, 'cart_count': cart_count, 'message': f'Added {product["name"]} to cart.'})
+        
     flash(f'Added {product["name"]} to cart.', 'success')
     return redirect(request.referrer or url_for('cart'))
 
@@ -591,6 +646,21 @@ def cart_remove(product_id):
     cart_data.pop(str(product_id), None)
     session['cart'] = cart_data
     flash('Item removed from cart.', 'success')
+    return redirect(url_for('cart'))
+
+@app.route('/cart/update/<product_id>', methods=['POST'])
+def cart_update(product_id):
+    cart_data = session.get('cart', {})
+    if str(product_id) in cart_data:
+        try:
+            qty = int(request.form.get('quantity', 1))
+            if qty > 0:
+                cart_data[str(product_id)] = qty
+            else:
+                cart_data.pop(str(product_id), None)
+            session['cart'] = cart_data
+        except ValueError:
+            pass
     return redirect(url_for('cart'))
 
 @app.route('/checkout', methods=['GET', 'POST'])
@@ -651,7 +721,7 @@ def checkout():
                 'image': item['image']
             })
 
-        order_id = create_order(g.user['id'], shipping_address, shipping_method, total, embedded_items, payment_method)
+        order_id = create_order(g.user['id'], shipping_address, shipping_method, total, embedded_items, payment_method, 'Processing')
         session['cart'] = {}
         session.pop('coupon', None)  # Clear coupon after order placed
         session.modified = True
@@ -759,6 +829,45 @@ def order_hard_delete(order_id):
         return redirect(url_for('inbox'))
     return redirect(url_for('order'))
 
+@app.route('/order/advance/<order_id>', methods=['POST'])
+def order_advance_status(order_id):
+    login_redirect = require_login()
+    if login_redirect: return login_redirect
+    
+    if g.user.get('role') != 'admin':
+        abort(403)
+        
+    order = get_order(order_id)
+    if not order:
+        flash('Order not found.', 'danger')
+        return redirect(url_for('inbox'))
+        
+    status_flow = ['Ordering', 'Processing', 'Shipped', 'Delivered']
+    current_status = order.get('status', 'Ordering')
+    
+    if current_status in status_flow:
+        current_index = status_flow.index(current_status)
+        if current_index < len(status_flow) - 1:
+            new_status = status_flow[current_index + 1]
+            db = get_db()
+            db.orders.update_one({'_id': ObjectId(str(order_id))}, {'$set': {'status': new_status}})
+            flash(f'Order #{str(order_id)[:8]} updated to {new_status}.', 'success')
+        else:
+            flash(f'Order is already {current_status}.', 'info')
+    else:
+        flash('Cannot advance this order.', 'warning')
+    return redirect(url_for('inbox'))
+
+@app.route('/order/demo-ship/<order_id>', methods=['POST'])
+def order_demo_ship(order_id):
+    if not g.user:
+        return {'success': False}
+    order = get_order(order_id)
+    if order and order['user_id'] == str(g.user['id']) and order.get('status') == 'Processing':
+        get_db().orders.update_one({'_id': ObjectId(str(order_id))}, {'$set': {'status': 'Shipped'}})
+        return {'success': True}
+    return {'success': False}
+
 @app.route('/profile', methods=['GET', 'POST'])
 def profile():
     login_redirect = require_login()
@@ -830,6 +939,108 @@ def settings():
     return render_template('front/settings.html', **common_context('settings'))
 
 # =============================================================================
+#  REVIEW ROUTES
+# =============================================================================
+
+@app.route('/product-detail/<product_id>/review', methods=['POST'])
+def submit_review(product_id):
+    """Submit or update a review for a product."""
+    login_redirect = require_login()
+    if login_redirect: return login_redirect
+
+    product = get_product_by_id(product_id)
+    if not product:
+        flash('Product not found.', 'danger')
+        return redirect(url_for('product'))
+
+    rating_str = request.form.get('rating', '0').strip()
+    comment = request.form.get('comment', '').strip()
+
+    try:
+        rating = int(rating_str)
+        if rating < 1 or rating > 5:
+            raise ValueError
+    except ValueError:
+        flash('Please select a rating between 1 and 5.', 'danger')
+        return redirect(url_for('product_detail', product_id=product_id))
+
+    if not comment:
+        flash('Please write a review comment.', 'danger')
+        return redirect(url_for('product_detail', product_id=product_id))
+
+    db = get_db()
+    existing = db.reviews.find_one({'product_id': str(product_id), 'user_id': str(g.user['id'])})
+
+    if existing:
+        db.reviews.update_one(
+            {'_id': existing['_id']},
+            {'$set': {
+                'rating': rating,
+                'comment': comment,
+                'updated_at': datetime.utcnow().isoformat()
+            }}
+        )
+        flash('Your review has been updated!', 'success')
+    else:
+        db.reviews.insert_one({
+            'product_id': str(product_id),
+            'user_id': str(g.user['id']),
+            'username': g.user['username'],
+            'rating': rating,
+            'comment': comment,
+            'created_at': datetime.utcnow().isoformat(),
+            'updated_at': datetime.utcnow().isoformat()
+        })
+        flash('Thank you for your review!', 'success')
+
+    return redirect(url_for('product_detail', product_id=product_id) + '#reviews')
+
+
+@app.route('/review/delete/<review_id>', methods=['POST'])
+def delete_review(review_id):
+    """Delete a review. Users can delete their own; admins can delete any."""
+    login_redirect = require_login()
+    if login_redirect: return login_redirect
+
+    db = get_db()
+    try:
+        review = db.reviews.find_one({'_id': ObjectId(str(review_id))})
+    except (InvalidId, TypeError, ValueError):
+        review = None
+
+    if not review:
+        flash('Review not found.', 'danger')
+        return redirect(url_for('product'))
+
+    if review['user_id'] != str(g.user['id']) and g.user.get('role') != 'admin':
+        abort(403)
+
+    product_id = review['product_id']
+    db.reviews.delete_one({'_id': ObjectId(str(review_id))})
+    flash('Review deleted.', 'success')
+
+    if g.user.get('role') == 'admin':
+        return redirect(url_for('admin_reviews'))
+    return redirect(url_for('product_detail', product_id=product_id) + '#reviews')
+
+
+@app.route('/admin/reviews')
+def admin_reviews():
+    """Admin page to view and manage all reviews."""
+    require_admin()
+    db = get_db()
+    all_reviews = list(db.reviews.find().sort('created_at', -1))
+    all_reviews = [format_doc(r) for r in all_reviews]
+
+    # Attach product name to each review
+    for r in all_reviews:
+        prod = get_product_by_id(r.get('product_id', ''))
+        r['product_name'] = prod['name'] if prod else 'Unknown'
+
+    return render_template('front/admin_reviews.html', reviews=all_reviews, **common_context('admin'))
+
+
+# =============================================================================
 #  AUTHENTICATION ROUTES
 # =============================================================================
 
@@ -899,6 +1110,9 @@ def logout():
 def inbox():
     require_admin()
     db = get_db()
+    # Mark all Ordering orders as read when the admin views the inbox
+    db.orders.update_many({'status': 'Ordering', 'is_read': {'$ne': True}}, {'$set': {'is_read': True}})
+    
     all_orders = []
     for order in db.orders.find().sort('created_at', -1):
         user = get_user_by_id(order['user_id'])
