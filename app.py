@@ -819,7 +819,7 @@ def order_hard_delete(order_id):
         flash('Order not found.', 'danger')
         return redirect(url_for('order'))
         
-    if order['user_id'] != str(g.user['id']) and g.user.get('role') != 'admin':
+    if g.user.get('role') != 'admin':
         abort(403)
         
     delete_order(order_id)

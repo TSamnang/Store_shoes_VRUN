@@ -82,12 +82,14 @@
                             <i class="fa-solid fa-ban me-1"></i>Cancelled
                         </span>
                         {% endif %}
+                        {% if g.user and g.user.role == 'admin' %}
                         <form action="{{ url_for('order_hard_delete', order_id=order.id) }}" method="post"
                               onsubmit="confirmAction(event, this, 'Permanently delete order #{{ order.id }}?', 'This action cannot be undone.', 'Yes, delete it!', '#dc3545');">
                             <button type="submit" class="btn btn-sm btn-danger">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
                         </form>
+                        {% endif %}
                     </div>
                 </div>
 
