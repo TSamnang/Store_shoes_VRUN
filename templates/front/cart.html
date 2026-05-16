@@ -25,7 +25,8 @@
         <div class="row g-4">
             <!-- Cart Items -->
             <div class="col-lg-8">
-                <div class="table-responsive">
+                <!-- Desktop Table View -->
+                <div class="table-responsive d-none d-md-block">
                     <table class="table bg-darker rounded">
                         <thead>
                             <tr class="border-bottom border-secondary">
@@ -80,7 +81,48 @@
                     </table>
                 </div>
 
-                <div class="d-flex justify-content-between align-items-center mt-4">
+                <!-- Mobile Card View -->
+                <div class="d-md-none">
+                    {% for item in cart_items %}
+                    <div class="card bg-darker border-secondary mb-3">
+                        <div class="card-body">
+                            <div class="d-flex gap-3 align-items-start">
+                                <div style="width: 70px; height: 70px; background: #1a1a1a; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <img src="{{item.image}}" alt="{{ item.name }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                </div>
+                                <div class="flex-grow-1 min-width-0">
+                                    <h6 class="text-warning mb-1 text-truncate">{{ item.name }}</h6>
+                                    <p class="text-muted small mb-1">{{ item.description }}</p>
+                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-2">
+                                        <span class="text-warning fw-bold">${{ '%.2f'|format(item.price) }} each</span>
+                                        {% if item.stock > 0 %}
+                                            <span class="badge bg-success">In Stock</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Out of stock</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mt-3">
+                                        <div class="input-group" style="max-width: 110px;">
+                                            <a href="{{ url_for('add_to_cart', product_id=item.id) }}" class="btn btn-outline-warning btn-sm">+</a>
+                                            <input type="number" class="form-control bg-dark text-white border-warning text-center" value="{{ item.quantity }}" min="1" readonly style="font-size: 0.9rem;">
+                                            <a href="{{ url_for('cart_remove', product_id=item.id) }}" class="btn btn-outline-danger btn-sm">-</a>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <span class="text-warning fw-bold">${{ '%.2f'|format(item.total) }}</span>
+                                            <a href="{{ url_for('cart_remove', product_id=item.id) }}" class="btn btn-sm btn-danger"><i class="fa-solid fa-trash"></i></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% if cart_items|length == 0 %}
+                    <div class="text-center text-white py-4">Your cart is empty.</div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-4 flex-wrap gap-2">
                     <a href="{{ url_for('product') }}" class="btn btn-outline-warning">Continue Shopping</a>
                     <button class="btn btn-outline-danger">Clear Cart</button>
                 </div>

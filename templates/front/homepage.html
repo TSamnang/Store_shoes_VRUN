@@ -39,11 +39,11 @@
     <!-- Hero Section -->
     <section class="container hero-section my-5">
         <div class="row align-items-center">
-            <div class="col-md-6">
+            <div class="col-md-6 text-center text-md-start">
                 <h1 class="text-warning fw-bold">NIKE'S SUMMER</h1>
                 <h2 class="text-white mb-4">Collection 2026</h2>
                 <p class="text-light-grey mb-4">Our website offers a wide selection of high-quality shoes for men, women, and kids. Customers can easily browse different styles such as sports shoes, casual shoes, and formal shoes.</p>
-                <div class="d-flex gap-3">
+                <div class="d-flex gap-3 justify-content-center justify-content-md-start flex-wrap">
                     <a href="{{ url_for('product') }}" class="btn btn-warning px-4 py-2 rounded-pill fw-bold">Shop Now</a>
                     <a href="{{ url_for('category') }}" class="btn btn-warning px-4 py-2 rounded-pill fw-bold">View More</a>
                 </div>
@@ -61,9 +61,9 @@
     <!-- Popular Products -->
     <section class="container my-5">
         <h4 class="text-warning mb-4">POPULAR PRODUCTS</h4>
-        <div class="row g-4">
+        <div class="row g-3 g-md-4">
             {% for product in featured_products %}
-            <div class="col-md-3">
+            <div class="col-6 col-md-3">
                 <div class="card product-card" data-product-id="{{ product.id }}">
                     <div class="img-container">
                         <img src="{{product.image}}" class="card-img-top" alt="{{ product.name }}">
@@ -89,9 +89,9 @@
     <!-- Latest Arrivals -->
     <section class="container my-5 pb-4">
         <h4 class="text-warning mb-4">LATEST ARRIVALS</h4>
-        <div class="row g-4">
+        <div class="row g-3 g-md-4">
             {% for product in latest_products %}
-            <div class="col-md-3">
+            <div class="col-6 col-md-3">
                 <div class="arrival-card">
                     <a href="{{ url_for('product_detail', product_id=product.id) }}" class="text-decoration-none">
                         <div class="arrival-img-box" style="background-color: var(--input-bg);">
@@ -135,9 +135,9 @@
     <!-- Visual Grid -->
     <section class="container my-5">
         <!-- Large grid: first 2 products -->
-        <div class="row g-4 mb-4">
+        <div class="row g-3 g-md-4 mb-4">
             {% for product in grid_products[:2] %}
-            <div class="col-md-6">
+            <div class="col-12 col-md-6">
                 <div class="grid-img-container rounded position-relative" style="background-color: var(--input-bg);">
                     <img src="{{ product.image }}" alt="{{ product.name }}" class="img-fluid rounded w-100" style="height:320px;object-fit:contain;padding:20px;">
                     <i class="fa-solid fa-heart text-danger position-absolute top-0 {% if loop.first %}start-0{% else %}end-0{% endif %} m-3 fs-4"></i>
@@ -147,9 +147,9 @@
             {% endfor %}
         </div>
         <!-- Small grid: next 4 products -->
-        <div class="row g-4">
+        <div class="row g-3 g-md-4">
             {% for product in grid_products %}
-            <div class="col-md-3">
+            <div class="col-6 col-md-3">
                 <div class="arrival-card">
                     <div class="arrival-img-box" style="background-color: var(--input-bg);">
                         <img src="{{ product.image }}" alt="{{ product.name }}" class="img-fluid">

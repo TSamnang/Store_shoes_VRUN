@@ -10,7 +10,7 @@ ATLAS_URI   = "mongodb://TSamnang:admin123@ac-sb3etsb-shard-00-00.eptj53w.mongod
 DB_NAME     = "StoreShoes"
 # -----------------------------------------------------------------------------
 
-COLLECTIONS = ["products", "users", "orders", "coupons", "reviews"]
+COLLECTIONS = ["products", "users", "orders", "coupons", "reviews", "categories"]
 
 def clone():
     print("Connecting to local MongoDB...")

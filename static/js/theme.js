@@ -34,18 +34,20 @@
             });
         });
 
-        const checkbox  = document.getElementById('themeToggleCheckbox');
-        const icon      = document.getElementById('themeToggleIcon');
-        const labelText = document.getElementById('themeToggleText');
-
-        if (!checkbox) return;
+        const checkbox     = document.getElementById('themeToggleCheckbox');
+        const checkboxMob  = document.getElementById('themeToggleCheckboxMobile');
+        const icon         = document.getElementById('themeToggleIcon');
+        const iconMob      = document.getElementById('themeToggleIconMobile');
+        const labelText    = document.getElementById('themeToggleText');
 
         const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-        checkbox.checked = isLight;
+
+        // Sync initial state
+        if (checkbox)    { checkbox.checked    = isLight; }
+        if (checkboxMob) { checkboxMob.checked = isLight; }
         updateUI(isLight);
 
-        checkbox.addEventListener('change', function () {
-            const light = this.checked;
+        function applyTheme(light) {
             if (light) {
                 document.documentElement.setAttribute('data-theme', 'light');
                 localStorage.setItem(STORAGE_KEY, 'light');
@@ -53,19 +55,31 @@
                 document.documentElement.removeAttribute('data-theme');
                 localStorage.setItem(STORAGE_KEY, 'dark');
             }
+            // Keep both toggles in sync
+            if (checkbox)    checkbox.checked    = light;
+            if (checkboxMob) checkboxMob.checked = light;
             updateUI(light);
-        });
+        }
+
+        if (checkbox) {
+            checkbox.addEventListener('change', function () { applyTheme(this.checked); });
+        }
+        if (checkboxMob) {
+            checkboxMob.addEventListener('change', function () { applyTheme(this.checked); });
+        }
 
         function updateUI(isLight) {
-            if (!icon || !labelText) return;
-            if (isLight) {
-                icon.className      = 'fa-solid fa-sun';
-                labelText.textContent = 'Light Mode';
-            } else {
-                icon.className      = 'fa-solid fa-moon';
-                labelText.textContent = 'Dark Mode';
+            if (icon) {
+                icon.className = isLight ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+            }
+            if (iconMob) {
+                iconMob.className = isLight ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+            }
+            if (labelText) {
+                labelText.textContent = isLight ? 'Light Mode' : 'Dark Mode';
             }
         }
+
 
         /* ── AJAX Add to Cart ── */
         document.querySelectorAll('a[href^="/add-to-cart/"]').forEach(link => {
