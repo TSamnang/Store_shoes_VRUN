@@ -185,7 +185,7 @@
                             {% for item in cart_items %}
                             <div class="d-flex align-items-center mb-3">
                                 <img
-                                    src="{{ url_for('static', filename=item.image) }}"
+                                    src="{{item.image}}"
                                     alt="{{ item.name }}"
                                     style="width: 54px; height: 54px; object-fit: contain; background: #1a1a2e; border-radius: 8px; padding: 4px; border: 1px solid rgba(255,193,7,0.2); flex-shrink: 0;"
                                 >
@@ -208,6 +208,12 @@
                                 <span class="text-muted">Subtotal</span>
                                 <span class="text-white">${{ '%.2f'|format(subtotal) }}</span>
                             </div>
+                            {% if discount_amt and discount_amt > 0 %}
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-success"><i class="fa-solid fa-tag me-1"></i>Discount ({{ coupon_code }})</span>
+                                <span class="text-success">-${{ '%.2f'|format(discount_amt) }}</span>
+                            </div>
+                            {% endif %}
                             <div class="d-flex justify-content-between mb-3">
                                 <span class="text-muted">Shipping</span>
                                 <span class="text-white" id="shipping-cost">${{ '%.2f'|format(shipping_cost) }}</span>
@@ -294,11 +300,12 @@
     <script>
         // Update shipping cost on selection
         const subtotal = {{ subtotal }};
+        const discountAmt = {{ discount_amt|float }};
         
         document.querySelectorAll('input[name="shipping_method"]').forEach(radio => {
             radio.addEventListener('change', function() {
                 const shippingCost = parseFloat(this.getAttribute('data-cost'));
-                const total = subtotal + shippingCost;
+                const total = Math.max(0, subtotal - discountAmt) + shippingCost;
                 
                 document.getElementById('shipping-cost').textContent = '$' + shippingCost.toFixed(2);
                 document.getElementById('total-price').textContent = '$' + total.toFixed(2);

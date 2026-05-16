@@ -24,21 +24,40 @@
             <!-- Product Image -->
             <div class="col-md-5">
                 <div class="product-detail-image text-center">
-                    <img src="{{ url_for('static', filename=product.image) }}" alt="{{ product.name }}" class="img-fluid" style="max-height: 500px;">
+                    <img id="mainProductImg" src="{{product.image}}" alt="{{ product.name }}" class="img-fluid" style="max-height: 500px;">
                 </div>
                 <div class="row g-2 mt-3">
-                    {% for thumb in [product.image] %}
+                    <div class="col-3">
+                        <img src="{{product.image}}" alt="Main" class="img-fluid thumb-image"
+                             style="cursor:pointer;border:2px solid #ffc107;border-radius:8px;padding:2px;aspect-ratio:1/1;object-fit:cover;"
+                             onclick="document.getElementById('mainProductImg').src=this.src;document.querySelectorAll('.thumb-image').forEach(t=>t.style.borderColor='var(--border-color)');this.style.borderColor='#ffc107';">
+                    </div>
+                    {% if product.color_images %}
+                        {% for color, img in product.color_images.items() %}
+                        {% if img != product.image %}
                         <div class="col-3">
-                            <img src="{{ url_for('static', filename=thumb) }}" alt="Thumbnail" class="img-fluid thumb-image" style="cursor: pointer;">
+                            <img src="{{img}}" alt="{{color}}" class="img-fluid thumb-image"
+                                 style="cursor:pointer;border:2px solid var(--border-color);border-radius:8px;padding:2px;aspect-ratio:1/1;object-fit:cover;"
+                                 title="{{color}}"
+                                 onclick="document.getElementById('mainProductImg').src=this.src;document.querySelectorAll('.thumb-image').forEach(t=>t.style.borderColor='var(--border-color)');this.style.borderColor='#ffc107';">
                         </div>
-                    {% endfor %}
+                        {% endif %}
+                        {% endfor %}
+                    {% endif %}
                 </div>
             </div>
 
             <!-- Product Info -->
             <div class="col-md-7">
                 <h1 class="text-warning fw-bold mb-2">{{ product.name }}</h1>
-                <p class="text-muted mb-3">{{ product.category }}</p>
+                {% if product.brand %}
+                <p class="text-muted mb-1" style="font-size:.82rem;"><i class="fa-solid fa-tag me-1"></i>{{ product.brand }}</p>
+                {% endif %}
+                <div class="d-flex flex-wrap gap-1 mb-3">
+                    {% for cat in product.category %}
+                    <span class="badge" style="background:rgba(255,193,7,.15);color:#ffc107;border-radius:8px;padding:4px 12px;">{{ cat }}</span>
+                    {% endfor %}
+                </div>
 
                 <div class="mb-4">
                     <div class="d-flex align-items-center gap-3">
@@ -71,23 +90,35 @@
                     </p>
                 </div>
 
+                {% set unique_sizes = [] %}
+                {% for v in product.variants %}{% if v.size and v.size not in unique_sizes %}{% set _ = unique_sizes.append(v.size) %}{% endif %}{% endfor %}
+                {% if unique_sizes %}
                 <div class="mb-4">
                     <h5 class="text-white mb-3">Select Size</h5>
                     <div class="d-flex flex-wrap gap-2">
-                        {% for size in [36,37,38,39,40,41,42,43] %}
-                            <button class="btn btn-outline-warning size-btn">{{ size }}</button>
+                        {% for size in unique_sizes %}
+                            <button class="btn btn-outline-warning size-btn" type="button">{{ size }}</button>
                         {% endfor %}
                     </div>
                 </div>
+                {% endif %}
 
+                {% set unique_colors = [] %}
+                {% for v in product.variants %}{% if v.color and v.color not in unique_colors %}{% set _ = unique_colors.append(v.color) %}{% endif %}{% endfor %}
+                {% if unique_colors %}
                 <div class="mb-4">
                     <h5 class="text-white mb-3">Color</h5>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-circle" style="background-color: #8B0000; width: 40px; height: 40px; border: 2px solid #ffc107;"></button>
-                        <button class="btn btn-circle" style="background-color: #000000; width: 40px; height: 40px; border: 2px solid #555;"></button>
-                        <button class="btn btn-circle" style="background-color: #FFFFFF; width: 40px; height: 40px; border: 2px solid #555;"></button>
+                    <div class="d-flex gap-2 flex-wrap">
+                        {% for color in unique_colors %}
+                            <button class="btn btn-circle color-btn" type="button"
+                                title="{{ color }}"
+                                style="background:{{ color }};width:40px;height:40px;border:2px solid #555;border-radius:50%;"
+                                data-color="{{ color }}">
+                            </button>
+                        {% endfor %}
                     </div>
                 </div>
+                {% endif %}
 
                 <div class="mb-4">
                     <h5 class="text-white mb-3">Quantity</h5>
@@ -107,15 +138,19 @@
                     </button>
                 </div>
 
+                {% if product.detail %}
                 <div class="border-top border-secondary pt-4">
-                    <h5 class="text-white mb-3">Product Features</h5>
-                    <ul class="list-unstyled">
-                        <li class="text-muted mb-2"><i class="fa-solid fa-check text-warning me-2"></i> Premium quality materials</li>
-                        <li class="text-muted mb-2"><i class="fa-solid fa-check text-warning me-2"></i> Comfortable cushioning</li>
-                        <li class="text-muted mb-2"><i class="fa-solid fa-check text-warning me-2"></i> Durable outsole</li>
-                        <li class="text-muted mb-2"><i class="fa-solid fa-check text-warning me-2"></i> Modern performance design</li>
-                    </ul>
+                    <h5 class="text-white mb-3">Product Detail</h5>
+                    <p class="text-muted" style="white-space:pre-line;">{{ product.detail }}</p>
                 </div>
+                {% endif %}
+                {% if product.brand %}
+                <div class="mt-3">
+                    <span class="badge" style="background:rgba(255,193,7,.15);color:#ffc107;border-radius:8px;padding:6px 14px;font-size:.8rem;">
+                        <i class="fa-solid fa-tag me-1"></i> {{ product.brand }}
+                    </span>
+                </div>
+                {% endif %}
             </div>
         </div>
 
@@ -129,7 +164,7 @@
                         <div class="arrival-card">
                             <a href="{{ url_for('product_detail', product_id=related.id) }}" class="text-decoration-none">
                                 <div class="arrival-img-box" style="background-color: var(--input-bg);">
-                                    <img src="{{ url_for('static', filename=related.image) }}" class="img-fluid" alt="{{ related.name }}">
+                                    <img src="{{related.image}}" class="img-fluid" alt="{{ related.name }}">
                                 </div>
                             </a>
                             <div class="arrival-card-body">
@@ -221,11 +256,12 @@
             });
 
             // Color selection
-            const colorBtns = document.querySelectorAll('.btn-circle');
+            const colorBtns = document.querySelectorAll('.color-btn');
             colorBtns.forEach(btn => {
                 btn.addEventListener('click', function() {
                     colorBtns.forEach(b => b.style.borderColor = '#555');
                     this.style.borderColor = '#ffc107';
+                    this.style.borderWidth = '3px';
                 });
             });
 

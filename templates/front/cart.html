@@ -42,7 +42,7 @@
                                 <td>
                                     <div class="d-flex gap-3 align-items-center">
                                         <div style="width: 80px; height: 80px; background: #1a1a1a; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                                            <img src="{{ url_for('static', filename=item.image) }}" alt="{{ item.name }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                            <img src="{{item.image}}" alt="{{ item.name }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                                         </div>
                                         <div>
                                             <h6 class="text-warning mb-1">{{ item.name }}</h6>
@@ -99,7 +99,7 @@
                             </div>
                             <div class="d-flex justify-content-between mb-2">
                                 <span class="text-muted">Discount</span>
-                                <span class="text-success">$0.00</span>
+                                <span class="text-success" id="discountDisplay">-$0.00</span>
                             </div>
                             <div class="d-flex justify-content-between mb-3">
                                 <span class="text-muted">Delivery</span>
@@ -116,9 +116,10 @@
                         <div class="mb-4">
                             <label class="form-label text-white small">Promo Code</label>
                             <div class="input-group">
-                                <input type="text" class="form-control bg-dark text-white border-secondary" placeholder="Enter code">
-                                <button class="btn btn-warning" type="button">Apply</button>
+                                <input type="text" id="promoInput" class="form-control bg-dark text-white border-secondary" placeholder="Enter code" style="text-transform:uppercase;">
+                                <button class="btn btn-warning" type="button" id="applyPromoBtn" onclick="applyPromo()">Apply</button>
                             </div>
+                            <div id="promoMsg" class="mt-2 small" style="display:none;"></div>
                         </div>
 
                         <!-- Checkout Button -->
@@ -133,30 +134,7 @@
                     </div>
                 </div>
 
-                <!-- Shipping Info -->
-                <div class="card bg-darker border-secondary mt-4">
-                    <div class="card-body">
-                        <h6 class="text-warning mb-3">Shipping Methods</h6>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="shipping" id="express" data-cost="15" checked>
-                            <label class="form-check-label text-white" for="express">
-                                Express Delivery - $15
-                            </label>
-                        </div>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="shipping" id="standard" data-cost="5">
-                            <label class="form-check-label text-white" for="standard">
-                                Standard Delivery - $5
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="shipping" id="free" data-cost="0">
-                            <label class="form-check-label text-white" for="free">
-                                Free Pickup (3-5 days)
-                            </label>
-                        </div>
-                    </div>
-                </div>
+
             </div>
         </div>
     </div>
@@ -215,15 +193,71 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const subtotal = {{ subtotal }};
-        
+        let discountAmt = 0;
+        let shippingCost = 15;
+
+        function recalcTotal() {
+            const t = Math.max(0, subtotal - discountAmt) + shippingCost;
+            document.getElementById('total-price').textContent = '$' + t.toFixed(2);
+        }
+
         document.querySelectorAll('input[name="shipping"]').forEach(radio => {
             radio.addEventListener('change', function() {
-                const shippingCost = parseFloat(this.getAttribute('data-cost'));
-                const total = subtotal + shippingCost;
-                
+                shippingCost = parseFloat(this.getAttribute('data-cost'));
                 document.getElementById('shipping-cost').textContent = '$' + shippingCost.toFixed(2);
-                document.getElementById('total-price').textContent = '$' + total.toFixed(2);
+                recalcTotal();
             });
+        });
+
+        function applyPromo() {
+            const code = document.getElementById('promoInput').value.trim();
+            const btn  = document.getElementById('applyPromoBtn');
+            const msg  = document.getElementById('promoMsg');
+
+            if (!code) { showMsg('Please enter a promo code.', false); return; }
+
+            btn.disabled = true;
+            btn.textContent = '...';
+
+            fetch('/apply-coupon', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ code: code, subtotal: subtotal })
+            })
+            .then(r => r.json())
+            .then(data => {
+                showMsg(data.message, data.success);
+                if (data.success) {
+                    discountAmt = data.discount_amount;
+                    document.getElementById('discountDisplay').textContent = '-$' + discountAmt.toFixed(2);
+                    btn.textContent = '✓ Applied';
+                    btn.classList.replace('btn-warning', 'btn-success');
+                    document.getElementById('promoInput').disabled = true;
+                } else {
+                    discountAmt = 0;
+                    document.getElementById('discountDisplay').textContent = '-$0.00';
+                    btn.disabled = false;
+                    btn.textContent = 'Apply';
+                }
+                recalcTotal();
+            })
+            .catch(() => {
+                showMsg('Something went wrong. Please try again.', false);
+                btn.disabled = false;
+                btn.textContent = 'Apply';
+            });
+        }
+
+        function showMsg(text, ok) {
+            const msg = document.getElementById('promoMsg');
+            msg.style.display = 'block';
+            msg.style.color = ok ? '#28a745' : '#dc3545';
+            msg.textContent = text;
+        }
+
+        // Allow Enter key to apply promo
+        document.getElementById('promoInput').addEventListener('keypress', e => {
+            if (e.key === 'Enter') applyPromo();
         });
     </script>
     <!-- Theme Toggle JS -->

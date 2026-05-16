@@ -2,6 +2,8 @@
 #  IMPORTS
 # =============================================================================
 import os
+import base64
+import mimetypes
 from datetime import datetime
 from decimal import Decimal
 from flask import (
@@ -71,7 +73,19 @@ def format_doc(doc):
                 doc['created_at'] = datetime.fromisoformat(doc['created_at'])
             except ValueError:
                 pass
+        # Ensure category is always a list
+        if 'category' not in doc or not doc['category']:
+            doc['category'] = []
+        elif isinstance(doc['category'], str):
+            doc['category'] = [c.strip() for c in doc['category'].split(',') if c.strip()]
+        # Ensure variants is always a list
+        if 'variants' not in doc or doc['variants'] is None:
+            doc['variants'] = []
+        # Ensure color_images is always a dict
+        if 'color_images' not in doc or doc['color_images'] is None:
+            doc['color_images'] = {}
     return doc
+
 
 # =============================================================================
 #  FILE UPLOAD HELPERS
@@ -83,14 +97,13 @@ def allowed_file(filename):
 
 def save_image(upload):
     """
-    Saves an uploaded image file securely and returns the relative path.
-    Returns None if the upload is invalid.
+    Saves an uploaded image file directly as a Base64 string.
+    Returns the base64 string or None if the upload is invalid.
     """
     if upload and allowed_file(upload.filename):
-        filename = secure_filename(upload.filename)
-        target_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        upload.save(target_path)
-        return f'images/{filename}'
+        encoded_string = base64.b64encode(upload.read()).decode('utf-8')
+        mime_type = upload.mimetype
+        return f"data:{mime_type};base64,{encoded_string}"
     return None
 
 # =============================================================================
@@ -150,10 +163,11 @@ def get_products(category=None, limit=None, max_price=None, search=None, page=1,
     query = {}
 
     if category:
+        # Works whether category is stored as a string or an array in MongoDB
         if isinstance(category, (list, tuple)):
             query['category'] = {'$in': category}
         else:
-            query['category'] = category
+            query['category'] = category  # MongoDB matches string OR array-containing-value
 
     if max_price is not None and str(max_price).strip() != '':
         try:
@@ -203,10 +217,21 @@ def get_category_counts():
     """
     db = get_db()
     pipeline = [
+        {'$unwind': {'path': '$category', 'preserveNullAndEmptyArrays': False}},
         {'$group': {'_id': '$category', 'total': {'$sum': 1}}}
     ]
     results = db.products.aggregate(pipeline)
-    return [{'category': r['_id'], 'count': r['total']} for r in results]
+    return [{'category': r['_id'], 'count': r['total']} for r in results if r['_id']]
+
+def get_all_categories():
+    db = get_db()
+    if db.categories.count_documents({}) == 0:
+        defaults = ['Sneaker','Sport','Running','Casual','Formal','Basketball','Football','Sandal','Boot','Kids']
+        db.categories.insert_many([{'name': c} for c in defaults])
+    cats = list(db.categories.find().sort('name', 1))
+    for c in cats:
+        c['id'] = str(c['_id'])
+    return cats
 
 # =============================================================================
 #  ORDER HELPERS
@@ -312,7 +337,22 @@ def init_db():
             ('G176 Multi-Blend NX Sneakers', 'Casual Shoes', 'Generic', 'Fashion forward sneakers with all-day comfort.', 'The G176 Multi-Blend NX combines mixed materials.', 140.00, 15, 'images/G176 Multi-Blend NX Sneakers.png'),
             ('Nike Mercurial Superfly', 'Sport Shoes', 'Nike', 'Elite soccer cleat built for speed and touch.', 'The Mercurial Superfly is engineered for speed.', 220.00, 12, 'images/Nike Mercurial Superfly.jpg'),
         ]
-        for name, category, brand, description, detail, price, stock, image in sample_products:
+        def get_base64_image(filepath):
+            try:
+                full_path = os.path.join(app.root_path, 'static', filepath)
+                if not os.path.exists(full_path):
+                    return filepath
+                with open(full_path, 'rb') as f:
+                    encoded_string = base64.b64encode(f.read()).decode('utf-8')
+                mime_type, _ = mimetypes.guess_type(full_path)
+                if not mime_type:
+                    mime_type = 'image/png'
+                return f"data:{mime_type};base64,{encoded_string}"
+            except Exception:
+                return filepath
+
+        for name, category, brand, description, detail, price, stock, image_path in sample_products:
+            b64_image = get_base64_image(image_path)
             db.products.insert_one({
                 'name': name,
                 'category': category,
@@ -321,8 +361,8 @@ def init_db():
                 'detail': detail,
                 'price': float(price),
                 'stock': stock,
-                'image': image,
-                'images': [image], # additional images
+                'image': b64_image,
+                'images': [b64_image], # additional images
                 'variants': [{'size': '9', 'color': 'Default', 'stock': stock}], # sizing/colors
                 'created_at': datetime.utcnow().isoformat()
             })
@@ -364,11 +404,18 @@ def homepage():
     featured_products = get_products(limit=4)
     latest_products = get_products(limit=8)
     categories = get_category_counts()
+    # Products for visual grid section (pick products 5-8 so they differ from featured)
+    all_products = get_products(limit=12)
+    grid_products = all_products[4:8] if len(all_products) > 4 else all_products[:4]
+    # One hero product for the banner
+    banner_product = all_products[0] if all_products else None
     return render_template(
         'front/homepage.html',
         featured_products=featured_products,
         latest_products=latest_products,
         categories=categories,
+        grid_products=grid_products,
+        banner_product=banner_product,
         **common_context('homepage')
     )
 
@@ -401,6 +448,7 @@ def product():
         'front/product.html',
         products=products,
         categories=categories,
+        all_categories=get_all_categories(),
         selected_categories=selected_categories,
         selected_max_price=max_price or '500',
         q=search_query,
@@ -435,17 +483,67 @@ def category():
     selected_category = request.args.get('category')
     categories = get_category_counts()
     products = get_products(category=selected_category) if selected_category else get_products()
+    # Build a map of category -> first product image for the category cards
+    db = get_db()
+    category_images = {}
+    for cat in categories:
+        first = db.products.find_one({'category': cat['category']}, {'image': 1})
+        if first and first.get('image'):
+            category_images[cat['category']] = first['image']
     return render_template(
         'front/category.html',
         categories=categories,
         products=products,
         selected_category=selected_category,
+        category_images=category_images,
         **common_context('category')
     )
 
 # =============================================================================
 #  CART & CHECKOUT ROUTES
 # =============================================================================
+
+@app.route('/apply-coupon', methods=['POST'])
+def apply_coupon():
+    from flask import jsonify
+    data = request.get_json(silent=True) or {}
+    code = data.get('code', '').strip().upper()
+    subtotal = float(data.get('subtotal', 0))
+
+    if not code:
+        return jsonify({'success': False, 'message': 'Please enter a promo code.'})
+
+    coupon = get_coupon(code)
+    if not coupon:
+        return jsonify({'success': False, 'message': f'"{code}" is not a valid promo code.'})
+
+    # Check expiry if present
+    valid_until = coupon.get('valid_until')
+    if valid_until:
+        from datetime import datetime as dt
+        try:
+            if dt.utcnow() > dt.strptime(valid_until, '%Y-%m-%d'):
+                return jsonify({'success': False, 'message': 'This promo code has expired.'})
+        except ValueError:
+            pass
+
+    discount_pct = float(coupon.get('discount_percent', 0))
+    discount_amt = round(subtotal * discount_pct / 100, 2)
+
+    # Save to session so it persists through to checkout
+    session['coupon'] = {
+        'code': code,
+        'discount_percent': discount_pct,
+        'discount_amount': discount_amt
+    }
+    session.modified = True
+
+    return jsonify({
+        'success': True,
+        'message': f'🎉 {discount_pct:.0f}% discount applied!',
+        'discount_percent': discount_pct,
+        'discount_amount': discount_amt
+    })
 
 @app.route('/add-to-cart/<product_id>')
 def add_to_cart(product_id):
@@ -528,7 +626,11 @@ def checkout():
         payment_method = request.form.get('payment', 'card').strip()
         
         shipping_cost = shipping_rates.get(shipping_method, Decimal('15.00'))
-        total = subtotal + shipping_cost if subtotal > Decimal('0.00') else Decimal('0.00')
+        coupon_session = session.get('coupon', {})
+        discount_amt = Decimal(str(coupon_session.get('discount_amount', 0)))
+        discount_pct = coupon_session.get('discount_percent', 0)
+        coupon_code  = coupon_session.get('code', '')
+        total = max(Decimal('0.00'), subtotal - discount_amt) + shipping_cost if subtotal > Decimal('0.00') else Decimal('0.00')
         
         if not shipping_address:
             flash('Please provide a shipping address.', 'danger')
@@ -551,13 +653,23 @@ def checkout():
 
         order_id = create_order(g.user['id'], shipping_address, shipping_method, total, embedded_items, payment_method)
         session['cart'] = {}
+        session.pop('coupon', None)  # Clear coupon after order placed
+        session.modified = True
         
         flash('Your order has been received.', 'success')
         return redirect(url_for('order_receipt', order_id=order_id))
 
-    shipping_cost = Decimal('15.00') # Default to Express
-    total = subtotal + shipping_cost if subtotal > Decimal('0.00') else Decimal('0.00')
-    return render_template('front/checkout.html', cart_items=cart_items, subtotal=subtotal, total=total, shipping_cost=shipping_cost, **common_context('checkout'))
+    shipping_cost = Decimal('15.00')  # Default to Express
+    coupon_session = session.get('coupon', {})
+    discount_amt = Decimal(str(coupon_session.get('discount_amount', 0)))
+    discount_pct = coupon_session.get('discount_percent', 0)
+    coupon_code  = coupon_session.get('code', '')
+    total = max(Decimal('0.00'), subtotal - discount_amt) + shipping_cost if subtotal > Decimal('0.00') else Decimal('0.00')
+    return render_template('front/checkout.html',
+        cart_items=cart_items, subtotal=subtotal, total=total,
+        shipping_cost=shipping_cost, discount_amt=discount_amt,
+        discount_pct=discount_pct, coupon_code=coupon_code,
+        **common_context('checkout'))
 
 # =============================================================================
 #  USER ACCOUNT & ORDER ROUTES
@@ -797,89 +909,182 @@ def inbox():
         
     return render_template('front/inbox.html', all_orders=all_orders, **common_context('inbox'))
 
-@app.route('/admin', methods=['GET', 'POST'])
-def admin():
+@app.route('/admin/categories', methods=['GET', 'POST'])
+def admin_categories():
     require_admin()
     db = get_db()
     
     if request.method == 'POST':
-        name = request.form.get('name', '').strip()
-        category = request.form.get('category', '').strip()
-        description = request.form.get('description', '').strip()
-        detail = request.form.get('detail', '').strip()
-        price = request.form.get('price', '0').strip()
-        stock = request.form.get('stock', '0').strip()
-        image_path = request.form.get('image_path', '').strip()
-        image_file = request.files.get('image_file')
+        action = request.form.get('action')
+        if action == 'add':
+            name = request.form.get('name', '').strip()
+            if name:
+                db.categories.insert_one({'name': name})
+                flash(f'Category "{name}" added.', 'success')
+        elif action == 'edit':
+            cat_id = request.form.get('category_id')
+            new_name = request.form.get('name', '').strip()
+            if cat_id and new_name:
+                db.categories.update_one({'_id': ObjectId(cat_id)}, {'$set': {'name': new_name}})
+                flash(f'Category updated to "{new_name}".', 'success')
+        elif action == 'delete':
+            cat_id = request.form.get('category_id')
+            if cat_id:
+                db.categories.delete_one({'_id': ObjectId(cat_id)})
+                flash('Category deleted.', 'success')
+        return redirect(url_for('admin_categories'))
         
-        if not name or not category or not description or not price:
-            flash('Please fill all required fields.', 'danger')
-        else:
-            image = save_image(image_file) if image_file and image_file.filename else None
-            image = image or image_path or 'images/logo.png'
-            db.products.insert_one({
-                'name': name,
-                'category': category,
-                'brand': 'Generic',
-                'description': description,
-                'detail': detail,
-                'price': float(price),
-                'stock': int(stock or 0),
-                'image': image,
-                'images': [image],
-                'variants': [{'size': 'Default', 'color': 'Default', 'stock': int(stock or 0)}],
-                'created_at': datetime.utcnow().isoformat()
-            })
-            flash('Product added successfully.', 'success')
-            return redirect(url_for('admin'))
-            
-    products = get_products()
+    cats = get_all_categories()
+    return render_template('front/admin_categories.html', 
+                           categories=cats, 
+                           **common_context('admin'))
+
+@app.route('/admin', methods=['GET'])
+def admin():
+    require_admin()
+    products = get_products(limit=100)
     return render_template('front/admin.html', products=products, **common_context('admin'))
 
-@app.route('/admin/edit/<product_id>', methods=['GET', 'POST'])
-def admin_edit(product_id):
+
+@app.route('/admin/product/new', methods=['GET', 'POST'])
+def admin_product_new():
+    """Single-form product creation — all fields at once."""
+    require_admin()
+    db = get_db()
+
+    if request.method == 'POST':
+        import json
+        name        = request.form.get('name', '').strip()
+        categories_raw = request.form.get('categories_json', '[]')
+        try:
+            categories = [c.strip() for c in json.loads(categories_raw) if c.strip()]
+        except Exception:
+            categories = []
+        brand       = request.form.get('brand', '').strip()
+        description = request.form.get('description', '').strip()
+        detail      = request.form.get('detail', '').strip()
+        price       = request.form.get('price', '0').strip()
+        stock_total = request.form.get('stock', '0').strip()
+        main_b64    = request.form.get('main_image_b64', '').strip()
+        image_file  = request.files.get('image_file')
+
+        if not name or not categories or not description or not price:
+            flash('Please fill all required fields (Name, at least one Category, Description, Price).', 'danger')
+            return redirect(url_for('admin_product_new'))
+
+        image = main_b64 if main_b64 else (save_image(image_file) if image_file and image_file.filename else '')
+
+        sizes     = request.form.getlist('variant_size[]')
+        colors    = request.form.getlist('variant_color[]')
+        vstocks   = request.form.getlist('variant_stock[]')
+        vimgs_b64 = request.form.getlist('variant_img_b64[]')
+        variants = []
+        color_images = {}
+        for s, c, vs, vimg in zip(sizes, colors, vstocks, vimgs_b64 + [''] * len(sizes)):
+            if s.strip() or c.strip():
+                variants.append({'size': s.strip(), 'color': c.strip(), 'stock': int(vs.strip() or 0)})
+                if vimg.strip() and c.strip():
+                    color_images[c.strip()] = vimg.strip()
+
+        if not image and color_images:
+            image = next(iter(color_images.values()))
+
+        db.products.insert_one({
+            'name': name, 'category': categories, 'brand': brand,
+            'description': description, 'detail': detail,
+            'price': float(price), 'stock': int(stock_total or 0),
+            'image': image,
+            'images': list(color_images.values()) or ([image] if image else []),
+            'color_images': color_images, 'variants': variants,
+            'created_at': datetime.utcnow().isoformat()
+        })
+        flash('Product added successfully!', 'success')
+        return redirect(url_for('admin'))
+
+
+    # GET — show blank form (reuse the same detail template with product=None)
+    return render_template('front/admin_product_detail.html',
+                           all_categories=[c['name'] for c in get_all_categories()],
+                           product=None,
+                           **common_context('admin'))
+
+
+@app.route('/admin/product/<product_id>/detail', methods=['GET', 'POST'])
+def admin_product_detail(product_id):
+    """Edit all product fields in one form."""
     require_admin()
     db = get_db()
     product = get_product_by_id(product_id)
     if not product:
         flash('Product not found.', 'danger')
         return redirect(url_for('admin'))
-        
+
     if request.method == 'POST':
-        name = request.form.get('name', '').strip()
-        category = request.form.get('category', '').strip()
+        import json
+        categories_raw = request.form.get('categories_json', '[]')
+        try:
+            categories = [c.strip() for c in json.loads(categories_raw) if c.strip()]
+        except Exception:
+            categories = product.get('category', [])
+        brand       = request.form.get('brand', '').strip()
+        detail      = request.form.get('detail', '').strip()
         description = request.form.get('description', '').strip()
-        detail = request.form.get('detail', '').strip()
-        price = request.form.get('price', '0').strip()
-        stock = request.form.get('stock', '0').strip()
-        image_path = request.form.get('image_path', '').strip()
-        image_file = request.files.get('image_file')
-        
-        if not name or not category or not description or not price:
-            flash('Please fill all required fields.', 'danger')
+        name        = request.form.get('name', product['name']).strip()
+        price       = request.form.get('price', str(product['price'])).strip()
+        stock_total = request.form.get('stock', str(product['stock'])).strip()
+        main_b64    = request.form.get('main_image_b64', '').strip()
+        image_file  = request.files.get('image_file')
+
+        sizes     = request.form.getlist('variant_size[]')
+        colors    = request.form.getlist('variant_color[]')
+        vstocks   = request.form.getlist('variant_stock[]')
+        vimgs_b64 = request.form.getlist('variant_img_b64[]')
+        variants = []
+        color_images = dict(product.get('color_images', {}))
+        for s, c, vs, vimg in zip(sizes, colors, vstocks, vimgs_b64 + [''] * len(sizes)):
+            if s.strip() or c.strip():
+                variants.append({'size': s.strip(), 'color': c.strip(), 'stock': int(vs.strip() or 0)})
+                if vimg.strip() and c.strip():
+                    color_images[c.strip()] = vimg.strip()
+
+        if main_b64:
+            new_image = main_b64
         else:
-            image = save_image(image_file) if image_file and image_file.filename else None
-            image = image or image_path or product['image']
-            
-            db.products.update_one(
-                {'_id': ObjectId(str(product_id))},
-                {'$set': {
-                    'name': name,
-                    'category': category,
-                    'description': description,
-                    'detail': detail,
-                    'price': float(price),
-                    'stock': int(stock or 0),
-                    'image': image
-                }}
-            )
-            flash('Product updated successfully.', 'success')
-            return redirect(url_for('admin'))
-            
-        product = get_product_by_id(product_id)
-        
-    products = get_products()
-    return render_template('front/admin.html', products=products, edit_product=product, **common_context('admin'))
+            new_image = save_image(image_file) if image_file and image_file.filename else None
+        image = new_image or product['image']
+        if not image and color_images:
+            image = next(iter(color_images.values()))
+
+        db.products.update_one(
+            {'_id': ObjectId(str(product_id))},
+            {'$set': {
+                'name': name, 'category': categories, 'brand': brand,
+                'description': description, 'detail': detail,
+                'price': float(price), 'stock': int(stock_total or 0),
+                'image': image,
+                'images': list(color_images.values()) or ([image] if image else []),
+                'color_images': color_images, 'variants': variants,
+            }}
+        )
+        flash('Product updated successfully!', 'success')
+        return redirect(url_for('admin'))
+
+
+    return render_template('front/admin_product_detail.html',
+                           all_categories=[c['name'] for c in get_all_categories()],
+                           product=product,
+                           **common_context('admin'))
+
+
+@app.route('/admin/edit/<product_id>')
+def admin_edit(product_id):
+    require_admin()
+    product = get_product_by_id(product_id)
+    if not product:
+        flash('Product not found.', 'danger')
+        return redirect(url_for('admin'))
+    return redirect(url_for('admin_product_detail', product_id=product_id))
+
 
 @app.route('/admin/delete/<product_id>', methods=['POST'])
 def admin_delete(product_id):
@@ -892,5 +1097,7 @@ def admin_delete(product_id):
         flash('Invalid product ID.', 'danger')
     return redirect(url_for('admin'))
 
+
 if __name__ == '__main__':
     app.run(debug=True)
+

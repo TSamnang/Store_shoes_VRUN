@@ -66,7 +66,7 @@
             <div class="col-md-3">
                 <div class="card product-card" data-product-id="{{ product.id }}">
                     <div class="img-container">
-                        <img src="{{ url_for('static', filename=product.image) }}" class="card-img-top" alt="{{ product.name }}">
+                        <img src="{{product.image}}" class="card-img-top" alt="{{ product.name }}">
                     </div>
                     <div class="card-body text-center">
                         <h6 class="text-warning">{{ product.name }}</h6>
@@ -95,7 +95,7 @@
                 <div class="arrival-card">
                     <a href="{{ url_for('product_detail', product_id=product.id) }}" class="text-decoration-none">
                         <div class="arrival-img-box" style="background-color: var(--input-bg);">
-                            <img src="{{ url_for('static', filename=product.image) }}" alt="{{ product.name }}" class="img-fluid">
+                            <img src="{{product.image}}" alt="{{ product.name }}" class="img-fluid">
                         </div>
                     </a>
                     <div class="arrival-card-body">
@@ -127,97 +127,44 @@
                 <a href="{{ url_for('product') }}" class="btn btn-warning rounded-pill px-4 py-2 fw-bold">View more</a>
             </div>
             <div class="col-md-6 mt-4 mt-md-0 text-center">
-                <img src="{{ url_for('static', filename='images/penaldo.jpg') }}" alt="CR7 Cleats" class="img-fluid banner-img">
+                <img src="{{ url_for('static', filename='images/penaldo.jpg') }}" alt="Nike Sports Collection" class="img-fluid banner-img rounded">
             </div>
         </div>
     </section>
 
     <!-- Visual Grid -->
     <section class="container my-5">
+        <!-- Large grid: first 2 products -->
         <div class="row g-4 mb-4">
-            <!-- Large Image 1 -->
+            {% for product in grid_products[:2] %}
             <div class="col-md-6">
-                <div class="grid-img-container rounded position-relative">
-                    <img src="{{ url_for('static', filename='images/label-1 (1).jpg') }}" alt="Soccer Shoes" class="img-fluid rounded w-100 object-fit-cover">
-                    <i class="fa-solid fa-heart text-danger position-absolute top-0 start-0 m-3 fs-4"></i>
-                    <a href="{{ url_for('product') }}" class="btn btn-light position-absolute bottom-0 start-50 translate-middle-x mb-4 rounded-pill px-4 fw-bold text-dark opacity-75 hover-opacity-100">Shop Now</a>
+                <div class="grid-img-container rounded position-relative" style="background-color: var(--input-bg);">
+                    <img src="{{ product.image }}" alt="{{ product.name }}" class="img-fluid rounded w-100" style="height:320px;object-fit:contain;padding:20px;">
+                    <i class="fa-solid fa-heart text-danger position-absolute top-0 {% if loop.first %}start-0{% else %}end-0{% endif %} m-3 fs-4"></i>
+                    <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-light position-absolute bottom-0 start-50 translate-middle-x mb-4 rounded-pill px-4 fw-bold text-dark opacity-75">Shop Now</a>
                 </div>
             </div>
-            <!-- Large Image 2 -->
-            <div class="col-md-6">
-                <div class="grid-img-container rounded position-relative">
-                    <img src="{{ url_for('static', filename='images/label-2 (1).jpg') }}" alt="Basketball Shoes" class="img-fluid rounded w-100 object-fit-cover">
-                    <i class="fa-solid fa-heart text-danger position-absolute top-0 end-0 m-3 fs-4"></i>
-                    <a href="{{ url_for('product') }}" class="btn btn-light position-absolute bottom-0 start-50 translate-middle-x mb-4 rounded-pill px-4 fw-bold text-dark opacity-75 hover-opacity-100">Shop Now</a>
-                </div>
-            </div>
+            {% endfor %}
         </div>
-
+        <!-- Small grid: next 4 products -->
         <div class="row g-4">
-            <!-- Small Grid 1 -->
+            {% for product in grid_products %}
             <div class="col-md-3">
                 <div class="arrival-card">
-                    <div class="arrival-img-box" style="background-color: #0d1b2a;">
-                        <img src="{{ url_for('static', filename='images/Nike Mercurial Superfly.jpg') }}" alt="Mercurial" class="img-fluid rounded">
+                    <div class="arrival-img-box" style="background-color: var(--input-bg);">
+                        <img src="{{ product.image }}" alt="{{ product.name }}" class="img-fluid">
                     </div>
                     <div class="arrival-card-body">
                         <div class="arrival-meta">
-                            <p class="arrival-name">Nike Mercurial</p>
-                            <span class="arrival-rating">4.9 <i class="fa-solid fa-star text-warning"></i></span>
+                            <p class="arrival-name text-truncate" title="{{ product.name }}">{{ product.name }}</p>
+                            <span class="arrival-rating">{{ product.category }}</span>
                         </div>
-                        <p class="arrival-price">$ 100</p>
-                        <a href="{{ url_for('product') }}" class="btn btn-warning btn-sm mt-1 px-3 rounded-pill">Browse Products</a>
+                        <p class="arrival-price">${{ '%.2f'|format(product.price) }}</p>
+                        <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-warning btn-sm mt-1 px-3 rounded-pill">View Product</a>
                     </div>
                 </div>
             </div>
-            <!-- Small Grid 2 -->
-            <div class="col-md-3">
-                <div class="arrival-card">
-                    <div class="arrival-img-box" style="background-color: #ffb5a7;">
-                        <img src="{{ url_for('static', filename='images/Nike Air Zoom.png') }}" alt="Air Zoom" class="img-fluid">
-                    </div>
-                    <div class="arrival-card-body">
-                        <div class="arrival-meta">
-                            <p class="arrival-name">Nike Air Zoom</p>
-                            <span class="arrival-rating">4.9 <i class="fa-solid fa-star text-warning"></i></span>
-                        </div>
-                        <p class="arrival-price">$ 115</p>
-                        <a href="{{ url_for('product') }}" class="btn btn-warning btn-sm mt-1 px-3 rounded-pill">Browse Products</a>
-                    </div>
-                </div>
-            </div>
-            <!-- Small Grid 3 -->
-            <div class="col-md-3">
-                <div class="arrival-card">
-                    <div class="arrival-img-box" style="background-color: #457b9d;">
-                        <img src="{{ url_for('static', filename='images/Men\'s Sneakers.png') }}" alt="Mens Sneakers" class="img-fluid">
-                    </div>
-                    <div class="arrival-card-body">
-                        <div class="arrival-meta">
-                            <p class="arrival-name">Men's Sneakers</p>
-                            <span class="arrival-rating">4.8 <i class="fa-solid fa-star text-warning"></i></span>
-                        </div>
-                        <p class="arrival-price">$ 130</p>
-                        <a href="{{ url_for('product') }}" class="btn btn-warning btn-sm mt-1 px-3 rounded-pill">Browse Products</a>
-                    </div>
-                </div>
-            </div>
-            <!-- Small Grid 4 -->
-            <div class="col-md-3">
-                <div class="arrival-card">
-                    <div class="arrival-img-box" style="background-color: #8b5a5a;">
-                        <img src="{{ url_for('static', filename='images/Zapatos Nike.png') }}" alt="Zapatos" class="img-fluid">
-                    </div>
-                    <div class="arrival-card-body">
-                        <div class="arrival-meta">
-                            <p class="arrival-name">Zapatos Nike</p>
-                            <span class="arrival-rating">4.8 <i class="fa-solid fa-star text-warning"></i></span>
-                        </div>
-                        <p class="arrival-price">$ 150</p>
-                        <a href="{{ url_for('product') }}" class="btn btn-warning btn-sm mt-1 px-3 rounded-pill">Browse Products</a>
-                    </div>
-                </div>
-            </div>
+            {% endfor %}
         </div>
     </section>
 

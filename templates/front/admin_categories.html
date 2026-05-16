@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Category Management – VRUN</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+<script>if(localStorage.getItem('vrun-theme')==='light'){document.documentElement.setAttribute('data-theme','light')}else{document.documentElement.removeAttribute('data-theme')}</script>
+<style>
+    :root { --gold:#ffc107; --gold-dim:rgba(255,193,7,.12); --gold-glow:rgba(255,193,7,.25); }
+
+    .dash-wrap { display:grid; grid-template-columns:220px 1fr; min-height:calc(100vh - 60px); }
+    .dash-side  { background:var(--card-bg); border-right:1px solid var(--border-color); padding:24px 12px; }
+    .dash-main  { padding:32px 28px; background:var(--body-bg); }
+
+    .side-label { font-size:.68rem; font-weight:700; letter-spacing:.12em; color:var(--muted-text); text-transform:uppercase; padding:0 12px; margin:18px 0 6px; }
+    .side-link  { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:10px; color:var(--body-text); font-weight:500; text-decoration:none; transition:.2s; font-size:.88rem; }
+    .side-link:hover, .side-link.active { background:var(--gold-dim); color:var(--gold); }
+    .side-link i { width:18px; text-align:center; }
+
+    .page-title { font-size:1.6rem; font-weight:800; color:var(--gold); margin:0; }
+
+    .btn-add-product { background:linear-gradient(135deg,#ffc107,#e6a800); color:#000; font-weight:700; border:none; border-radius:12px; padding:10px 22px; font-size:.88rem; transition:.2s; box-shadow:0 4px 14px var(--gold-glow); text-decoration:none; display:inline-flex; align-items:center; cursor:pointer;}
+    .btn-add-product:hover { transform:translateY(-2px); box-shadow:0 6px 20px var(--gold-glow); color:#000; }
+
+    .tbl-card { background:var(--card-bg); border:1px solid var(--border-color); border-radius:18px; overflow:hidden; }
+    .tbl-card .card-header { background:transparent; border-bottom:1px solid var(--border-color); padding:18px 22px; display:flex; align-items:center; justify-content:space-between; }
+    .tbl-card table thead th { background:var(--gold-dim); color:var(--gold); font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; padding:12px 16px; border-bottom:1px solid var(--border-color); font-weight:700; }
+    .tbl-card table tbody td { padding:14px 16px; border-bottom:1px solid var(--border-color); vertical-align:middle; font-size:.87rem; color:var(--body-text); }
+    .tbl-card table tbody tr:last-child td { border-bottom:none; }
+    .tbl-card table tbody tr:hover td { background:var(--gold-dim); }
+
+    .btn-action { width:32px; height:32px; border-radius:8px; border:none; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:.2s; font-size:.8rem; }
+    .btn-edit { background:rgba(255,193,7,.15); color:#ffc107; }
+    .btn-edit:hover { background:#ffc107; color:#000; }
+    .btn-del  { background:rgba(220,53,69,.12); color:#f87171; }
+    .btn-del:hover { background:#dc3545; color:#fff; }
+
+    /* Modal */
+    .modal-content { background:var(--card-bg); border:1px solid var(--border-color); border-radius:20px; }
+    .modal-header  { border-bottom:1px solid var(--border-color); padding:20px 24px; }
+    .modal-title   { font-weight:700; color:var(--gold); font-size:1.05rem; }
+    .modal-footer  { border-top:1px solid var(--border-color); padding:16px 24px; }
+    .modal-body    { padding:24px; }
+    .custom-input { background:var(--input-bg); border:1px solid var(--border-color); color:var(--body-text); padding:10px 14px; border-radius:10px; width:100%; transition:.2s; }
+    .custom-input:focus { border-color:var(--gold); outline:none; box-shadow:0 0 0 3px var(--gold-glow); }
+
+    @media (max-width:992px) {
+        .dash-wrap { grid-template-columns:1fr; }
+        .dash-side { border-right:none; border-bottom:1px solid var(--border-color); }
+        .dash-main { padding:20px 16px; }
+    }
+</style>
+</head>
+<body>
+{% include 'front/navbar.html' %}
+{% include 'front/flash_messages.html' %}
+
+<div class="dash-wrap">
+    <!-- SIDEBAR -->
+    <aside class="dash-side">
+        <p class="side-label">Overview</p>
+        <a href="{{ url_for('admin') }}" class="side-link"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+        <a href="{{ url_for('admin_categories') }}" class="side-link active"><i class="fa-solid fa-tags"></i> Categories</a>
+        <a href="{{ url_for('inbox') }}" class="side-link"><i class="fa-solid fa-inbox"></i> Order Inbox</a>
+        <p class="side-label">Account</p>
+        <a href="{{ url_for('profile') }}" class="side-link"><i class="fa-solid fa-user"></i> My Profile</a>
+        <a href="{{ url_for('settings') }}" class="side-link"><i class="fa-solid fa-gear"></i> Settings</a>
+        <a href="{{ url_for('logout') }}" class="side-link text-danger"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="dash-main">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+            <div>
+                <h1 class="page-title"><i class="fa-solid fa-tags me-2"></i>Categories</h1>
+                <p class="text-muted small mb-0">Manage product categories for your store.</p>
+            </div>
+            <button class="btn-add-product" data-bs-toggle="modal" data-bs-target="#addModal">
+                <i class="fa-solid fa-plus me-2"></i> Add Category
+            </button>
+        </div>
+
+        <div class="tbl-card">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-white">All Categories</h6>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-borderless mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 70%;">Category Name</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cat in categories %}
+                        <tr>
+                            <td class="fw-bold">{{ cat.name }}</td>
+                            <td class="text-end">
+                                <button class="btn-action btn-edit me-2" onclick="editCat('{{ cat.id }}', '{{ cat.name }}')" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                                <button class="btn-action btn-del" onclick="delCat('{{ cat.id }}', '{{ cat.name }}')" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Add Modal -->
+<div class="modal fade" id="addModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('admin_categories') }}">
+                <input type="hidden" name="action" value="add">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Category</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="text-muted small fw-bold mb-2">Category Name</label>
+                    <input type="text" name="name" class="custom-input" required placeholder="e.g. Sneaker">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning rounded-pill px-4 fw-bold">Add Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('admin_categories') }}">
+                <input type="hidden" name="action" value="edit">
+                <input type="hidden" name="category_id" id="edit_cat_id">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Category</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="text-muted small fw-bold mb-2">Category Name</label>
+                    <input type="text" name="name" id="edit_cat_name" class="custom-input" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning rounded-pill px-4 fw-bold">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="delModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-danger">
+            <form method="POST" action="{{ url_for('admin_categories') }}">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="category_id" id="del_cat_id">
+                <div class="modal-header border-danger">
+                    <h5 class="modal-title text-danger">Confirm Deletion</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <div style="width:64px;height:64px;border-radius:50%;background:rgba(220,53,69,.12);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.6rem;color:#f87171;">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </div>
+                    <p class="text-white mb-1">Are you sure you want to delete <strong id="del_cat_name" class="text-warning"></strong>?</p>
+                    <p class="text-muted small">Products with this category will not be deleted, but the category tag may remain on them until updated.</p>
+                </div>
+                <div class="modal-footer border-0 justify-content-center">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold">Yes, Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+<script>
+function editCat(id, name) {
+    document.getElementById('edit_cat_id').value = id;
+    document.getElementById('edit_cat_name').value = name;
+    new bootstrap.Modal(document.getElementById('editModal')).show();
+}
+function delCat(id, name) {
+    document.getElementById('del_cat_id').value = id;
+    document.getElementById('del_cat_name').textContent = name;
+    new bootstrap.Modal(document.getElementById('delModal')).show();
+}
+</script>
+</body>
+</html>

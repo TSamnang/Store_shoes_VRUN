@@ -150,7 +150,7 @@
                             <!-- Product Image -->
                             <div class="flex-shrink-0">
                                 <img
-                                    src="{{ url_for('static', filename=item.image) }}"
+                                    src="{{item.image}}"
                                     alt="{{ item.product_name }}"
                                     style="width: 80px; height: 80px; object-fit: contain; background: #1a1a2e; border-radius: 10px; padding: 6px; border: 1px solid rgba(255,193,7,0.2);"
                                 >
@@ -218,7 +218,7 @@
                             {% for item in items %}
                             <div class="d-flex align-items-center mb-2">
                                 <img
-                                    src="{{ url_for('static', filename=item.image) }}"
+                                    src="{{item.image}}"
                                     alt="{{ item.product_name }}"
                                     style="width: 42px; height: 42px; object-fit: contain; background: #1a1a2e; border-radius: 6px; padding: 3px; border: 1px solid rgba(255,193,7,0.2);"
                                 >

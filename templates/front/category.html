@@ -20,17 +20,19 @@
     <!-- Page Title -->
     <section class="container my-5">
         <h1 class="text-warning fw-bold mb-4">Shop by Category</h1>
-        {% set image_map = {
-            'Sneaker Shoes':'images/Sneaker_category.png',
-            'Sport Shoes':'images/sport-category.png',
-            'Casual Shoes':'images/casual_category.png'
-        } %}
         <div class="row g-3 mb-5">
             {% for cat in categories %}
             <div class="col-md-4">
                 <div class="arrival-card">
-                    <div class="arrival-img-box" style="background-color: #1e1e1e;">
-                        <img src="{{ url_for('static', filename=image_map.get(cat.category, 'images/Sneaker_category.png')) }}" alt="{{ cat.category }}" class="img-fluid">
+                    <div class="arrival-img-box" style="background-color: var(--input-bg);">
+                        {% set cat_img = category_images.get(cat.category, '') %}
+                        {% if cat_img %}
+                        <img src="{{ cat_img }}" alt="{{ cat.category }}" class="img-fluid">
+                        {% else %}
+                        <div class="d-flex align-items-center justify-content-center h-100 text-muted" style="min-height:160px;">
+                            <i class="fa-solid fa-shoe-prints fs-1"></i>
+                        </div>
+                        {% endif %}
                     </div>
                     <div class="arrival-card-body">
                         <div class="arrival-meta">
@@ -57,7 +59,7 @@
                     <div class="arrival-card">
                         <a href="{{ url_for('product_detail', product_id=product.id) }}" class="text-decoration-none">
                             <div class="arrival-img-box" style="background-color: var(--input-bg);">
-                                <img src="{{ url_for('static', filename=product.image) }}" class="img-fluid" alt="{{ product.name }}">
+                                <img src="{{product.image}}" class="img-fluid" alt="{{ product.name }}">
                             </div>
                         </a>
                         <div class="arrival-card-body">
