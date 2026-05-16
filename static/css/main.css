@@ -857,6 +857,44 @@ body {
     color: var(--body-text);
 }
 
+/* ==================== CATEGORY PILL BADGE ==================== */
+.category-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.18) 0%, rgba(255, 140, 0, 0.22) 100%);
+    color: var(--primary-yellow);
+    border: 1px solid rgba(255, 193, 7, 0.35);
+    box-shadow: 0 0 8px rgba(255, 193, 7, 0.12);
+    transition: all 0.25s ease;
+    align-self: flex-start;
+    margin-bottom: 4px;
+    position: relative;
+    overflow: hidden;
+}
+
+.category-pill::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 60%);
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+.arrival-card:hover .category-pill {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.30) 0%, rgba(255, 140, 0, 0.35) 100%);
+    box-shadow: 0 0 14px rgba(255, 193, 7, 0.30);
+    border-color: rgba(255, 193, 7, 0.65);
+    transform: translateX(2px);
+}
+
 .arrival-card-body .arrival-price {
     font-weight: 700;
     font-size: 1rem;

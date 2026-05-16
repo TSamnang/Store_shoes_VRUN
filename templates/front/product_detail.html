@@ -169,9 +169,11 @@
                             </a>
                             <div class="arrival-card-body">
                                 <div class="arrival-meta">
-                                    <a href="{{ url_for('product_detail', product_id=related.id) }}" class="text-decoration-none"><p class="arrival-name">{{ related.name }}</p></a>
-                                    <span class="arrival-rating">{{ related.category }} <i class="fa-solid fa-star text-warning"></i></span>
+                                    <a href="{{ url_for('product_detail', product_id=related.id) }}" class="text-decoration-none" style="flex: 1; min-width: 0;">
+                                        <p class="arrival-name text-truncate m-0" title="{{ related.name }}">{{ related.name }}</p>
+                                    </a>
                                 </div>
+                                {% if related.category %}<span class="category-pill">{{ related.category | join(', ') }}</span>{% endif %}
                                 <p class="arrival-price">${{ '%.2f'|format(related.price) }}</p>
                                 <a href="{{ url_for('add_to_cart', product_id=related.id) }}" class="btn btn-warning btn-sm mt-1 w-100 rounded-pill">Add to cart</a>
                             </div>
