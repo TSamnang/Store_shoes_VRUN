@@ -119,8 +119,6 @@ def create_user(username, email, password, role='customer'):
         'email': email,
         'password_hash': password_hash,
         'role': role,
-        'shipping_addresses': [], # Array of addresses
-        'wishlist': [],           # Array of product_ids
         'created_at': datetime.utcnow().isoformat()
     })
     return str(result.inserted_id)
