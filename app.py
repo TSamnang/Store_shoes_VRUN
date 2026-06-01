@@ -1384,7 +1384,10 @@ def admin_categories():
 def admin():
     require_admin()
     products = get_products(limit=100)
-    return render_template('admin/dashboard.html', products=products, **common_context('admin'))
+    discounted_products = get_discounted_products(limit=100)
+    categories = get_all_categories()
+    return render_template('admin/dashboard.html', products=products, discounted_products=discounted_products, categories=categories, **common_context('admin'))
+
 
 
 @app.route('/admin/product/new', methods=['GET', 'POST'])

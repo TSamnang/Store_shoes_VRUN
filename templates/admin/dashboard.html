@@ -43,6 +43,20 @@
     .stock-low { color:#f87171; font-weight:700; }
     .stock-ok  { color:#34d399; font-weight:600; }
 
+    .badge-sale { background:linear-gradient(135deg,#ef4444,#f97316); color:#fff; border-radius:6px; padding:3px 10px; font-size:.72rem; font-weight:700; letter-spacing:.04em; box-shadow:0 2px 8px rgba(239,68,68,.35); }
+    .price-original { text-decoration:line-through; color:var(--muted-text); font-size:.8rem; }
+    .price-sale { color:#f97316; font-weight:800; font-size:.95rem; }
+    .discount-pill { background:rgba(239,68,68,.12); color:#f87171; border-radius:20px; padding:4px 12px; font-size:.75rem; font-weight:700; display:inline-flex; align-items:center; gap:5px; }
+    .discount-section-header { font-size:.95rem; font-weight:700; color:#f97316; display:flex; align-items:center; gap:8px; }
+
+    .filter-bar { display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:12px 22px; border-bottom:1px solid var(--border-color); background:var(--body-bg); }
+    .filter-bar-label { font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--muted-text); margin-right:4px; white-space:nowrap; }
+    .cat-chip { display:inline-flex; align-items:center; gap:5px; padding:5px 14px; border-radius:20px; border:1px solid var(--border-color); background:transparent; color:var(--body-text); font-size:.75rem; font-weight:600; cursor:pointer; transition:.18s; white-space:nowrap; }
+    .cat-chip:hover { border-color:var(--gold); color:var(--gold); background:var(--gold-dim); }
+    .cat-chip.active { background:var(--gold); border-color:var(--gold); color:#000; box-shadow:0 2px 10px var(--gold-glow); }
+    .cat-chip-sale.active { background:#f97316; border-color:#f97316; color:#fff; box-shadow:0 2px 10px rgba(249,115,22,.35); }
+    .cat-chip-sale:hover { border-color:#f97316; color:#f97316; background:rgba(249,115,22,.1); }
+
     .btn-action { width:32px; height:32px; border-radius:8px; border:none; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:.2s; font-size:.8rem; }
     .btn-edit { background:rgba(255,193,7,.15); color:#ffc107; }
     .btn-edit:hover { background:#ffc107; color:#000; }
@@ -164,14 +178,109 @@
                     </div>
                 </div>
             </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div><div class="stat-num" style="color:#f97316;">{{ discounted_products|length }}</div><div class="stat-label">On Sale</div></div>
+                        <i class="fa-solid fa-tag stat-icon" style="color:#f97316;"></i>
+                    </div>
+                </div>
+            </div>
         </div>
+
+        <!-- DISCOUNTED PRODUCTS -->
+        {% if discounted_products %}
+        <div class="tbl-card mb-4">
+            <div class="card-header">
+                <div class="discount-section-header">
+                    <i class="fa-solid fa-tag"></i> On-Sale Products
+                    <span class="text-muted fw-normal" style="font-size:.75rem;color:var(--muted-text) !important;">{{ discounted_products|length }} item(s) currently discounted</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="search-wrap">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="saleSearchInput" placeholder="Search on-sale…" oninput="filterSaleTable(this.value)">
+                    </div>
+                    <span class="badge-sale"><i class="fa-solid fa-bolt me-1"></i>SALE ACTIVE</span>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <div class="filter-bar" id="saleFilterBar">
+                    <span class="filter-bar-label"><i class="fa-solid fa-filter me-1"></i>Category:</span>
+                    <button class="cat-chip cat-chip-sale active" data-value="all" onclick="selectChip('saleFilterBar','discountTable','all','cat-chip-sale')">All</button>
+                    {% for cat in categories %}
+                    <button class="cat-chip cat-chip-sale" data-value="{{ cat.name|lower }}" onclick="selectChip('saleFilterBar','discountTable','{{ cat.name|lower }}','cat-chip-sale')">{{ cat.name }}</button>
+                    {% endfor %}
+                </div>
+                <table class="table mb-0 text-white" id="discountTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th>Original Price</th>
+                            <th>Discount</th>
+                            <th>Sale Price</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in discounted_products %}
+                        {% set pct = p.discount_percent | float %}
+                        {% set sale_price = (p.price | float) * (1 - pct / 100) %}
+                        {% set cats_str = p.category | select | list | join(' ') | lower %}
+                        <tr data-name="{{ p.name|lower }}" data-cat="{{ cats_str }}">
+                            <td class="text-muted small">{{ loop.index }}</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    {% if p.image %}
+                                    <img src="{{ p.image }}" alt="{{ p.name }}" class="prod-thumb">
+                                    {% else %}
+                                    <div class="prod-thumb d-flex align-items-center justify-content-center text-muted"><i class="fa-solid fa-image"></i></div>
+                                    {% endif %}
+                                    <div>
+                                        <div style="font-size:.87rem;font-weight:600;">{{ p.name }}</div>
+                                        <div class="text-muted" style="font-size:.72rem;">{{ p.brand }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% set cats = p.category | select | list %}
+                                {% if cats %}
+                                    {% for c in cats %}<span class="badge-cat me-1">{{ c }}</span>{% endfor %}
+                                {% else %}
+                                    <span class="text-muted" style="font-size:.75rem;">—</span>
+                                {% endif %}
+                            </td>
+                            <td><span class="price-original">${{ '%.2f'|format(p.price) }}</span></td>
+                            <td>
+                                <span class="discount-pill">
+                                    <i class="fa-solid fa-arrow-down"></i>
+                                    {{ pct | int }}% OFF
+                                </span>
+                            </td>
+                            <td><span class="price-sale">${{ '%.2f'|format(sale_price) }}</span></td>
+                            <td class="text-end">
+                                <a href="{{ url_for('admin_product_detail', product_id=p.id) }}" class="btn-action btn-edit me-1" title="Edit Discount">
+                                    <i class="fa-solid fa-pen"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
 
         <!-- PRODUCT CATALOG -->
         <div class="tbl-card">
             <div class="card-header">
                 <div style="font-size:.95rem;font-weight:700;color:var(--gold);display:flex;align-items:center;gap:8px;">
                     <i class="fa-solid fa-boxes-stacked"></i> Product Catalog
-                    <span class="text-muted fw-normal" style="font-size:.75rem;">{{ products|length }} items</span>
+                    {% set ns = namespace(count=0) %}
+                    {% for p in products %}{% if (p.discount_percent | default(0) | float) <= 0 %}{% set ns.count = ns.count + 1 %}{% endif %}{% endfor %}
+                    <span class="text-muted fw-normal" style="font-size:.75rem;">{{ ns.count }} items</span>
                 </div>
                 <div class="search-wrap">
                     <i class="fa-solid fa-magnifying-glass"></i>
@@ -179,6 +288,13 @@
                 </div>
             </div>
             <div class="table-responsive">
+                <div class="filter-bar" id="prodFilterBar">
+                    <span class="filter-bar-label"><i class="fa-solid fa-filter me-1"></i>Category:</span>
+                    <button class="cat-chip active" data-value="all" onclick="selectChip('prodFilterBar','prodTable','all','')">All</button>
+                    {% for cat in categories %}
+                    <button class="cat-chip" data-value="{{ cat.name|lower }}" onclick="selectChip('prodFilterBar','prodTable','{{ cat.name|lower }}','')">{{ cat.name }}</button>
+                    {% endfor %}
+                </div>
                 <table class="table mb-0 text-white" id="prodTable">
                     <thead>
                         <tr>
@@ -193,7 +309,9 @@
                     </thead>
                     <tbody>
                         {% for p in products %}
-                        <tr data-name="{{ p.name|lower }}">
+                        {% if (p.discount_percent | default(0) | float) <= 0 %}
+                        {% set cats_str = p.category | select | list | join(' ') | lower %}
+                        <tr data-name="{{ p.name|lower }}" data-cat="{{ cats_str }}">
                             <td class="text-muted small">{{ loop.index }}</td>
                             <td>
                                 <div class="d-flex align-items-center gap-3">
@@ -239,6 +357,7 @@
                                 </button>
                             </td>
                         </tr>
+                        {% endif %}
                         {% else %}
                         <tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-box-open"></i>No products yet.</div></td></tr>
                         {% endfor %}
@@ -300,11 +419,69 @@
         new bootstrap.Modal(document.getElementById('deleteModal')).show();
     }
 
-    function filterTable(q) {
-        document.querySelectorAll('#prodTable tbody tr[data-name]').forEach(row => {
-            row.style.display = row.dataset.name.includes(q.toLowerCase()) ? '' : 'none';
+    /* ── Category chip filter for BOTH tables ── */
+    function buildChips(barId, tableId, chipClass) {
+        const bar   = document.getElementById(barId);
+        const table = document.getElementById(tableId);
+        if (!bar || !table) return;
+
+        // Collect unique categories from data-cat attributes
+        const cats = new Set();
+        table.querySelectorAll('tbody tr[data-cat]').forEach(r => {
+            r.dataset.cat.split(' ').forEach(c => { if (c) cats.add(c.trim()); });
+        });
+
+        // Build chips
+        const all = makeChip('All', chipClass, true);
+        all.addEventListener('click', () => selectChip(barId, tableId, 'all', chipClass));
+        bar.appendChild(all);
+        [...cats].sort().forEach(cat => {
+            const chip = makeChip(cat.charAt(0).toUpperCase() + cat.slice(1), chipClass, false);
+            chip.dataset.value = cat;
+            chip.addEventListener('click', () => selectChip(barId, tableId, cat, chipClass));
+            bar.appendChild(chip);
         });
     }
+
+    function makeChip(label, extraClass, active) {
+        const btn = document.createElement('button');
+        btn.className = 'cat-chip' + (extraClass ? ' ' + extraClass : '') + (active ? ' active' : '');
+        btn.textContent = label;
+        btn.dataset.value = label === 'All' ? 'all' : label.toLowerCase();
+        return btn;
+    }
+
+    function selectChip(barId, tableId, value, chipClass) {
+        const bar = document.getElementById(barId);
+        bar.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+        const target = [...bar.querySelectorAll('.cat-chip')].find(c => c.dataset.value === value);
+        if (target) target.classList.add('active');
+        applyFilters(tableId, barId);
+    }
+
+    function getActiveChip(barId) {
+        const bar = document.getElementById(barId);
+        if (!bar) return 'all';
+        const active = bar.querySelector('.cat-chip.active');
+        return active ? active.dataset.value : 'all';
+    }
+
+    function applyFilters(tableId, barId) {
+        const searchInput = tableId === 'discountTable'
+            ? document.getElementById('saleSearchInput')
+            : document.querySelector('#prodTable')?.closest('.tbl-card')?.querySelector('input[type=text]');
+        const q   = (searchInput?.value || '').toLowerCase().trim();
+        const cat = getActiveChip(barId);
+
+        document.querySelectorAll('#' + tableId + ' tbody tr[data-name]').forEach(row => {
+            const nameMatch = !q || row.dataset.name.includes(q) || (row.dataset.cat || '').includes(q);
+            const catMatch  = cat === 'all' || (row.dataset.cat || '').split(' ').includes(cat);
+            row.style.display = (nameMatch && catMatch) ? '' : 'none';
+        });
+    }
+
+    function filterSaleTable(q) { applyFilters('discountTable', 'saleFilterBar'); }
+    function filterTable(q)     { applyFilters('prodTable',     'prodFilterBar'); }
 </script>
 </body>
 </html>
