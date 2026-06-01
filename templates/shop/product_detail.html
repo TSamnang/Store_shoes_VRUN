@@ -15,8 +15,8 @@
 </head>
 <body>
 
-    {% include 'front/navbar.html' %}
-    {% include 'front/flash_messages.html' %}
+    {% include 'base/navbar.html' %}
+    {% include 'base/flash_messages.html' %}
 
     <!-- Product Details -->
     <div class="container my-5">
@@ -393,20 +393,15 @@
     <!-- Product Detail Interactivity -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Size selection
             const sizeBtns = document.querySelectorAll('.size-btn');
             sizeBtns.forEach(btn => {
                 btn.addEventListener('click', function() {
-                    sizeBtns.forEach(b => {
-                        b.classList.remove('btn-warning', 'text-dark');
-                        b.classList.add('btn-outline-warning');
-                    });
+                    sizeBtns.forEach(b => { b.classList.remove('btn-warning', 'text-dark'); b.classList.add('btn-outline-warning'); });
                     this.classList.remove('btn-outline-warning');
                     this.classList.add('btn-warning', 'text-dark');
                 });
             });
 
-            // Color selection
             const colorBtns = document.querySelectorAll('.color-btn');
             colorBtns.forEach(btn => {
                 btn.addEventListener('click', function() {
@@ -416,35 +411,21 @@
                 });
             });
 
-            // Quantity buttons
             const qtyInput = document.querySelector('input[type="number"]');
             const qtyBtns = document.querySelectorAll('.input-group .btn-outline-warning');
             if(qtyBtns.length >= 2 && qtyInput) {
-                qtyBtns[0].addEventListener('click', function() {
-                    let val = parseInt(qtyInput.value) || 1;
-                    if(val > 1) qtyInput.value = val - 1;
-                });
-                qtyBtns[1].addEventListener('click', function() {
-                    let val = parseInt(qtyInput.value) || 1;
-                    qtyInput.value = val + 1;
-                });
+                qtyBtns[0].addEventListener('click', function() { let val = parseInt(qtyInput.value) || 1; if(val > 1) qtyInput.value = val - 1; });
+                qtyBtns[1].addEventListener('click', function() { let val = parseInt(qtyInput.value) || 1; qtyInput.value = val + 1; });
             }
 
-            // Heart/Wishlist button
-            const heartBtn = document.querySelector('.fa-heart').parentElement;
+            const heartBtn = document.querySelector('.fa-heart')?.parentElement;
             if(heartBtn && heartBtn.tagName === 'BUTTON') {
                 heartBtn.addEventListener('click', function() {
-                    if(this.classList.contains('btn-outline-warning')) {
-                        this.classList.remove('btn-outline-warning');
-                        this.classList.add('btn-danger', 'text-white', 'border-danger');
-                    } else {
-                        this.classList.remove('btn-danger', 'text-white', 'border-danger');
-                        this.classList.add('btn-outline-warning');
-                    }
+                    if(this.classList.contains('btn-outline-warning')) { this.classList.remove('btn-outline-warning'); this.classList.add('btn-danger', 'text-white', 'border-danger'); }
+                    else { this.classList.remove('btn-danger', 'text-white', 'border-danger'); this.classList.add('btn-outline-warning'); }
                 });
             }
 
-            // ===== STAR RATING INPUT =====
             const starBtns = document.querySelectorAll('.star-btn');
             const ratingInput = document.getElementById('ratingInput');
             const ratingLabel = document.getElementById('ratingLabel');
@@ -454,15 +435,8 @@
                 starBtns.forEach(btn => {
                     const v = parseInt(btn.dataset.value);
                     const icon = btn.querySelector('i');
-                    if (v <= value) {
-                        icon.classList.remove('fa-regular');
-                        icon.classList.add('fa-solid');
-                        btn.classList.add('star-btn--active');
-                    } else {
-                        icon.classList.remove('fa-solid');
-                        icon.classList.add('fa-regular');
-                        btn.classList.remove('star-btn--active');
-                    }
+                    if (v <= value) { icon.classList.remove('fa-regular'); icon.classList.add('fa-solid'); btn.classList.add('star-btn--active'); }
+                    else { icon.classList.remove('fa-solid'); icon.classList.add('fa-regular'); btn.classList.remove('star-btn--active'); }
                 });
                 if (!isHover && ratingLabel) {
                     ratingLabel.textContent = value ? ratingLabels[value] : 'Click to rate';
@@ -471,46 +445,27 @@
                 }
             }
 
-            // Pre-fill existing rating
             const existingRating = parseInt(ratingInput ? ratingInput.value : 0) || 0;
             if (existingRating) setStars(existingRating, false);
 
             starBtns.forEach(btn => {
                 btn.addEventListener('mouseenter', () => setStars(parseInt(btn.dataset.value), true));
                 btn.addEventListener('mouseleave', () => setStars(parseInt(ratingInput.value) || 0, true));
-                btn.addEventListener('click', () => {
-                    const val = parseInt(btn.dataset.value);
-                    ratingInput.value = val;
-                    setStars(val, false);
-                });
+                btn.addEventListener('click', () => { const val = parseInt(btn.dataset.value); ratingInput.value = val; setStars(val, false); });
             });
 
-            // ===== CHAR COUNTER =====
             const textarea = document.getElementById('reviewComment');
             const charCount = document.getElementById('charCount');
-            if (textarea && charCount) {
-                textarea.addEventListener('input', () => {
-                    charCount.textContent = textarea.value.length;
-                });
-            }
+            if (textarea && charCount) { textarea.addEventListener('input', () => { charCount.textContent = textarea.value.length; }); }
 
-            // ===== SUBMIT GUARD =====
             const reviewForm = document.getElementById('reviewForm');
             if (reviewForm) {
                 reviewForm.addEventListener('submit', function(e) {
-                    if (!ratingInput.value) {
-                        e.preventDefault();
-                        ratingLabel.textContent = '← Please select a rating!';
-                        ratingLabel.classList.add('text-danger');
-                        ratingLabel.classList.remove('text-muted', 'text-warning');
-                    }
+                    if (!ratingInput.value) { e.preventDefault(); ratingLabel.textContent = '← Please select a rating!'; ratingLabel.classList.add('text-danger'); ratingLabel.classList.remove('text-muted', 'text-warning'); }
                 });
             }
         });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        // Use global window.addToCartAjax from theme.js
-    </script>
 </body>
 </html>

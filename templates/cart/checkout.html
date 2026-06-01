@@ -15,8 +15,8 @@
 </head>
 <body>
 
-    {% include 'front/navbar.html' %}
-    {% include 'front/flash_messages.html' %}
+    {% include 'base/navbar.html' %}
+    {% include 'base/flash_messages.html' %}
 
     <!-- Checkout Page -->
     <div class="container my-5">
@@ -125,23 +125,23 @@
                     </div>
                     <div class="card-body">
                         <div class="form-check mb-3">
-                            <input class="form-check-input" type="radio" name="shipping_method" id="express" value="Express" data-cost="15" checked>
+                            <input class="form-check-input" type="radio" name="shipping_method" id="express" value="Express" data-cost="15" {{ 'checked' if preselected_shipping == 'Express' else '' }}>
                             <label class="form-check-label text-white" for="express">
                                 <strong>Express Delivery</strong> - 1-2 days
                                 <span class="text-warning ms-2">$15.00</span>
                             </label>
                         </div>
                         <div class="form-check mb-3">
-                            <input class="form-check-input" type="radio" name="shipping_method" id="standard" value="Standard" data-cost="5">
+                            <input class="form-check-input" type="radio" name="shipping_method" id="standard" value="Standard" data-cost="5" {{ 'checked' if preselected_shipping == 'Standard' else '' }}>
                             <label class="form-check-label text-white" for="standard">
                                 <strong>Standard Delivery</strong> - 3-5 days
                                 <span class="text-warning ms-2">$5.00</span>
                             </label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="shipping_method" id="pickup" value="Pickup" data-cost="0">
+                            <input class="form-check-input" type="radio" name="shipping_method" id="pickup" value="Pickup" data-cost="0" {{ 'checked' if preselected_shipping == 'Pickup' else '' }}>
                             <label class="form-check-label text-white" for="pickup">
-                                <strong>Store Pickup</strong> - 3-5 days
+                                <strong>Store Pickup</strong> - Pick up at our store
                                 <span class="text-warning ms-2">Free</span>
                             </label>
                         </div>
@@ -160,6 +160,7 @@
                                 <i class="fa-solid fa-credit-card text-warning me-2"></i> Credit / Debit Card
                             </label>
                         </div>
+
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="payment" value="KHQR" id="khqr">
                             <label class="form-check-label text-white" for="khqr">
@@ -179,15 +180,61 @@
                             </button>
                         </div>
 
-                        <!-- Card Details (appears when card selected) -->
-                        <div class="row g-3 mt-4" id="card-details">
+                        <!-- Saved Cards Selection -->
+                        {% set saved_methods = current_user.get('payment_methods', []) %}
+                        {% if saved_methods %}
+                            <div class="mt-4" id="saved-cards-section">
+                                <label class="form-label text-white fw-semibold mb-2">Select a Saved Card</label>
+                                <div class="row g-2 mb-3">
+                                    {% for pm in saved_methods %}
+                                        <div class="col-md-6">
+                                            <div class="card p-3 bg-dark border-secondary cursor-pointer saved-card-option {% if pm.is_default %}border-warning{% endif %}" 
+                                                 data-id="{{ pm.id }}" 
+                                                 data-name="{{ pm.name }}"
+                                                 data-number="{{ pm.number }}"
+                                                 data-expiry="{{ pm.expiry }}"
+                                                 style="border-radius:10px; cursor: pointer; transition: all 0.2s;">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <input class="form-check-input saved-card-radio" type="radio" name="selected_card_id" value="{{ pm.id }}" {% if pm.is_default %}checked{% endif %}>
+                                                    <div>
+                                                        <span class="text-white fw-bold d-block">
+                                                            {% if pm.brand|lower == 'visa' %}<i class="fa-brands fa-cc-visa text-primary me-1"></i>
+                                                            {% elif pm.brand|lower in ['mastercard', 'mc'] %}<i class="fa-brands fa-cc-mastercard text-danger me-1"></i>
+                                                            {% elif pm.brand|lower == 'amex' %}<i class="fa-brands fa-cc-amex text-info me-1"></i>
+                                                            {% else %}<i class="fa-solid fa-credit-card text-muted me-1"></i>{% endif %}
+                                                            {{ pm.number }}
+                                                        </span>
+                                                        <span class="text-muted small">Exp: {{ pm.expiry }} &nbsp;·&nbsp; {{ pm.name }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                    <div class="col-md-6">
+                                        <div class="card p-3 bg-dark border-secondary saved-card-option {% if not saved_methods %}border-warning{% endif %}" 
+                                             data-id="new" 
+                                             style="border-radius:10px; cursor: pointer; transition: all 0.2s; min-height: 70px; display: flex; justify-content: center; align-items: center;">
+                                            <div class="d-flex align-items-center gap-2 w-100">
+                                                <input class="form-check-input saved-card-radio" type="radio" name="selected_card_id" value="new" {% if not saved_methods %}checked{% endif %}>
+                                                <div>
+                                                    <span class="text-white fw-bold d-block"><i class="fa-solid fa-plus text-warning me-1"></i> Use a New Card</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Card Details -->
+                        <div class="row g-3 mt-2" id="card-details">
                             <div class="col-12">
                                 <label class="form-label text-white" for="cc-name">Name on Card</label>
                                 <input type="text" id="cc-name" name="cc_name" class="form-control bg-dark text-white border-secondary" placeholder="John Doe" autocomplete="cc-name">
                             </div>
                             <div class="col-12">
-                                <label class="form-label text-white" for="cc-number">Card Number (Any 16 digits)</label>
-                                <input type="text" id="cc-number" name="cc_number" class="form-control bg-dark text-white border-secondary" placeholder="1234567890123456" pattern="\d{16}" maxlength="16" title="Please enter 16 digits (fake cards accepted)" autocomplete="cc-number" inputmode="numeric">
+                                <label class="form-label text-white" for="cc-number">Card Number</label>
+                                <input type="text" id="cc-number" name="cc_number" class="form-control bg-dark text-white border-secondary" placeholder="1234567890123456" pattern="\d{13,19}" maxlength="19" title="Please enter 13 to 19 digits" autocomplete="cc-number" inputmode="numeric">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-white" for="cc-exp">Expiry Date</label>
@@ -195,7 +242,15 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-white" for="cc-cvc">CVV</label>
-                                <input type="text" id="cc-cvc" name="cc_cvv" class="form-control bg-dark text-white border-secondary" placeholder="123" pattern="\d{3,4}" maxlength="4" title="3 or 4 digit CVV" autocomplete="cc-csc" inputmode="numeric">
+                                <input type="password" id="cc-cvc" name="cc_cvv" class="form-control bg-dark text-white border-secondary" placeholder="123" pattern="\d{3,4}" maxlength="4" title="3 or 4 digit CVV" autocomplete="cc-csc" inputmode="numeric">
+                            </div>
+                            <div class="col-12" id="save-card-checkbox-container">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="save_card" value="true" id="save-card" checked>
+                                    <label class="form-check-label text-muted" for="save-card">
+                                        Save this card to my account for future purchases
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -213,11 +268,8 @@
                         <div class="mb-4">
                             {% for item in cart_items %}
                             <div class="d-flex align-items-center mb-3">
-                                <img
-                                    src="{{item.image}}"
-                                    alt="{{ item.name }}"
-                                    style="width: 54px; height: 54px; object-fit: contain; background: #1a1a2e; border-radius: 8px; padding: 4px; border: 1px solid rgba(255,193,7,0.2); flex-shrink: 0;"
-                                >
+                                <img src="{{item.image}}" alt="{{ item.name }}"
+                                    style="width: 54px; height: 54px; object-fit: contain; background: #1a1a2e; border-radius: 8px; padding: 4px; border: 1px solid rgba(255,193,7,0.2); flex-shrink: 0;">
                                 <div class="flex-grow-1 ms-3">
                                     <p class="text-warning small mb-1 fw-semibold">{{ item.name }}</p>
                                     <p class="text-muted small mb-0">Qty: {{ item.quantity }} &times; ${{ '%.2f'|format(item.price) }}</p>
@@ -330,51 +382,104 @@
         // Update shipping cost on selection
         const subtotal = {{ subtotal }};
         const discountAmt = {{ discount_amt|float }};
-        
-        document.querySelectorAll('input[name="shipping_method"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                const shippingCost = parseFloat(this.getAttribute('data-cost'));
-                const total = Math.max(0, subtotal - discountAmt) + shippingCost;
-                
-                document.getElementById('shipping-cost').textContent = '$' + shippingCost.toFixed(2);
-                document.getElementById('total-price').textContent = '$' + total.toFixed(2);
-            });
-        });
 
-        // Payment method toggle (hide/show card details)
+        function syncShipping() {
+            const checked = document.querySelector('input[name="shipping_method"]:checked');
+            if (!checked) return;
+            const cost = parseFloat(checked.getAttribute('data-cost'));
+            const total = Math.max(0, subtotal - discountAmt) + cost;
+            document.getElementById('shipping-cost').textContent = cost === 0 ? 'Free' : '$' + cost.toFixed(2);
+            document.getElementById('total-price').textContent = '$' + total.toFixed(2);
+        }
+
+        document.querySelectorAll('input[name="shipping_method"]').forEach(radio => {
+            radio.addEventListener('change', syncShipping);
+        });
+        // Run on load so the summary matches the pre-selected method
+        syncShipping();
+
         const cardRadio = document.getElementById('card');
         const cardDetails = document.getElementById('card-details');
         const cardInputs = cardDetails.querySelectorAll('input');
-        
         const khqrRadio = document.getElementById('khqr');
         const khqrDetails = document.getElementById('khqr-details');
+        const savedCardsSection = document.getElementById('saved-cards-section');
+        
+        function updateCardInputRequirements() {
+            const isCardActive = cardRadio.checked;
+            const newRadio = document.querySelector('input[name="selected_card_id"][value="new"]');
+            const isNewCardSelected = !newRadio || newRadio.checked;
+            
+            if (isCardActive) {
+                cardDetails.style.display = 'flex';
+                if (isNewCardSelected) {
+                    cardInputs.forEach(input => {
+                        if (input.type !== 'checkbox') {
+                            input.removeAttribute('readonly');
+                            input.setAttribute('required', 'required');
+                            if (input.dataset.autofilled === 'true') { input.value = ''; delete input.dataset.autofilled; }
+                        }
+                    });
+                    const saveCardContainer = document.getElementById('save-card-checkbox-container');
+                    if (saveCardContainer) saveCardContainer.style.display = 'block';
+                } else {
+                    const activeRadio = document.querySelector('input[name="selected_card_id"]:checked');
+                    const cardOption = activeRadio ? activeRadio.closest('.saved-card-option') : null;
+                    if (cardOption) {
+                        document.getElementById('cc-name').value = cardOption.dataset.name || '';
+                        document.getElementById('cc-number').value = cardOption.dataset.number || '';
+                        document.getElementById('cc-exp').value = cardOption.dataset.expiry || '';
+                        document.getElementById('cc-cvc').value = '•••';
+                        cardInputs.forEach(input => {
+                            if (input.type !== 'checkbox') { input.setAttribute('readonly', 'readonly'); input.removeAttribute('required'); input.dataset.autofilled = 'true'; }
+                        });
+                    }
+                    const saveCardContainer = document.getElementById('save-card-checkbox-container');
+                    if (saveCardContainer) saveCardContainer.style.display = 'none';
+                }
+            } else {
+                cardDetails.style.display = 'none';
+                cardInputs.forEach(input => { input.removeAttribute('required'); input.removeAttribute('readonly'); });
+            }
+            if (isCardActive && savedCardsSection) { savedCardsSection.style.display = 'block'; }
+            else if (savedCardsSection) { savedCardsSection.style.display = 'none'; }
+        }
         
         document.querySelectorAll('input[name="payment"]').forEach(radio => {
             radio.addEventListener('change', function() {
-                if (cardRadio.checked) {
-                    cardDetails.style.display = 'flex';
-                } else {
-                    cardDetails.style.display = 'none';
-                    cardInputs.forEach(input => {
-                        input.value = ''; // clear values
-                    });
-                }
-                
-                if (khqrRadio.checked) {
-                    khqrDetails.style.display = 'block';
-                } else {
-                    khqrDetails.style.display = 'none';
+                updateCardInputRequirements();
+                if (!cardRadio.checked) { cardInputs.forEach(input => { if (input.type !== 'checkbox') input.value = ''; }); }
+                if (khqrRadio.checked) { khqrDetails.style.display = 'block'; } else { khqrDetails.style.display = 'none'; }
+            });
+        });
+
+        document.querySelectorAll('input[name="selected_card_id"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                updateCardInputRequirements();
+                document.querySelectorAll('.saved-card-option').forEach(cardOpt => { cardOpt.classList.remove('border-warning'); });
+                const selectedOption = this.closest('.saved-card-option');
+                if (selectedOption) { selectedOption.classList.add('border-warning'); }
+            });
+        });
+        
+        document.querySelectorAll('.saved-card-option').forEach(cardOpt => {
+            cardOpt.addEventListener('click', function(e) {
+                if (e.target.type !== 'radio') {
+                    const radio = this.querySelector('input[type="radio"]');
+                    if (radio) { radio.checked = true; radio.dispatchEvent(new Event('change')); }
                 }
             });
         });
 
-        // Mock Scan Success
         document.getElementById('btn-mock-scan').addEventListener('click', function() {
             this.classList.remove('btn-outline-warning');
             this.classList.add('btn-success', 'text-white', 'border-success');
             this.innerHTML = '<i class="fa-solid fa-check me-1"></i> Payment Verified!';
             alert('Success! Your payment via KHQR has been verified.');
         });
+        
+        // Initial setup
+        updateCardInputRequirements();
     </script>
     <!-- Theme Toggle JS -->
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>

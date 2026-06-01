@@ -1,0 +1,26 @@
+# Task List - Dynamic Payment Methods
+
+- [x] Implement backend helpers and settings action routes in `app.py`
+    - [x] Create utility for card brand detection
+    - [x] Add POST handler for `add_payment_method`
+    - [x] Add POST handler for `delete_payment_method`
+    - [x] Add POST handler for `set_default_payment_method`
+- [x] Update frontend Settings page in `settings.html`
+    - [x] Include flash messages template
+    - [x] Render card list dynamically using the database
+    - [x] Add the interactive card input Modal
+    - [x] Form actions integration for delete & set default
+- [x] Update Checkout page in `checkout.html`
+    - [x] Render selectable list of saved cards with default pre-selection
+    - [x] Render manual card input toggle logic (Show/Hide)
+    - [x] Integrate "Save card to account" checkbox
+    - [x] Enable premium dynamic autofill & readonly status on selecting saved cards
+- [x] Update `/checkout` POST handler in `app.py`
+    - [x] Support saved card selection retrieval
+    - [x] Save new cards to database if checkbox is selected
+- [ ] Verify functionality
+    - [ ] Verify adding new card under settings
+    - [ ] Verify deleting a card under settings
+    - [ ] Verify setting default card under settings
+    - [ ] Verify checkout list selection and payment history
+    - [ ] Verify automatic card details autofilling behavior

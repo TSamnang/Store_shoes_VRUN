@@ -38,7 +38,6 @@
     .btn-del  { background:rgba(220,53,69,.12); color:#f87171; }
     .btn-del:hover { background:#dc3545; color:#fff; }
 
-    /* Modal */
     .modal-content { background:var(--card-bg); border:1px solid var(--border-color); border-radius:20px; }
     .modal-header  { border-bottom:1px solid var(--border-color); padding:20px 24px; }
     .modal-title   { font-weight:700; color:var(--gold); font-size:1.05rem; }
@@ -47,36 +46,15 @@
     .custom-input { background:var(--input-bg); border:1px solid var(--border-color); color:var(--body-text); padding:10px 14px; border-radius:10px; width:100%; transition:.2s; }
     .custom-input:focus { border-color:var(--gold); outline:none; box-shadow:0 0 0 3px var(--gold-glow); }
 
-    @media (max-width:992px) {
-        .dash-wrap { grid-template-columns:1fr; }
-        .dash-side { border-right:none; border-bottom:1px solid var(--border-color); }
-        .dash-main { padding:20px 16px; }
-    }
+    .side-badge { margin-left:auto; background:#ef4444; color:#fff; font-size:.62rem; font-weight:800; min-width:20px; height:20px; border-radius:99px; display:inline-flex; align-items:center; justify-content:center; padding:0 5px; animation:badgePulse 2s ease-in-out infinite; }
+    @keyframes badgePulse { 0%,100% { box-shadow:0 0 0 0 rgba(239,68,68,.5); } 50% { box-shadow:0 0 0 5px rgba(239,68,68,0); } }
 
-    .side-badge {
-        margin-left: auto;
-        background: #ef4444;
-        color: #fff;
-        font-size: .62rem;
-        font-weight: 800;
-        min-width: 20px;
-        height: 20px;
-        border-radius: 99px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 5px;
-        animation: badgePulse 2s ease-in-out infinite;
-    }
-    @keyframes badgePulse {
-        0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.5); }
-        50%      { box-shadow: 0 0 0 5px rgba(239,68,68,0); }
-    }
+    @media (max-width:992px) { .dash-wrap { grid-template-columns:1fr; } .dash-side { border-right:none; border-bottom:1px solid var(--border-color); } .dash-main { padding:20px 16px; } }
 </style>
 </head>
 <body>
-{% include 'front/navbar.html' %}
-{% include 'front/flash_messages.html' %}
+{% include 'base/navbar.html' %}
+{% include 'base/flash_messages.html' %}
 
 <div class="dash-wrap">
     <!-- SIDEBAR -->
@@ -91,9 +69,9 @@
         <a href="{{ url_for('admin') }}" class="side-link"><i class="fa-solid fa-gauge"></i> Dashboard</a>
         <a href="{{ url_for('admin_categories') }}" class="side-link active"><i class="fa-solid fa-tags"></i> Categories</a>
         <a href="{{ url_for('admin_reviews') }}" class="side-link"><i class="fa-solid fa-star"></i> Reviews</a>
+        <a href="{{ url_for('admin_users') }}" class="side-link"><i class="fa-solid fa-users"></i> Users</a>
         <p class="side-label">Account</p>
         <a href="{{ url_for('profile') }}" class="side-link"><i class="fa-solid fa-user"></i> My Profile</a>
-        <a href="{{ url_for('settings') }}" class="side-link"><i class="fa-solid fa-gear"></i> Settings</a>
         <a href="{{ url_for('logout') }}" class="side-link text-danger"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
     </aside>
 

@@ -9,23 +9,14 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <script>if(localStorage.getItem('vrun-theme')==='light'){document.documentElement.setAttribute('data-theme','light');}else{document.documentElement.removeAttribute('data-theme');}</script>
     <style>
-        .receipt-divider {
-            border: none;
-            border-top: 2px dashed rgba(255,193,7,0.3);
-            margin: 1rem 0;
-        }
-        .item-row {
-            transition: background 0.2s;
-        }
-        .item-row:hover {
-            background: rgba(255,193,7,0.05);
-        }
+        .receipt-divider { border: none; border-top: 2px dashed rgba(255,193,7,0.3); margin: 1rem 0; }
+        .item-row { transition: background 0.2s; }
+        .item-row:hover { background: rgba(255,193,7,0.05); }
         .status-badge-Ordering    { background: #0d6efd; }
         .status-badge-Processing  { background: #fd7e14; }
         .status-badge-Shipped     { background: #20c997; }
         .status-badge-Delivered   { background: #198754; }
         .status-badge-Cancelled   { background: #dc3545; }
-        
         @media print {
             body { background: white !important; color: black !important; }
             .text-white, .text-warning, .text-muted { color: black !important; }
@@ -36,8 +27,8 @@
 </head>
 <body>
     <div class="d-print-none">
-        {% include 'front/navbar.html' %}
-        {% include 'front/flash_messages.html' %}
+        {% include 'base/navbar.html' %}
+        {% include 'base/flash_messages.html' %}
     </div>
 
     <div class="container my-5">
@@ -73,7 +64,6 @@
                     <p class="step-text text-warning">Payment</p>
                 </div>
                 
-                <!-- Connector 2 (Active if Processing or beyond) -->
                 {% set past_ordering = order.status in ['Processing', 'Shipped', 'Delivered'] %}
                 <div class="step-connector {{ 'active-connector' if past_ordering else '' }}"></div>
                 
@@ -83,7 +73,6 @@
                     <p class="step-text {{ 'text-warning' if past_ordering else 'text-muted' }}">Processing</p>
                 </div>
                 
-                <!-- Connector 3 (Active if Shipped or beyond) -->
                 {% set past_processing = order.status in ['Shipped', 'Delivered'] %}
                 <div class="step-connector {{ 'active-connector' if past_processing else '' }}"></div>
                 
@@ -93,7 +82,6 @@
                     <p class="step-text {{ 'text-warning' if past_processing else 'text-muted' }}">Shipped</p>
                 </div>
                 
-                <!-- Connector 4 (Active if Delivered) -->
                 {% set is_delivered = order.status == 'Delivered' %}
                 <div class="step-connector {{ 'active-connector' if is_delivered else '' }}"></div>
                 
@@ -107,9 +95,7 @@
         </div>
 
         <div class="row g-4">
-            <!-- ============================= -->
-            <!-- LEFT: Main Receipt Content    -->
-            <!-- ============================= -->
+            <!-- LEFT: Main Receipt Content -->
             <div class="col-lg-8">
 
                 <!-- Order Info Card -->
@@ -171,29 +157,17 @@
                     <div class="card-body p-0">
                         {% for item in items %}
                         <div class="item-row d-flex align-items-center p-3 {% if not loop.last %}border-bottom border-secondary{% endif %}">
-                            <!-- Product Image -->
                             <div class="flex-shrink-0">
-                                <img
-                                    src="{{item.image}}"
-                                    alt="{{ item.product_name }}"
-                                    style="width: 80px; height: 80px; object-fit: contain; background: #1a1a2e; border-radius: 10px; padding: 6px; border: 1px solid rgba(255,193,7,0.2);"
-                                >
+                                <img src="{{item.image}}" alt="{{ item.product_name }}"
+                                    style="width: 80px; height: 80px; object-fit: contain; background: #1a1a2e; border-radius: 10px; padding: 6px; border: 1px solid rgba(255,193,7,0.2);">
                             </div>
-                            <!-- Product Info -->
                             <div class="flex-grow-1 ms-3">
                                 <p class="text-white fw-bold mb-1">{{ item.product_name }}</p>
                                 <div class="d-flex flex-wrap gap-3">
-                                    <span class="text-muted small">
-                                        <i class="fa-solid fa-tag me-1 text-warning"></i>
-                                        Unit price: ${{ "%.2f"|format(item.price) }}
-                                    </span>
-                                    <span class="text-muted small">
-                                        <i class="fa-solid fa-layer-group me-1 text-warning"></i>
-                                        Qty: {{ item.quantity }}
-                                    </span>
+                                    <span class="text-muted small"><i class="fa-solid fa-tag me-1 text-warning"></i>Unit price: ${{ "%.2f"|format(item.price) }}</span>
+                                    <span class="text-muted small"><i class="fa-solid fa-layer-group me-1 text-warning"></i>Qty: {{ item.quantity }}</span>
                                 </div>
                             </div>
-                            <!-- Line Total -->
                             <div class="text-end flex-shrink-0 ms-3">
                                 <p class="text-warning fw-bold fs-6 mb-0">${{ "%.2f"|format(item.price * item.quantity) }}</p>
                                 <span class="text-muted small">{{ item.quantity }} &times; ${{ "%.2f"|format(item.price) }}</span>
@@ -225,9 +199,7 @@
                 </div>
             </div>
 
-            <!-- ============================= -->
-            <!-- RIGHT: Order Summary Sidebar  -->
-            <!-- ============================= -->
+            <!-- RIGHT: Order Summary Sidebar -->
             <div class="col-lg-4">
                 <div class="card bg-darker border-secondary">
                     <div class="card-header bg-dark border-secondary">
@@ -241,11 +213,8 @@
                         <div class="mb-3">
                             {% for item in items %}
                             <div class="d-flex align-items-center mb-2">
-                                <img
-                                    src="{{item.image}}"
-                                    alt="{{ item.product_name }}"
-                                    style="width: 42px; height: 42px; object-fit: contain; background: #1a1a2e; border-radius: 6px; padding: 3px; border: 1px solid rgba(255,193,7,0.2);"
-                                >
+                                <img src="{{item.image}}" alt="{{ item.product_name }}"
+                                    style="width: 42px; height: 42px; object-fit: contain; background: #1a1a2e; border-radius: 6px; padding: 3px; border: 1px solid rgba(255,193,7,0.2);">
                                 <div class="flex-grow-1 ms-2">
                                     <p class="text-white small fw-semibold mb-0 text-truncate" style="max-width: 140px;">{{ item.product_name }}</p>
                                     <p class="text-muted" style="font-size: 0.75rem; margin-bottom: 0;">Qty {{ item.quantity }}</p>
@@ -264,9 +233,7 @@
                                 <span class="text-white">${{ "%.2f"|format(subtotal) }}</span>
                             </div>
                             <div class="d-flex justify-content-between mb-2">
-                                <span class="text-muted">
-                                    <i class="fa-solid fa-truck-fast me-1"></i>Shipping
-                                </span>
+                                <span class="text-muted"><i class="fa-solid fa-truck-fast me-1"></i>Shipping</span>
                                 <span class="text-white">
                                     {% if shipping_cost == 0 %}
                                         <span class="text-success">Free</span>
@@ -285,28 +252,19 @@
                         </div>
 
                         <!-- Status Alert -->
-                        <div class="rounded p-3 mb-3"
-                             style="background: rgba(255,193,7,0.08); border: 1px solid rgba(255,193,7,0.25);">
-                            <p class="text-warning small mb-1 fw-bold">
-                                <i class="fa-solid fa-circle-info me-1"></i>Order Status
-                            </p>
+                        <div class="rounded p-3 mb-3" style="background: rgba(255,193,7,0.08); border: 1px solid rgba(255,193,7,0.25);">
+                            <p class="text-warning small mb-1 fw-bold"><i class="fa-solid fa-circle-info me-1"></i>Order Status</p>
                             <p class="text-white small mb-0">
                                 Your order is currently <strong class="text-warning">{{ order.status }}</strong>.
-                                {% if order.status == 'Ordering' %}
-                                    We are reviewing your order.
-                                {% elif order.status == 'Processing' %}
-                                    Your order is being packed.
-                                {% elif order.status == 'Shipped' %}
-                                    Your order is on the way!
-                                {% elif order.status == 'Delivered' %}
-                                    Your order has been delivered.
-                                {% else %}
-                                    Please contact support for updates.
-                                {% endif %}
+                                {% if order.status == 'Ordering' %}We are reviewing your order.
+                                {% elif order.status == 'Processing' %}Your order is being packed.
+                                {% elif order.status == 'Shipped' %}Your order is on the way!
+                                {% elif order.status == 'Delivered' %}Your order has been delivered.
+                                {% else %}Please contact support for updates.{% endif %}
                             </p>
                         </div>
 
-                        <!-- Print / Share -->
+                        <!-- Print -->
                         <button class="btn btn-outline-secondary w-100 d-print-none" onclick="window.print()">
                             <i class="fa-solid fa-print me-2"></i>Print Receipt
                         </button>
@@ -381,36 +339,18 @@
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) {
-                        // Activate the connector between Processing and Shipped
                         const connectors = document.querySelectorAll('.step-connector');
-                        if (connectors.length > 2) {
-                            connectors[2].classList.add('active-connector');
-                        }
-                        
-                        // Activate the Shipped step
+                        if (connectors.length > 2) { connectors[2].classList.add('active-connector'); }
                         const steps = document.querySelectorAll('.checkout-step');
                         if (steps.length > 3) {
                             steps[3].classList.add('active');
                             const text = steps[3].querySelector('.step-text');
                             if (text) text.classList.replace('text-muted', 'text-warning');
                         }
-                        
-                        // Show sweet alert toast
                         const bgColor = document.documentElement.getAttribute('data-theme') === 'light' ? '#fff' : '#1f2937';
                         const textColor = document.documentElement.getAttribute('data-theme') === 'light' ? '#000' : '#fff';
                         if (window.Swal) {
-                            Swal.fire({
-                                toast: true,
-                                position: 'top-end',
-                                icon: 'info',
-                                title: 'Your order has been shipped!',
-                                showConfirmButton: false,
-                                timer: 4000,
-                                timerProgressBar: true,
-                                background: bgColor,
-                                color: textColor,
-                                iconColor: '#20c997'
-                            });
+                            Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Your order has been shipped!', showConfirmButton: false, timer: 4000, timerProgressBar: true, background: bgColor, color: textColor, iconColor: '#20c997' });
                         }
                     }
                 });

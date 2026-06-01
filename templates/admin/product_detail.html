@@ -199,7 +199,6 @@
         display: flex; flex-direction: column;
         transition: var(--transition-theme);
     }
-    /* Dynamic Island Fake */
     .device-island { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 90px; height: 22px; background: var(--border-color); border-radius: 12px; z-index: 10; transition: var(--transition-theme); }
     
     .prev-content { flex: 1; overflow-y: auto; padding: 0 0 20px; scrollbar-width: none; }
@@ -241,8 +240,8 @@
 </style>
 </head>
 <body>
-{% include 'front/navbar.html' %}
-{% include 'front/flash_messages.html' %}
+{% include 'base/navbar.html' %}
+{% include 'base/flash_messages.html' %}
 
 <form method="post" enctype="multipart/form-data" id="productForm" action="{% if product %}{{ url_for('admin_product_detail', product_id=product.id) }}{% else %}{{ url_for('admin_product_new') }}{% endif %}">
     
@@ -334,6 +333,22 @@
                             <input type="number" min="0" name="stock" class="custom-input" placeholder=" " value="{% if product %}{{ product.stock }}{% endif %}">
                             <label class="custom-label">Total Stock Inventory</label>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Discount Field -->
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        <div class="form-floating-custom mb-0" style="position:relative;">
+                            <input type="number" step="1" min="0" max="100" name="discount_percent" id="f_discount" class="custom-input" placeholder=" " value="{% if product %}{{ product.discount_percent | default(0) | int }}{% else %}0{% endif %}" oninput="updateDiscountPreview(this.value)">
+                            <label class="custom-label">Discount % (0 = no discount)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-center">
+                        <div id="discountBadgePreview" style="display:none; background:linear-gradient(135deg,#dc3545,#ff6b6b); color:#fff; border-radius:10px; padding:8px 16px; font-weight:800; font-size:1rem; letter-spacing:.03em;">
+                            <i class="fa-solid fa-tag me-1"></i><span id="discountBadgeText"></span> OFF
+                        </div>
+                        <div id="discountNone" style="color:var(--muted-text); font-size:.85rem;">No discount set</div>
                     </div>
                 </div>
             </div>
@@ -431,7 +446,6 @@
                         <div class="prev-sec-title">Color Gallery</div>
                         <div class="prev-gallery-row" id="prevGalleryRow">
                             <div class="prev-gallery-item active"><img id="prevGalThumb1" src="{% if product and product.image %}{{ product.image }}{% else %}{{ url_for('static', filename='images/placeholder.png') }}{% endif %}"></div>
-                            <!-- Dynamic images injected here -->
                         </div>
 
                         <div class="prev-sec-title">Select Color</div>
@@ -513,6 +527,23 @@ function updateCategories() {
 // Init categories
 updateCategories();
 
+// Discount badge preview
+function updateDiscountPreview(val) {
+    const pct = parseInt(val) || 0;
+    const badge = document.getElementById('discountBadgePreview');
+    const none  = document.getElementById('discountNone');
+    if (pct > 0) {
+        document.getElementById('discountBadgeText').textContent = pct + '%';
+        badge.style.display = 'inline-flex';
+        none.style.display  = 'none';
+    } else {
+        badge.style.display = 'none';
+        none.style.display  = 'block';
+    }
+}
+// Init on load
+updateDiscountPreview(document.getElementById('f_discount') ? document.getElementById('f_discount').value : 0);
+
 // Live Preview Updater
 function updatePreview(id, val) { document.getElementById(id).textContent = val; }
 
@@ -524,7 +555,7 @@ function compressImage(file, callback) {
         const img = new Image();
         img.onload = function() {
             const canvas = document.createElement('canvas');
-            const MAX_SIZE = 800; // max width/height
+            const MAX_SIZE = 800;
             let width = img.width;
             let height = img.height;
             if (width > height) {

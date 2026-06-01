@@ -132,6 +132,23 @@ def get_user_by_id(user_id):
     except (InvalidId, TypeError, ValueError):
         return None
 
+def detect_card_brand(cc_number):
+    """Detects credit card brand based on card number digits."""
+    clean_number = ''.join(filter(str.isdigit, str(cc_number)))
+    if not clean_number:
+        return 'Card'
+    if clean_number.startswith('4'):
+        return 'Visa'
+    elif clean_number.startswith(('51', '52', '53', '54', '55')) or (len(clean_number) >= 4 and 2221 <= int(clean_number[:4]) <= 2720):
+        return 'Mastercard'
+    elif clean_number.startswith(('34', '37')):
+        return 'Amex'
+    elif clean_number.startswith('6011') or clean_number.startswith(('644', '645', '646', '647', '648', '649')) or clean_number.startswith('65'):
+        return 'Discover'
+    elif clean_number.startswith(('3528', '3529')) or (len(clean_number) >= 4 and 3530 <= int(clean_number[:4]) <= 3589):
+        return 'JCB'
+    return 'Card'
+
 def get_user_by_email(email):
     """Fetches a user dictionary by their email address."""
     db = get_db()
@@ -231,6 +248,24 @@ def get_all_categories():
         c['id'] = str(c['_id'])
     return cats
 
+def get_discounted_products(limit=8):
+    """Fetches products that have a discount_percent > 0, sorted by discount descending."""
+    db = get_db()
+    cursor = db.products.find({'discount_percent': {'$gt': 0}}).sort('discount_percent', -1).limit(limit)
+    products = [format_doc(doc) for doc in cursor]
+    for p in products:
+        pct = float(p.get('discount_percent', 0))
+        p['discounted_price'] = round(float(p['price']) * (1 - pct / 100), 2)
+    return products
+
+def get_effective_price(product):
+    """Returns the final price for a product, applying discount_percent if set."""
+    pct = float(product.get('discount_percent', 0) or 0)
+    original = float(product.get('price', 0))
+    if pct > 0:
+        return round(original * (1 - pct / 100), 2)
+    return original
+
 # =============================================================================
 #  ORDER HELPERS
 # =============================================================================
@@ -256,7 +291,7 @@ def get_order_items(order_id):
         item['price'] = Decimal(str(item['price']))
     return items
 
-def create_order(user_id, shipping_address, shipping_method, total, items, payment_method='COD', status='Ordering'):
+def create_order(user_id, shipping_address, shipping_method, shipping_cost, total, items, payment_method='COD', status='Ordering'):
     """
     Creates a new order in the database.
     Order items and payment details are embedded directly inside the order document.
@@ -266,6 +301,7 @@ def create_order(user_id, shipping_address, shipping_method, total, items, payme
         'user_id': str(user_id),
         'shipping_address': shipping_address,
         'shipping_method': shipping_method,
+        'shipping_cost': float(shipping_cost),
         'total': float(total),
         'status': status,
         'items': items,
@@ -423,16 +459,18 @@ def homepage():
     featured_products = get_products(limit=4)
     latest_products = get_products(limit=8)
     categories = get_category_counts()
+    discounted_products = get_discounted_products(limit=8)
     # Products for visual grid section (pick products 5-8 so they differ from featured)
     all_products = get_products(limit=12)
     grid_products = all_products[4:8] if len(all_products) > 4 else all_products[:4]
     # One hero product for the banner
     banner_product = all_products[0] if all_products else None
     return render_template(
-        'front/homepage.html',
+        'shop/homepage.html',
         featured_products=featured_products,
         latest_products=latest_products,
         categories=categories,
+        discounted_products=discounted_products,
         grid_products=grid_products,
         banner_product=banner_product,
         **common_context('homepage')
@@ -464,7 +502,7 @@ def product():
     total_pages = (total_count + per_page - 1) // per_page
         
     return render_template(
-        'front/product.html',
+        'shop/product.html',
         products=products,
         categories=categories,
         all_categories=get_all_categories(),
@@ -503,7 +541,7 @@ def product_detail(product_id):
         rating_counts[r.get('rating', 0)] = rating_counts.get(r.get('rating', 0), 0) + 1
     
     return render_template(
-        'front/product_detail.html',
+        'shop/product_detail.html',
         product=product,
         related_products=related_products,
         reviews=reviews,
@@ -527,7 +565,7 @@ def category():
         if first and first.get('image'):
             category_images[cat['category']] = first['image']
     return render_template(
-        'front/category.html',
+        'shop/category.html',
         categories=categories,
         products=products,
         selected_category=selected_category,
@@ -621,17 +659,19 @@ def cart():
     for product_id, quantity in cart_data.items():
         product = get_product_by_id(product_id)
         if not product: continue
-            
-        total = Decimal(str(product['price'])) * quantity
+
+        effective_price = get_effective_price(product)
+        total = Decimal(str(effective_price)) * quantity
         subtotal += total
-        
+
         item = dict(product)
         item['quantity'] = quantity
+        item['effective_price'] = effective_price
         item['total'] = total
         cart_items.append(item)
         
     return render_template(
-        'front/cart.html',
+        'cart/cart.html',
         cart_items=cart_items,
         subtotal=subtotal,
         total=subtotal,
@@ -673,12 +713,14 @@ def checkout():
     for product_id, quantity in cart_data.items():
         product = get_product_by_id(product_id)
         if not product: continue
-            
-        total = Decimal(str(product['price'])) * quantity
+
+        effective_price = get_effective_price(product)
+        total = Decimal(str(effective_price)) * quantity
         subtotal += total
-        
+
         item = dict(product)
         item['quantity'] = quantity
+        item['effective_price'] = effective_price
         item['total'] = total
         cart_items.append(item)
         
@@ -702,7 +744,7 @@ def checkout():
         
         if not shipping_address:
             flash('Please provide a shipping address.', 'danger')
-            return render_template('front/checkout.html', cart_items=cart_items, subtotal=subtotal, total=total, shipping_cost=shipping_cost, **common_context('checkout'))
+            return render_template('cart/checkout.html', cart_items=cart_items, subtotal=subtotal, total=total, shipping_cost=shipping_cost, **common_context('checkout'))
             
         if not cart_items:
             flash('Your cart is empty.', 'warning')
@@ -715,11 +757,55 @@ def checkout():
                 'product_id': str(item['id']),
                 'product_name': item['name'],
                 'quantity': item['quantity'],
-                'price': float(item['price']),
+                'price': float(item['effective_price']),
                 'image': item['image']
             })
 
-        order_id = create_order(g.user['id'], shipping_address, shipping_method, total, embedded_items, payment_method, 'Processing')
+        # Process payment method details
+        if payment_method == 'Card':
+            selected_card_id = request.form.get('selected_card_id', 'new').strip()
+            user = get_db().users.find_one({'_id': ObjectId(str(g.user['id']))})
+            saved_cards = user.get('payment_methods', [])
+
+            if selected_card_id != 'new':
+                # User selected a saved card
+                selected_card = next((c for c in saved_cards if c['id'] == selected_card_id), None)
+                if selected_card:
+                    payment_method_str = f"Card ({selected_card['brand']} {selected_card['number']})"
+                else:
+                    payment_method_str = "Card"
+            else:
+                # User entered a new card
+                cc_name = request.form.get('cc_name', '').strip()
+                cc_number = request.form.get('cc_number', '').strip().replace(' ', '')
+                cc_exp = request.form.get('cc_exp', '').strip()
+                cc_cvv = request.form.get('cc_cvv', '').strip()
+                save_card = request.form.get('save_card') == 'true' or request.form.get('save_card') == 'on'
+
+                brand = detect_card_brand(cc_number)
+                masked_number = f"•••• •••• •••• {cc_number[-4:]}" if len(cc_number) >= 4 else "••••"
+                payment_method_str = f"Card ({brand} {masked_number})"
+
+                if save_card and cc_name and cc_number and cc_exp and cc_cvv:
+                    is_default = not saved_cards
+                    new_method = {
+                        'id': os.urandom(8).hex(),
+                        'brand': brand,
+                        'number': masked_number,
+                        'expiry': cc_exp,
+                        'name': cc_name,
+                        'is_default': is_default,
+                        'created_at': datetime.utcnow().isoformat()
+                    }
+                    if is_default:
+                        for m in saved_cards:
+                            m['is_default'] = False
+                    saved_cards.append(new_method)
+                    get_db().users.update_one({'_id': ObjectId(str(g.user['id']))}, {'$set': {'payment_methods': saved_cards}})
+        else:
+            payment_method_str = payment_method
+
+        order_id = create_order(g.user['id'], shipping_address, shipping_method, float(shipping_cost), total, embedded_items, payment_method_str, 'Processing')
         session['cart'] = {}
         session.pop('coupon', None)  # Clear coupon after order placed
         session.modified = True
@@ -727,16 +813,23 @@ def checkout():
         flash('Your order has been received.', 'success')
         return redirect(url_for('order_receipt', order_id=order_id))
 
-    shipping_cost = Decimal('15.00')  # Default to Express
+    VALID_METHODS = {'Express', 'Standard', 'Pickup'}
+    preselected_shipping = request.args.get('shipping', 'Express').strip()
+    if preselected_shipping not in VALID_METHODS:
+        preselected_shipping = 'Express'
+
+    shipping_rates = {'Express': Decimal('15.00'), 'Standard': Decimal('5.00'), 'Pickup': Decimal('0.00')}
+    shipping_cost = shipping_rates.get(preselected_shipping, Decimal('15.00'))
     coupon_session = session.get('coupon', {})
     discount_amt = Decimal(str(coupon_session.get('discount_amount', 0)))
     discount_pct = coupon_session.get('discount_percent', 0)
     coupon_code  = coupon_session.get('code', '')
     total = max(Decimal('0.00'), subtotal - discount_amt) + shipping_cost if subtotal > Decimal('0.00') else Decimal('0.00')
-    return render_template('front/checkout.html',
+    return render_template('cart/checkout.html',
         cart_items=cart_items, subtotal=subtotal, total=total,
         shipping_cost=shipping_cost, discount_amt=discount_amt,
         discount_pct=discount_pct, coupon_code=coupon_code,
+        preselected_shipping=preselected_shipping,
         **common_context('checkout'))
 
 # =============================================================================
@@ -752,7 +845,7 @@ def order():
     orders = list(db.orders.find({'user_id': str(g.user['id'])}).sort('created_at', -1))
     orders = [format_doc(o) for o in orders]
     
-    return render_template('front/order_index.html', orders=orders, **common_context('order'))
+    return render_template('account/order_index.html', orders=orders, **common_context('order'))
 
 @app.route('/order/<order_id>')
 def order_receipt(order_id):
@@ -769,11 +862,12 @@ def order_receipt(order_id):
 
     items = get_order_items(order_id)
     subtotal = sum(Decimal(str(item['price'])) * item['quantity'] for item in items)
-    shipping_cost = Decimal(str(order['total'])) - subtotal
+    # Read the stored shipping_cost directly — never derive by subtraction
+    shipping_cost = Decimal(str(order.get('shipping_cost', 0)))
     item_count = sum(item['quantity'] for item in items)
     
     return render_template(
-        'front/order_receipt.html',
+        'account/order_receipt.html',
         order=order,
         items=items,
         subtotal=subtotal,
@@ -910,7 +1004,7 @@ def profile():
 
     orders = list(db.orders.find({'user_id': str(g.user['id'])}).sort('created_at', -1))
     orders = [format_doc(o) for o in orders]
-    return render_template('front/profile.html', orders=orders, order_count=len(orders), **common_context('profile'))
+    return render_template('account/profile.html', orders=orders, order_count=len(orders), **common_context('profile'))
 
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():
@@ -934,7 +1028,89 @@ def settings():
             flash('Your account has been permanently deleted.', 'success')
             return redirect(url_for('login'))
 
-    return render_template('front/settings.html', **common_context('settings'))
+        elif action == 'add_payment_method':
+            cc_name = request.form.get('cc_name', '').strip()
+            cc_number = request.form.get('cc_number', '').strip().replace(' ', '')
+            cc_exp = request.form.get('cc_exp', '').strip()
+            cc_cvv = request.form.get('cc_cvv', '').strip()
+            set_default = request.form.get('set_default') == 'true' or request.form.get('set_default') == 'on'
+
+            if not cc_name or not cc_number or not cc_exp or not cc_cvv:
+                flash('All credit card fields are required.', 'danger')
+            elif not cc_number.isdigit() or len(cc_number) < 13 or len(cc_number) > 19:
+                flash('Please enter a valid credit card number.', 'danger')
+            elif '/' not in cc_exp or len(cc_exp) != 5:
+                flash('Please enter expiration date in MM/YY format.', 'danger')
+            else:
+                brand = detect_card_brand(cc_number)
+                masked_number = f"•••• •••• •••• {cc_number[-4:]}"
+                
+                user = get_db().users.find_one({'_id': ObjectId(str(g.user['id']))})
+                existing_methods = user.get('payment_methods', [])
+                
+                is_default = not existing_methods or set_default
+                
+                new_method = {
+                    'id': os.urandom(8).hex(),
+                    'brand': brand,
+                    'number': masked_number,
+                    'expiry': cc_exp,
+                    'name': cc_name,
+                    'is_default': is_default,
+                    'created_at': datetime.utcnow().isoformat()
+                }
+                
+                if is_default:
+                    for m in existing_methods:
+                        m['is_default'] = False
+                        
+                existing_methods.append(new_method)
+                get_db().users.update_one({'_id': ObjectId(str(g.user['id']))}, {'$set': {'payment_methods': existing_methods}})
+                flash('Payment method added successfully.', 'success')
+            return redirect(url_for('settings'))
+
+        elif action == 'delete_payment_method':
+            pm_id = request.form.get('payment_method_id', '').strip()
+            user = get_db().users.find_one({'_id': ObjectId(str(g.user['id']))})
+            existing_methods = user.get('payment_methods', [])
+            
+            card_to_delete = None
+            for m in existing_methods:
+                if m['id'] == pm_id:
+                    card_to_delete = m
+                    break
+                    
+            if card_to_delete:
+                existing_methods = [m for m in existing_methods if m['id'] != pm_id]
+                if card_to_delete.get('is_default') and existing_methods:
+                    existing_methods[0]['is_default'] = True
+                get_db().users.update_one({'_id': ObjectId(str(g.user['id']))}, {'$set': {'payment_methods': existing_methods}})
+                flash('Payment method removed successfully.', 'success')
+            else:
+                flash('Payment method not found.', 'danger')
+            return redirect(url_for('settings'))
+
+        elif action == 'set_default_payment_method':
+            pm_id = request.form.get('payment_method_id', '').strip()
+            user = get_db().users.find_one({'_id': ObjectId(str(g.user['id']))})
+            existing_methods = user.get('payment_methods', [])
+            
+            card_found = False
+            for m in existing_methods:
+                if m['id'] == pm_id:
+                    m['is_default'] = True
+                    card_found = True
+                else:
+                    m['is_default'] = False
+                    
+            if card_found:
+                get_db().users.update_one({'_id': ObjectId(str(g.user['id']))}, {'$set': {'payment_methods': existing_methods}})
+                flash('Default payment method updated.', 'success')
+            else:
+                flash('Payment method not found.', 'danger')
+            return redirect(url_for('settings'))
+
+    return render_template('account/settings.html', **common_context('settings'))
 
 # =============================================================================
 #  REVIEW ROUTES
@@ -1035,7 +1211,60 @@ def admin_reviews():
         prod = get_product_by_id(r.get('product_id', ''))
         r['product_name'] = prod['name'] if prod else 'Unknown'
 
-    return render_template('front/admin_reviews.html', reviews=all_reviews, **common_context('admin'))
+    return render_template('admin/reviews.html', reviews=all_reviews, **common_context('admin'))
+
+
+@app.route('/admin/users', methods=['GET', 'POST'])
+def admin_users():
+    """Admin page to view and manage all users — assign roles, ban accounts."""
+    require_admin()
+    db = get_db()
+
+    if request.method == 'POST':
+        action    = request.form.get('action', '')
+        target_id = request.form.get('user_id', '').strip()
+
+        # Prevent self-demotion / self-ban
+        if target_id == str(g.user['id']):
+            flash('You cannot modify your own account from here.', 'danger')
+            return redirect(url_for('admin_users'))
+
+        try:
+            oid = ObjectId(target_id)
+        except (InvalidId, TypeError, ValueError):
+            flash('Invalid user ID.', 'danger')
+            return redirect(url_for('admin_users'))
+
+        if action == 'set_role':
+            new_role = request.form.get('role', 'user')
+            if new_role not in ('admin', 'user'):
+                flash('Invalid role.', 'danger')
+                return redirect(url_for('admin_users'))
+            db.users.update_one({'_id': oid}, {'$set': {'role': new_role}})
+            flash(f'User role updated to "{new_role}".', 'success')
+
+        elif action == 'ban':
+            db.users.update_one({'_id': oid}, {'$set': {'banned': True}})
+            flash('User has been banned.', 'warning')
+
+        elif action == 'unban':
+            db.users.update_one({'_id': oid}, {'$unset': {'banned': ''}})
+            flash('User has been unbanned.', 'success')
+
+        elif action == 'delete_user':
+            db.users.delete_one({'_id': oid})
+            db.orders.delete_many({'user_id': target_id})
+            flash('User account deleted.', 'success')
+
+        return redirect(url_for('admin_users'))
+
+    # GET — fetch all users
+    all_users = [format_doc(u) for u in db.users.find().sort('created_at', -1)]
+    # Attach order count per user
+    for u in all_users:
+        u['order_count'] = db.orders.count_documents({'user_id': u['id']})
+
+    return render_template('admin/users.html', all_users=all_users, **common_context('admin'))
 
 
 # =============================================================================
@@ -1070,7 +1299,7 @@ def login():
             
         flash('Invalid email or password.', 'danger')
         
-    return render_template('front/login.html', **common_context())
+    return render_template('auth/login.html', **common_context())
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -1092,7 +1321,7 @@ def register():
             flash('Account created successfully.', 'success')
             return redirect(url_for('homepage'))
             
-    return render_template('front/register.html', **common_context())
+    return render_template('auth/register.html', **common_context())
 
 @app.route('/logout')
 def logout():
@@ -1119,7 +1348,7 @@ def inbox():
             order['email'] = user['email']
         all_orders.append(format_doc(order))
         
-    return render_template('front/inbox.html', all_orders=all_orders, **common_context('inbox'))
+    return render_template('admin/inbox.html', all_orders=all_orders, **common_context('inbox'))
 
 @app.route('/admin/categories', methods=['GET', 'POST'])
 def admin_categories():
@@ -1147,7 +1376,7 @@ def admin_categories():
         return redirect(url_for('admin_categories'))
         
     cats = get_all_categories()
-    return render_template('front/admin_categories.html', 
+    return render_template('admin/categories.html', 
                            categories=cats, 
                            **common_context('admin'))
 
@@ -1155,7 +1384,7 @@ def admin_categories():
 def admin():
     require_admin()
     products = get_products(limit=100)
-    return render_template('front/admin.html', products=products, **common_context('admin'))
+    return render_template('admin/dashboard.html', products=products, **common_context('admin'))
 
 
 @app.route('/admin/product/new', methods=['GET', 'POST'])
@@ -1172,17 +1401,23 @@ def admin_product_new():
             categories = [c.strip() for c in json.loads(categories_raw) if c.strip()]
         except Exception:
             categories = []
-        brand       = request.form.get('brand', '').strip()
-        description = request.form.get('description', '').strip()
-        detail      = request.form.get('detail', '').strip()
-        price       = request.form.get('price', '0').strip()
-        stock_total = request.form.get('stock', '0').strip()
-        main_b64    = request.form.get('main_image_b64', '').strip()
-        image_file  = request.files.get('image_file')
+        brand            = request.form.get('brand', '').strip()
+        description      = request.form.get('description', '').strip()
+        detail           = request.form.get('detail', '').strip()
+        price            = request.form.get('price', '0').strip()
+        stock_total      = request.form.get('stock', '0').strip()
+        discount_percent = request.form.get('discount_percent', '0').strip()
+        main_b64         = request.form.get('main_image_b64', '').strip()
+        image_file       = request.files.get('image_file')
 
         if not name or not categories or not description or not price:
             flash('Please fill all required fields (Name, at least one Category, Description, Price).', 'danger')
             return redirect(url_for('admin_product_new'))
+
+        try:
+            discount_pct_val = max(0.0, min(100.0, float(discount_percent or 0)))
+        except ValueError:
+            discount_pct_val = 0.0
 
         image = main_b64 if main_b64 else (save_image(image_file) if image_file and image_file.filename else '')
 
@@ -1205,6 +1440,7 @@ def admin_product_new():
             'name': name, 'category': categories, 'brand': brand,
             'description': description, 'detail': detail,
             'price': float(price), 'stock': int(stock_total or 0),
+            'discount_percent': discount_pct_val,
             'image': image,
             'images': list(color_images.values()) or ([image] if image else []),
             'color_images': color_images, 'variants': variants,
@@ -1215,7 +1451,7 @@ def admin_product_new():
 
 
     # GET — show blank form (reuse the same detail template with product=None)
-    return render_template('front/admin_product_detail.html',
+    return render_template('admin/product_detail.html',
                            all_categories=[c['name'] for c in get_all_categories()],
                            product=None,
                            **common_context('admin'))
@@ -1238,14 +1474,20 @@ def admin_product_detail(product_id):
             categories = [c.strip() for c in json.loads(categories_raw) if c.strip()]
         except Exception:
             categories = product.get('category', [])
-        brand       = request.form.get('brand', '').strip()
-        detail      = request.form.get('detail', '').strip()
-        description = request.form.get('description', '').strip()
-        name        = request.form.get('name', product['name']).strip()
-        price       = request.form.get('price', str(product['price'])).strip()
-        stock_total = request.form.get('stock', str(product['stock'])).strip()
-        main_b64    = request.form.get('main_image_b64', '').strip()
-        image_file  = request.files.get('image_file')
+        brand            = request.form.get('brand', '').strip()
+        detail           = request.form.get('detail', '').strip()
+        description      = request.form.get('description', '').strip()
+        name             = request.form.get('name', product['name']).strip()
+        price            = request.form.get('price', str(product['price'])).strip()
+        stock_total      = request.form.get('stock', str(product['stock'])).strip()
+        discount_percent = request.form.get('discount_percent', str(product.get('discount_percent', 0))).strip()
+        main_b64         = request.form.get('main_image_b64', '').strip()
+        image_file       = request.files.get('image_file')
+
+        try:
+            discount_pct_val = max(0.0, min(100.0, float(discount_percent or 0)))
+        except ValueError:
+            discount_pct_val = 0.0
 
         sizes     = request.form.getlist('variant_size[]')
         colors    = request.form.getlist('variant_color[]')
@@ -1273,6 +1515,7 @@ def admin_product_detail(product_id):
                 'name': name, 'category': categories, 'brand': brand,
                 'description': description, 'detail': detail,
                 'price': float(price), 'stock': int(stock_total or 0),
+                'discount_percent': discount_pct_val,
                 'image': image,
                 'images': list(color_images.values()) or ([image] if image else []),
                 'color_images': color_images, 'variants': variants,
@@ -1282,7 +1525,7 @@ def admin_product_detail(product_id):
         return redirect(url_for('admin'))
 
 
-    return render_template('front/admin_product_detail.html',
+    return render_template('admin/product_detail.html',
                            all_categories=[c['name'] for c in get_all_categories()],
                            product=product,
                            **common_context('admin'))

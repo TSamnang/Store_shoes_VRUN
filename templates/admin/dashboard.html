@@ -54,79 +54,39 @@
     .search-wrap input:focus { outline:none; border-color:var(--gold); width:260px; }
     .search-wrap i { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--muted-text); font-size:.8rem; }
 
-    /* Modal */
     .modal-content { background:var(--card-bg); border:1px solid var(--border-color); border-radius:20px; }
     .modal-header  { border-bottom:1px solid var(--border-color); padding:20px 24px; }
     .modal-title   { font-weight:700; color:var(--gold); font-size:1.05rem; }
     .modal-footer  { border-top:1px solid var(--border-color); padding:16px 24px; }
     .modal-body    { padding:24px; }
 
-    /* Step indicator */
-    .step-bar { display:flex; align-items:center; gap:0; margin-bottom:24px; }
-    .step-item { display:flex; align-items:center; gap:8px; font-size:.8rem; font-weight:600; color:var(--muted-text); }
-    .step-item.active { color:var(--gold); }
-    .step-circle { width:28px; height:28px; border-radius:50%; border:2px solid currentColor; display:flex; align-items:center; justify-content:center; font-size:.75rem; font-weight:800; flex-shrink:0; }
-    .step-item.active .step-circle { background:var(--gold); border-color:var(--gold); color:#000; }
-    .step-line { flex:1; height:2px; background:var(--border-color); margin:0 8px; }
-    .step-item.active ~ .step-line { background:var(--border-color); }
-
-    /* Field groups */
     .field-grp { background:var(--input-bg); border:1px solid var(--border-color); border-radius:12px; padding:12px 14px; margin-bottom:12px; transition:.2s; }
     .field-grp:focus-within { border-color:var(--gold); box-shadow:0 0 0 3px var(--gold-glow); }
     .field-grp label { display:block; font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--muted-text); margin-bottom:3px; }
     .field-grp input, .field-grp textarea, .field-grp select { width:100%; background:transparent; border:none; outline:none; color:var(--body-text); font-size:.9rem; font-family:inherit; }
-    .field-grp textarea { resize:vertical; min-height:68px; }
 
-    /* Upload zone */
     .upload-zone { border:2px dashed var(--border-color); border-radius:14px; padding:28px 20px; text-align:center; cursor:pointer; transition:.3s; position:relative; overflow:hidden; background:var(--input-bg); }
     .upload-zone:hover, .upload-zone.drag-over { border-color:var(--gold); background:var(--gold-dim); }
     .upload-zone input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
     .upload-zone i { font-size:2.2rem; color:rgba(255,193,7,.4); display:block; margin-bottom:10px; }
     .upload-zone p { margin:0; font-size:.82rem; color:var(--muted-text); }
-    .upload-zone span { font-size:.72rem; color:rgba(255,193,7,.7); }
 
     .img-preview-box { display:none; border-radius:14px; overflow:hidden; border:2px solid var(--gold); background:#0a0a14; position:relative; }
     .img-preview-box img { width:100%; height:180px; object-fit:contain; display:block; padding:8px; }
-    .img-preview-box .preview-overlay { position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent,rgba(0,0,0,.8)); padding:10px 14px; display:flex; align-items:center; justify-content:space-between; }
-    .img-preview-box .preview-filename { font-size:.72rem; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:75%; }
-    .img-preview-box .preview-change { font-size:.72rem; color:var(--gold); cursor:pointer; background:none; border:none; padding:0; }
 
-    /* Delete modal */
     .delete-icon { width:64px; height:64px; border-radius:50%; background:rgba(220,53,69,.12); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; font-size:1.6rem; color:#f87171; }
     .empty-state { text-align:center; padding:60px 20px; color:var(--muted-text); }
     .empty-state i { font-size:3rem; color:rgba(255,193,7,.2); display:block; margin-bottom:16px; }
 
-    @media (max-width:992px) {
-        .dash-wrap { grid-template-columns:1fr; }
-        .dash-side { border-right:none; border-bottom:1px solid var(--border-color); }
-        .dash-main { padding:20px 16px; }
-    }
+    .side-badge { margin-left:auto; background:#ef4444; color:#fff; font-size:.62rem; font-weight:800; min-width:20px; height:20px; border-radius:99px; display:inline-flex; align-items:center; justify-content:center; padding:0 5px; animation:badgePulse 2s ease-in-out infinite; }
+    @keyframes badgePulse { 0%,100% { box-shadow:0 0 0 0 rgba(239,68,68,.5); } 50% { box-shadow:0 0 0 5px rgba(239,68,68,0); } }
 
-    /* Inbox badge */
-    .side-badge {
-        margin-left: auto;
-        background: #ef4444;
-        color: #fff;
-        font-size: .62rem;
-        font-weight: 800;
-        min-width: 20px;
-        height: 20px;
-        border-radius: 99px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 5px;
-        animation: badgePulse 2s ease-in-out infinite;
-    }
-    @keyframes badgePulse {
-        0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.5); }
-        50%      { box-shadow: 0 0 0 5px rgba(239,68,68,0); }
-    }
+    @media (max-width:992px) { .dash-wrap { grid-template-columns:1fr; } .dash-side { border-right:none; border-bottom:1px solid var(--border-color); } .dash-main { padding:20px 16px; } }
 </style>
 </head>
 <body>
-{% include 'front/navbar.html' %}
-{% include 'front/flash_messages.html' %}
+{% include 'base/navbar.html' %}
+{% include 'base/flash_messages.html' %}
 
 <div class="dash-wrap">
 
@@ -142,9 +102,9 @@
         <a href="{{ url_for('admin') }}" class="side-link active"><i class="fa-solid fa-gauge"></i> Dashboard</a>
         <a href="{{ url_for('admin_categories') }}" class="side-link"><i class="fa-solid fa-tags"></i> Categories</a>
         <a href="{{ url_for('admin_reviews') }}" class="side-link"><i class="fa-solid fa-star"></i> Reviews</a>
+        <a href="{{ url_for('admin_users') }}" class="side-link"><i class="fa-solid fa-users"></i> Users</a>
         <p class="side-label">Account</p>
         <a href="{{ url_for('profile') }}" class="side-link"><i class="fa-solid fa-user"></i> My Profile</a>
-        <a href="{{ url_for('settings') }}" class="side-link"><i class="fa-solid fa-gear"></i> Settings</a>
         <a href="{{ url_for('logout') }}" class="side-link text-danger"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
     </aside>
 
@@ -206,7 +166,7 @@
             </div>
         </div>
 
-        <!-- ===== PRODUCT CATALOG ===== -->
+        <!-- PRODUCT CATALOG -->
         <div class="tbl-card">
             <div class="card-header">
                 <div style="font-size:.95rem;font-weight:700;color:var(--gold);display:flex;align-items:center;gap:8px;">
@@ -290,9 +250,7 @@
     </main>
 </div>
 
-
-
-<!-- ══ DELETE CONFIRM MODAL ══ -->
+<!-- DELETE CONFIRM MODAL -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content">
@@ -324,32 +282,17 @@
     const fileInput  = document.getElementById('f_image_file');
 
     function handleUpload(input) {
-        if (!input.files || !input.files[0]) return;
+        if (!input || !input.files || !input.files[0]) return;
         const file = input.files[0];
         const reader = new FileReader();
         reader.onload = e => {
-            previewImg.src = e.target.result;
-            previewName.textContent = file.name;
-            uploadZone.style.display = 'none';
-            previewBox.style.display = 'block';
+            if (previewImg) previewImg.src = e.target.result;
+            if (previewName) previewName.textContent = file.name;
+            if (uploadZone) uploadZone.style.display = 'none';
+            if (previewBox) previewBox.style.display = 'block';
         };
         reader.readAsDataURL(file);
     }
-
-    function resetUpload() {
-        previewBox.style.display = 'none';
-        uploadZone.style.display = 'block';
-        fileInput.value = '';
-        previewImg.src = '';
-    }
-
-    uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
-    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
-    uploadZone.addEventListener('drop', e => {
-        e.preventDefault();
-        uploadZone.classList.remove('drag-over');
-        if (e.dataTransfer.files.length) { fileInput.files = e.dataTransfer.files; handleUpload(fileInput); }
-    });
 
     function openDeleteModal(id, name) {
         document.getElementById('deleteProductName').textContent = '"' + name + '"';
