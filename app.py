@@ -292,13 +292,22 @@ def send_telegram_notification(order_id, user, shipping_address, shipping_method
         print("Telegram configuration missing. Skipping order notification.")
         return False
 
-    # Format the item list
+    # Clean potential surrounding quotes (common when copying from .env to Vercel)
+    token = token.strip('\'"')
+    chat_id = chat_id.strip('\'"')
+
+    def escape_html(text):
+        if not text:
+            return ""
+        return str(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+    # Format the item list and escape names to prevent HTML parsing errors
     item_rows = []
     for item in items:
         name = item.get('product_name', 'Product')
         qty = item.get('quantity', 1)
         price = item.get('price', 0.0)
-        item_rows.append(f"• {qty}x {name} - ${price:.2f}")
+        item_rows.append(f"• {qty}x {escape_html(name)} - ${price:.2f}")
     items_list = "\n".join(item_rows)
 
     username = user.get('username') or user.get('name') or 'Customer'
@@ -306,10 +315,10 @@ def send_telegram_notification(order_id, user, shipping_address, shipping_method
 
     message = (
         f"<b>📦 New Order Received!</b>\n\n"
-        f"<b>Order ID:</b> <code>{order_id}</code>\n"
-        f"<b>Customer:</b> {username} ({email})\n"
-        f"<b>Shipping Method:</b> {shipping_method} (${shipping_cost:.2f})\n"
-        f"<b>Address:</b> {shipping_address}\n"
+        f"<b>Order ID:</b> <code>{escape_html(order_id)}</code>\n"
+        f"<b>Customer:</b> {escape_html(username)} ({escape_html(email)})\n"
+        f"<b>Shipping Method:</b> {escape_html(shipping_method)} (${shipping_cost:.2f})\n"
+        f"<b>Address:</b> {escape_html(shipping_address)}\n"
         f"<b>Total Amount:</b> ${total:.2f}\n\n"
         f"<b>🛒 Items Ordered:</b>\n"
         f"{items_list}"
@@ -324,7 +333,12 @@ def send_telegram_notification(order_id, user, shipping_address, shipping_method
 
     try:
         data = urllib.parse.urlencode(payload).encode('utf-8')
-        req = urllib.request.Request(url, data=data, method='POST')
+        req = urllib.request.Request(
+            url, 
+            data=data, 
+            headers={'Content-Type': 'application/x-www-form-urlencoded'},
+            method='POST'
+        )
         with urllib.request.urlopen(req, timeout=8) as response:
             res_body = response.read().decode('utf-8')
             res_json = json.loads(res_body)
