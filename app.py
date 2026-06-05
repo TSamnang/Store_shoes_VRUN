@@ -19,6 +19,12 @@ from bson.errors import InvalidId
 # =============================================================================
 #  APP CONFIGURATION
 # =============================================================================
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 app = Flask(__name__)
 
 # Secret key — change this to a random string before deploying!
@@ -269,6 +275,63 @@ def get_effective_price(product):
 # =============================================================================
 #  ORDER HELPERS
 # =============================================================================
+
+def send_telegram_notification(order_id, user, shipping_address, shipping_method, shipping_cost, total, items):
+    """
+    Sends a formatted HTML notification message to a Telegram bot.
+    Safe-guarded to fail silently if the bot is not configured or fails.
+    """
+    import urllib.request
+    import urllib.parse
+    import json
+
+    token = os.environ.get('TELEGRAM_BOT_TOKEN')
+    chat_id = os.environ.get('TELEGRAM_CHAT_ID')
+
+    if not token or not chat_id:
+        print("Telegram configuration missing. Skipping order notification.")
+        return False
+
+    # Format the item list
+    item_rows = []
+    for item in items:
+        name = item.get('product_name', 'Product')
+        qty = item.get('quantity', 1)
+        price = item.get('price', 0.0)
+        item_rows.append(f"• {qty}x {name} - ${price:.2f}")
+    items_list = "\n".join(item_rows)
+
+    username = user.get('username') or user.get('name') or 'Customer'
+    email = user.get('email', '')
+
+    message = (
+        f"<b>📦 New Order Received!</b>\n\n"
+        f"<b>Order ID:</b> <code>{order_id}</code>\n"
+        f"<b>Customer:</b> {username} ({email})\n"
+        f"<b>Shipping Method:</b> {shipping_method} (${shipping_cost:.2f})\n"
+        f"<b>Address:</b> {shipping_address}\n"
+        f"<b>Total Amount:</b> ${total:.2f}\n\n"
+        f"<b>🛒 Items Ordered:</b>\n"
+        f"{items_list}"
+    )
+
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    payload = {
+        'chat_id': chat_id,
+        'text': message,
+        'parse_mode': 'HTML'
+    }
+
+    try:
+        data = urllib.parse.urlencode(payload).encode('utf-8')
+        req = urllib.request.Request(url, data=data, method='POST')
+        with urllib.request.urlopen(req, timeout=8) as response:
+            res_body = response.read().decode('utf-8')
+            res_json = json.loads(res_body)
+            return res_json.get('ok', False)
+    except Exception as e:
+        print(f"Error sending Telegram notification: {e}")
+        return False
 
 def get_order(order_id):
     """Fetches an order dictionary by its primary ID."""
@@ -786,6 +849,21 @@ def checkout():
         payment_method_str = payment_method
 
         order_id = create_order(g.user['id'], shipping_address, shipping_method, float(shipping_cost), total, embedded_items, payment_method_str, 'Processing')
+
+        # Send Telegram notification (fails silently if bot is not configured or fails)
+        try:
+            send_telegram_notification(
+                order_id=order_id,
+                user=g.user,
+                shipping_address=shipping_address,
+                shipping_method=shipping_method,
+                shipping_cost=float(shipping_cost),
+                total=float(total),
+                items=embedded_items
+            )
+        except Exception as te:
+            print(f"Telegram notification error: {te}")
+
         session['cart'] = {}
         session.pop('coupon', None)  # Clear coupon after order placed
         session.modified = True
