@@ -8,54 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <script>if(localStorage.getItem('vrun-theme')==='light'){document.documentElement.setAttribute('data-theme','light')}else{document.documentElement.removeAttribute('data-theme')}</script>
-    <style>
-        :root { --gold:#ffc107; --gold-dim:rgba(255,193,7,.12); --gold-glow:rgba(255,193,7,.25); }
-        body { background: var(--bg-dark); overflow-x: hidden; }
-        
-        .auth-layout { min-height: 100vh; display: grid; grid-template-columns: 1fr; }
-        @media (min-width: 992px) { .auth-layout { grid-template-columns: 1.1fr 1fr; } }
-        
-        .auth-left { background: linear-gradient(135deg, var(--bg-darker) 0%, var(--bg-dark) 100%); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: center; padding: 4rem; }
-        .auth-left::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 50% 50%, var(--gold-dim) 0%, transparent 60%); z-index: 1; }
-        
-        .auth-left-content { position: relative; z-index: 2; }
-        .auth-left h1 { font-size: 3.5rem; font-weight: 800; letter-spacing: -1px; color: var(--gold); line-height: 1.1; margin-bottom: 20px; text-transform: uppercase; }
-        .auth-left p { font-size: 1.1rem; color: var(--muted-text); max-width: 400px; line-height: 1.6; }
-        .hero-shoe { width: 120%; max-width: 600px; transform: rotate(15deg) translateY(20px) translateX(-40px) scaleX(-1); filter: drop-shadow(0 20px 30px rgba(0,0,0,0.5)); transition: transform 0.5s ease; }
-        .hero-shoe:hover { transform: rotate(10deg) translateY(10px) translateX(-30px) scaleX(-1); }
-
-        .auth-right { background: var(--body-bg); padding: 2rem; display: flex; align-items: center; justify-content: center; position: relative; }
-        .auth-card { width: 100%; max-width: 420px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 24px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
-        
-        .auth-title { font-size: 1.8rem; font-weight: 800; color: var(--body-text); margin-bottom: 30px; text-align: center; }
-        
-        .form-floating-custom { position: relative; margin-bottom: 20px; }
-        .custom-input { width: 100%; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--body-text); padding: 14px 16px; border-radius: 12px; font-size: 1rem; transition: all 0.3s; }
-        .custom-input:focus { border-color: var(--gold); outline: none; box-shadow: 0 0 0 4px var(--gold-dim); }
-        .custom-label { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 1rem; color: var(--muted-text); pointer-events: none; transition: 0.2s; background: var(--input-bg); padding: 0 4px; }
-        .custom-input:focus ~ .custom-label, .custom-input:not(:placeholder-shown) ~ .custom-label { top: 0; font-size: 0.75rem; color: var(--gold); font-weight: 600; }
-        
-        .pass-toggle { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--muted-text); cursor: pointer; transition: 0.2s; z-index: 10; }
-        .pass-toggle:hover { color: var(--gold); }
-        
-        .btn-auth { background: linear-gradient(135deg, #ffc107, #e6a800); color: #000; font-weight: 800; font-size: 1rem; border: none; border-radius: 12px; padding: 14px; width: 100%; transition: all 0.3s; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 6px 20px var(--gold-glow); }
-        .btn-auth:hover { transform: translateY(-2px); box-shadow: 0 10px 25px var(--gold-glow); color: #000; }
-        
-        .btn-google { background: var(--input-bg); border: 1px solid var(--border-color); color: var(--body-text); font-weight: 600; border-radius: 12px; padding: 12px; width: 100%; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .btn-google:hover { background: var(--card-bg); border-color: var(--body-text); color: var(--body-text); transform: translateY(-1px); }
-        
-        .divider { display: flex; align-items: center; text-align: center; margin: 24px 0; color: var(--muted-text); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
-        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid var(--border-color); }
-        .divider:not(:empty)::before { margin-right: .5em; }
-        .divider:not(:empty)::after { margin-left: .5em; }
-        
-        .auth-links { text-align: center; margin-top: 24px; font-size: 0.95rem; color: var(--muted-text); }
-        .auth-links a { color: var(--gold); font-weight: 600; text-decoration: none; transition: 0.2s; }
-        .auth-links a:hover { color: #e6a800; text-decoration: underline; }
-        
-        .home-btn { position: absolute; top: 30px; left: 30px; color: var(--muted-text); font-size: 1.5rem; transition: 0.2s; z-index: 100; text-decoration: none; }
-        .home-btn:hover { color: var(--gold); transform: scale(1.1); }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
 </head>
 <body>
     <a href="{{ url_for('homepage') }}" class="home-btn"><i class="fa-solid fa-arrow-left"></i></a>

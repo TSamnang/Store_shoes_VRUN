@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,9 +11,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/checkout.css') }}">
     <!-- Early theme apply (prevents flash) -->
-    <script>if(localStorage.getItem('vrun-theme')==='light'){document.documentElement.setAttribute('data-theme','light');}else{document.documentElement.removeAttribute('data-theme');}</script>
+    <script>if (localStorage.getItem('vrun-theme') === 'light') { document.documentElement.setAttribute('data-theme', 'light'); } else { document.documentElement.removeAttribute('data-theme'); }</script>
 </head>
+
 <body>
 
     {% include 'base/navbar.html' %}
@@ -24,305 +27,241 @@
 
         <!-- ===== Progress Steps ===== -->
         <div class="mb-5 d-print-none">
-            <div class="d-flex align-items-center justify-content-center flex-nowrap mx-auto" style="max-width: 650px;">
-                
+            <div
+                class="checkout-progress-container d-flex align-items-center justify-content-center flex-nowrap mx-auto">
+
                 <!-- Step 1: Ordering -->
                 <div class="checkout-step active text-center">
                     <div class="step-circle"><i class="fa-solid fa-cart-shopping"></i></div>
                     <p class="step-text text-warning">Ordering</p>
                 </div>
-                
+
                 <!-- Connector 1 (Pulsing / connecting to Payment) -->
                 <div class="step-connector active-connector"></div>
-                
+
                 <!-- Step 2: Payment -->
                 <div class="checkout-step active pulsing text-center">
                     <div class="step-circle"><i class="fa-solid fa-credit-card"></i></div>
                     <p class="step-text text-warning">Payment</p>
                 </div>
-                
+
                 <!-- Connector 2 -->
                 <div class="step-connector"></div>
-                
+
                 <!-- Step 3: Processing -->
                 <div class="checkout-step text-center">
                     <div class="step-circle"><i class="fa-solid fa-gears"></i></div>
                     <p class="step-text text-muted">Processing</p>
                 </div>
-                
+
                 <!-- Connector 3 -->
                 <div class="step-connector"></div>
-                
+
                 <!-- Step 4: Shipped -->
                 <div class="checkout-step text-center">
                     <div class="step-circle"><i class="fa-solid fa-truck-fast"></i></div>
                     <p class="step-text text-muted">Shipped</p>
                 </div>
-                
+
                 <!-- Connector 4 -->
                 <div class="step-connector"></div>
-                
+
                 <!-- Step 5: Delivered -->
                 <div class="checkout-step text-center">
                     <div class="step-circle"><i class="fa-solid fa-house-circle-check"></i></div>
                     <p class="step-text text-muted">Delivered</p>
                 </div>
-                
+
             </div>
         </div>
 
         <form method="post">
-        <div class="row g-4">
-            <!-- Left Section - Form -->
-            <div class="col-lg-8">
-                <!-- Shipping Address -->
-                <div class="card bg-darker border-secondary mb-4">
-                    <div class="card-header bg-dark border-secondary">
-                        <h5 class="text-warning mb-0">Shipping Address</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label text-white">Full Name</label>
-                                <input type="text" class="form-control bg-dark text-white border-secondary" placeholder="Enter full name">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label text-white">Phone Number</label>
-                                <input type="text" class="form-control bg-dark text-white border-secondary" placeholder="Enter phone number">
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label text-white">Email</label>
-                                <input type="email" class="form-control bg-dark text-white border-secondary" placeholder="Enter email">
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label text-white">Street Address</label>
-                                <input type="text" name="shipping_address" class="form-control bg-dark text-white border-secondary" placeholder="Enter street address" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label text-white">City</label>
-                                <input type="text" class="form-control bg-dark text-white border-secondary" placeholder="Enter city">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label text-white">Postal Code</label>
-                                <input type="text" class="form-control bg-dark text-white border-secondary" placeholder="Enter postal code">
-                            </div>
-                            <div class="col-12">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="same-billing" checked>
-                                    <label class="form-check-label text-muted" for="same-billing">
-                                        Billing address same as shipping
-                                    </label>
+            <div class="row g-4">
+                <!-- Left Section - Form -->
+                <div class="col-lg-8">
+                    <!-- Shipping Address -->
+                    <div class="card bg-darker border-secondary mb-4">
+                        <div class="card-header bg-dark border-secondary">
+                            <h5 class="text-warning mb-0">Shipping Address</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-white">Full Name</label>
+                                    <input type="text" class="form-control bg-dark text-white border-secondary"
+                                        placeholder="Enter full name">
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Shipping Method -->
-                <div class="card bg-darker border-secondary mb-4">
-                    <div class="card-header bg-dark border-secondary">
-                        <h5 class="text-warning mb-0">Shipping Method</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="radio" name="shipping_method" id="express" value="Express" data-cost="15" {{ 'checked' if preselected_shipping == 'Express' else '' }}>
-                            <label class="form-check-label text-white" for="express">
-                                <strong>Express Delivery</strong> - 1-2 days
-                                <span class="text-warning ms-2">$15.00</span>
-                            </label>
-                        </div>
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="radio" name="shipping_method" id="standard" value="Standard" data-cost="5" {{ 'checked' if preselected_shipping == 'Standard' else '' }}>
-                            <label class="form-check-label text-white" for="standard">
-                                <strong>Standard Delivery</strong> - 3-5 days
-                                <span class="text-warning ms-2">$5.00</span>
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="shipping_method" id="pickup" value="Pickup" data-cost="0" {{ 'checked' if preselected_shipping == 'Pickup' else '' }}>
-                            <label class="form-check-label text-white" for="pickup">
-                                <strong>Store Pickup</strong> - Pick up at our store
-                                <span class="text-warning ms-2">Free</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Payment Method -->
-                <div class="card bg-darker border-secondary">
-                    <div class="card-header bg-dark border-secondary">
-                        <h5 class="text-warning mb-0">Payment Method</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="radio" name="payment" value="Card" id="card" checked>
-                            <label class="form-check-label text-white" for="card">
-                                <i class="fa-solid fa-credit-card text-warning me-2"></i> Credit / Debit Card
-                            </label>
-                        </div>
-
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="payment" value="KHQR" id="khqr">
-                            <label class="form-check-label text-white" for="khqr">
-                                <i class="fa-solid fa-qrcode text-warning me-2"></i> KHQR
-                            </label>
-                        </div>
-
-                        <!-- KHQR Details (appears when KHQR selected) -->
-                        <div class="mt-4 text-center" id="khqr-details" style="display: none;">
-                            <h6 class="text-white mb-3">Scan to Pay with KHQR</h6>
-                            <div class="bg-white p-3 rounded d-inline-block mb-3" style="max-width: 300px;">
-                                <img src="{{ url_for('static', filename='images/qr.jpg') }}" alt="KHQR Code" class="img-fluid rounded">
-                            </div>
-                            <p class="text-muted small">Please scan the QR code to complete your payment.</p>
-                            <button type="button" class="btn btn-sm btn-outline-warning mt-2" id="btn-mock-scan">
-                                <i class="fa-solid fa-camera me-1"></i> I have scanned and paid
-                            </button>
-                        </div>
-
-                        <!-- Saved Cards Selection -->
-                        {% set saved_methods = current_user.get('payment_methods', []) %}
-                        {% if saved_methods %}
-                            <div class="mt-4" id="saved-cards-section">
-                                <label class="form-label text-white fw-semibold mb-2">Select a Saved Card</label>
-                                <div class="row g-2 mb-3">
-                                    {% for pm in saved_methods %}
-                                        <div class="col-md-6">
-                                            <div class="card p-3 bg-dark border-secondary cursor-pointer saved-card-option {% if pm.is_default %}border-warning{% endif %}" 
-                                                 data-id="{{ pm.id }}" 
-                                                 data-name="{{ pm.name }}"
-                                                 data-number="{{ pm.number }}"
-                                                 data-expiry="{{ pm.expiry }}"
-                                                 style="border-radius:10px; cursor: pointer; transition: all 0.2s;">
-                                                <div class="d-flex align-items-center gap-2">
-                                                    <input class="form-check-input saved-card-radio" type="radio" name="selected_card_id" value="{{ pm.id }}" {% if pm.is_default %}checked{% endif %}>
-                                                    <div>
-                                                        <span class="text-white fw-bold d-block">
-                                                            {% if pm.brand|lower == 'visa' %}<i class="fa-brands fa-cc-visa text-primary me-1"></i>
-                                                            {% elif pm.brand|lower in ['mastercard', 'mc'] %}<i class="fa-brands fa-cc-mastercard text-danger me-1"></i>
-                                                            {% elif pm.brand|lower == 'amex' %}<i class="fa-brands fa-cc-amex text-info me-1"></i>
-                                                            {% else %}<i class="fa-solid fa-credit-card text-muted me-1"></i>{% endif %}
-                                                            {{ pm.number }}
-                                                        </span>
-                                                        <span class="text-muted small">Exp: {{ pm.expiry }} &nbsp;·&nbsp; {{ pm.name }}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-                                    <div class="col-md-6">
-                                        <div class="card p-3 bg-dark border-secondary saved-card-option {% if not saved_methods %}border-warning{% endif %}" 
-                                             data-id="new" 
-                                             style="border-radius:10px; cursor: pointer; transition: all 0.2s; min-height: 70px; display: flex; justify-content: center; align-items: center;">
-                                            <div class="d-flex align-items-center gap-2 w-100">
-                                                <input class="form-check-input saved-card-radio" type="radio" name="selected_card_id" value="new" {% if not saved_methods %}checked{% endif %}>
-                                                <div>
-                                                    <span class="text-white fw-bold d-block"><i class="fa-solid fa-plus text-warning me-1"></i> Use a New Card</span>
-                                                </div>
-                                            </div>
-                                        </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-white">Phone Number</label>
+                                    <input type="text" class="form-control bg-dark text-white border-secondary"
+                                        placeholder="Enter phone number">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label text-white">Email</label>
+                                    <input type="email" class="form-control bg-dark text-white border-secondary"
+                                        placeholder="Enter email">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label text-white">Street Address</label>
+                                    <input type="text" name="shipping_address"
+                                        class="form-control bg-dark text-white border-secondary"
+                                        placeholder="Enter street address" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-white">City</label>
+                                    <input type="text" class="form-control bg-dark text-white border-secondary"
+                                        placeholder="Enter city">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-white">Postal Code</label>
+                                    <input type="text" class="form-control bg-dark text-white border-secondary"
+                                        placeholder="Enter postal code">
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="same-billing" checked>
+                                        <label class="form-check-label text-muted" for="same-billing">
+                                            Billing address same as shipping
+                                        </label>
                                     </div>
                                 </div>
                             </div>
-                        {% endif %}
+                        </div>
+                    </div>
 
-                        <!-- Card Details -->
-                        <div class="row g-3 mt-2" id="card-details">
-                            <div class="col-12">
-                                <label class="form-label text-white" for="cc-name">Name on Card</label>
-                                <input type="text" id="cc-name" name="cc_name" class="form-control bg-dark text-white border-secondary" placeholder="John Doe" autocomplete="cc-name">
+                    <!-- Shipping Method -->
+                    <div class="card bg-darker border-secondary mb-4">
+                        <div class="card-header bg-dark border-secondary">
+                            <h5 class="text-warning mb-0">Shipping Method</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="shipping_method" id="express"
+                                    value="Express" data-cost="15" {{ 'checked' if preselected_shipping=='Express'
+                                    else '' }}>
+                                <label class="form-check-label text-white" for="express">
+                                    <strong>Express Delivery</strong> - 1-2 days
+                                    <span class="text-warning ms-2">$15.00</span>
+                                </label>
                             </div>
-                            <div class="col-12">
-                                <label class="form-label text-white" for="cc-number">Card Number</label>
-                                <input type="text" id="cc-number" name="cc_number" class="form-control bg-dark text-white border-secondary" placeholder="1234567890123456" pattern="\d{13,19}" maxlength="19" title="Please enter 13 to 19 digits" autocomplete="cc-number" inputmode="numeric">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="shipping_method" id="standard"
+                                    value="Standard" data-cost="5" {{ 'checked' if preselected_shipping=='Standard'
+                                    else '' }}>
+                                <label class="form-check-label text-white" for="standard">
+                                    <strong>Standard Delivery</strong> - 3-5 days
+                                    <span class="text-warning ms-2">$5.00</span>
+                                </label>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label text-white" for="cc-exp">Expiry Date</label>
-                                <input type="text" id="cc-exp" name="cc_exp" class="form-control bg-dark text-white border-secondary" placeholder="MM/YY" pattern="\d{2}/\d{2}" maxlength="5" title="Format: MM/YY" autocomplete="cc-exp">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label text-white" for="cc-cvc">CVV</label>
-                                <input type="password" id="cc-cvc" name="cc_cvv" class="form-control bg-dark text-white border-secondary" placeholder="123" pattern="\d{3,4}" maxlength="4" title="3 or 4 digit CVV" autocomplete="cc-csc" inputmode="numeric">
-                            </div>
-                            <div class="col-12" id="save-card-checkbox-container">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="save_card" value="true" id="save-card" checked>
-                                    <label class="form-check-label text-muted" for="save-card">
-                                        Save this card to my account for future purchases
-                                    </label>
-                                </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="shipping_method" id="pickup"
+                                    value="Pickup" data-cost="0" {{ 'checked' if preselected_shipping=='Pickup' else ''
+                                    }}>
+                                <label class="form-check-label text-white" for="pickup">
+                                    <strong>Store Pickup</strong> - Pick up at our store
+                                    <span class="text-warning ms-2">Free</span>
+                                </label>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Right Section - Order Summary -->
-            <div class="col-lg-4">
-                <div class="card bg-darker border-secondary">
-                    <div class="card-header bg-dark border-secondary">
-                        <h5 class="text-warning mb-0">Order Summary</h5>
-                    </div>
-                    <div class="card-body">
-                        <!-- Dynamic Cart Items -->
-                        <div class="mb-4">
-                            {% for item in cart_items %}
+                    <!-- Payment Method -->
+                    <div class="card bg-darker border-secondary">
+                        <div class="card-header bg-dark border-secondary">
+                            <h5 class="text-warning mb-0">Payment Method</h5>
+                        </div>
+                        <div class="card-body">
                             <div class="d-flex align-items-center mb-3">
-                                <img src="{{item.image}}" alt="{{ item.name }}"
-                                    style="width: 54px; height: 54px; object-fit: contain; background: #1a1a2e; border-radius: 8px; padding: 4px; border: 1px solid rgba(255,193,7,0.2); flex-shrink: 0;">
-                                <div class="flex-grow-1 ms-3">
-                                    <p class="text-warning small mb-1 fw-semibold">{{ item.name }}</p>
-                                    <p class="text-muted small mb-0">Qty: {{ item.quantity }} &times; ${{ '%.2f'|format(item.price) }}</p>
+                                <input type="hidden" name="payment" value="KHQR">
+                                <span class="text-white fw-bold"><i class="fa-solid fa-qrcode text-warning me-2"></i>
+                                    KHQR Payment (Only Option)</span>
+                            </div>
+
+                            <!-- KHQR Details -->
+                            <div class="mt-3 text-center" id="khqr-details">
+                                <h6 class="text-white mb-3">Scan to Pay with KHQR</h6>
+                                <div class="khqr-code-wrapper bg-white p-3 rounded d-inline-block mb-3">
+                                    <img src="{{ url_for('static', filename='images/qr.jpg') }}" alt="KHQR Code"
+                                        class="img-fluid rounded">
                                 </div>
-                                <p class="text-warning fw-bold mb-0 ms-2">${{ '%.2f'|format(item.total) }}</p>
+                                <p class="text-muted small">Please scan the QR code to complete your payment.</p>
+                                <button type="button" class="btn btn-sm btn-outline-warning mt-2" id="btn-mock-scan">
+                                    <i class="fa-solid fa-camera me-1"></i> I have scanned and paid
+                                </button>
                             </div>
-                            {% else %}
-                            <p class="text-muted small">Your cart is empty.</p>
-                            {% endfor %}
                         </div>
+                    </div>
+                </div>
 
-                        <hr class="border-secondary">
+                <!-- Right Section - Order Summary -->
+                <div class="col-lg-4">
+                    <div class="card bg-darker border-secondary">
+                        <div class="card-header bg-dark border-secondary">
+                            <h5 class="text-warning mb-0">Order Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Dynamic Cart Items -->
+                            <div class="mb-4">
+                                {% for item in cart_items %}
+                                <div class="d-flex align-items-center mb-3">
+                                    <img src="{{item.image}}" alt="{{ item.name }}" class="checkout-item-thumb">
+                                    <div class="flex-grow-1 ms-3">
+                                        <p class="text-warning small mb-1 fw-semibold">{{ item.name }}</p>
+                                        <p class="text-muted small mb-0">Qty: {{ item.quantity }} &times; ${{
+                                            '%.2f'|format(item.price) }}</p>
+                                    </div>
+                                    <p class="text-warning fw-bold mb-0 ms-2">${{ '%.2f'|format(item.total) }}</p>
+                                </div>
+                                {% else %}
+                                <p class="text-muted small">Your cart is empty.</p>
+                                {% endfor %}
+                            </div>
 
-                        <!-- Totals -->
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between mb-2">
-                                <span class="text-muted">Subtotal</span>
-                                <span class="text-white">${{ '%.2f'|format(subtotal) }}</span>
-                            </div>
-                            {% if discount_amt and discount_amt > 0 %}
-                            <div class="d-flex justify-content-between mb-2">
-                                <span class="text-success"><i class="fa-solid fa-tag me-1"></i>Discount ({{ coupon_code }})</span>
-                                <span class="text-success">-${{ '%.2f'|format(discount_amt) }}</span>
-                            </div>
-                            {% endif %}
-                            <div class="d-flex justify-content-between mb-3">
-                                <span class="text-muted">Shipping</span>
-                                <span class="text-white" id="shipping-cost">${{ '%.2f'|format(shipping_cost) }}</span>
-                            </div>
                             <hr class="border-secondary">
-                            <div class="d-flex justify-content-between">
-                                <span class="text-white fw-bold">Total</span>
-                                <span class="text-warning fw-bold fs-5" id="total-price">${{ '%.2f'|format(total) }}</span>
+
+                            <!-- Totals -->
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted">Subtotal</span>
+                                    <span class="text-white">${{ '%.2f'|format(subtotal) }}</span>
+                                </div>
+                                {% if discount_amt and discount_amt > 0 %}
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-success"><i class="fa-solid fa-tag me-1"></i>Discount ({{
+                                        coupon_code }})</span>
+                                    <span class="text-success">-${{ '%.2f'|format(discount_amt) }}</span>
+                                </div>
+                                {% endif %}
+                                <div class="d-flex justify-content-between mb-3">
+                                    <span class="text-muted">Shipping</span>
+                                    <span class="text-white" id="shipping-cost">${{ '%.2f'|format(shipping_cost)
+                                        }}</span>
+                                </div>
+                                <hr class="border-secondary">
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-white fw-bold">Total</span>
+                                    <span class="text-warning fw-bold fs-5" id="total-price">${{ '%.2f'|format(total)
+                                        }}</span>
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- Action Buttons -->
-                        <button class="btn btn-warning w-100 fw-bold py-2 mb-2" type="submit">
-                            <i class="fa-solid fa-lock me-2"></i> Complete Purchase
-                        </button>
-                        <a href="{{ url_for('cart') }}" class="btn btn-outline-warning w-100">Back to Cart</a>
+                            <!-- Action Buttons -->
+                            <button class="btn btn-warning w-100 fw-bold py-2 mb-2" type="submit">
+                                <i class="fa-solid fa-lock me-2"></i> Complete Purchase
+                            </button>
+                            <a href="{{ url_for('cart') }}" class="btn btn-outline-warning w-100">Back to Cart</a>
 
-                        <!-- Security Info -->
-                        <div class="mt-3 text-center">
-                            <p class="text-muted small mb-0">
-                                <i class="fa-solid fa-shield text-warning me-2"></i>
-                                Secure SSL encrypted payment
-                            </p>
+                            <!-- Security Info -->
+                            <div class="mt-3 text-center">
+                                <p class="text-muted small mb-0">
+                                    <i class="fa-solid fa-shield text-warning me-2"></i>
+                                    Secure SSL encrypted payment
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
         </form>
     </div>
 
@@ -333,10 +272,14 @@
                 <div class="col-md-3">
                     <h5 class="text-warning mb-3">Quick Links</h5>
                     <ul class="list-unstyled">
-                        <li><a href="{{ url_for('homepage') }}" class="text-white text-decoration-none hover-warning">Home</a></li>
-                        <li><a href="{{ url_for('category') }}" class="text-white text-decoration-none hover-warning">Category</a></li>
-                        <li><a href="{{ url_for('product') }}" class="text-white text-decoration-none hover-warning">Products</a></li>
-                        <li><a href="{{ url_for('order') }}" class="text-white text-decoration-none hover-warning">Orders</a></li>
+                        <li><a href="{{ url_for('homepage') }}"
+                                class="text-white text-decoration-none hover-warning">Home</a></li>
+                        <li><a href="{{ url_for('category') }}"
+                                class="text-white text-decoration-none hover-warning">Category</a></li>
+                        <li><a href="{{ url_for('product') }}"
+                                class="text-white text-decoration-none hover-warning">Products</a></li>
+                        <li><a href="{{ url_for('order') }}"
+                                class="text-white text-decoration-none hover-warning">Orders</a></li>
                     </ul>
                 </div>
                 <div class="col-md-3">
@@ -357,9 +300,12 @@
                 <div class="col-md-3">
                     <h5 class="text-warning mb-3">Follow Us</h5>
                     <div class="d-flex gap-3">
-                        <a href="#" class="text-white text-decoration-none"><i class="fa-brands fa-facebook fs-5"></i></a>
-                        <a href="#" class="text-white text-decoration-none"><i class="fa-brands fa-instagram fs-5"></i></a>
-                        <a href="#" class="text-white text-decoration-none"><i class="fa-brands fa-twitter fs-5"></i></a>
+                        <a href="#" class="text-white text-decoration-none"><i
+                                class="fa-brands fa-facebook fs-5"></i></a>
+                        <a href="#" class="text-white text-decoration-none"><i
+                                class="fa-brands fa-instagram fs-5"></i></a>
+                        <a href="#" class="text-white text-decoration-none"><i
+                                class="fa-brands fa-twitter fs-5"></i></a>
                         <a href="#" class="text-white text-decoration-none"><i class="fa-brands fa-tiktok fs-5"></i></a>
                     </div>
                 </div>
@@ -370,7 +316,9 @@
                     <p class="text-white mb-0"><small>&copy; 2026 We Run. All rights reserved.</small></p>
                 </div>
                 <div class="col-md-6 text-end">
-                    <p class="text-white mb-0"><small><a href="#" class="text-white text-decoration-none hover-warning">Privacy Policy</a> | <a href="#" class="text-white text-decoration-none hover-warning">Terms & Condition</a></small></p>
+                    <p class="text-white mb-0"><small><a href="#"
+                                class="text-white text-decoration-none hover-warning">Privacy Policy</a> | <a href="#"
+                                class="text-white text-decoration-none hover-warning">Terms & Condition</a></small></p>
                 </div>
             </div>
         </div>
@@ -381,7 +329,7 @@
     <script>
         // Update shipping cost on selection
         const subtotal = {{ subtotal }};
-        const discountAmt = {{ discount_amt|float }};
+        const discountAmt = {{ discount_amt| float }};
 
         function syncShipping() {
             const checked = document.querySelector('input[name="shipping_method"]:checked');
@@ -398,90 +346,15 @@
         // Run on load so the summary matches the pre-selected method
         syncShipping();
 
-        const cardRadio = document.getElementById('card');
-        const cardDetails = document.getElementById('card-details');
-        const cardInputs = cardDetails.querySelectorAll('input');
-        const khqrRadio = document.getElementById('khqr');
-        const khqrDetails = document.getElementById('khqr-details');
-        const savedCardsSection = document.getElementById('saved-cards-section');
-        
-        function updateCardInputRequirements() {
-            const isCardActive = cardRadio.checked;
-            const newRadio = document.querySelector('input[name="selected_card_id"][value="new"]');
-            const isNewCardSelected = !newRadio || newRadio.checked;
-            
-            if (isCardActive) {
-                cardDetails.style.display = 'flex';
-                if (isNewCardSelected) {
-                    cardInputs.forEach(input => {
-                        if (input.type !== 'checkbox') {
-                            input.removeAttribute('readonly');
-                            input.setAttribute('required', 'required');
-                            if (input.dataset.autofilled === 'true') { input.value = ''; delete input.dataset.autofilled; }
-                        }
-                    });
-                    const saveCardContainer = document.getElementById('save-card-checkbox-container');
-                    if (saveCardContainer) saveCardContainer.style.display = 'block';
-                } else {
-                    const activeRadio = document.querySelector('input[name="selected_card_id"]:checked');
-                    const cardOption = activeRadio ? activeRadio.closest('.saved-card-option') : null;
-                    if (cardOption) {
-                        document.getElementById('cc-name').value = cardOption.dataset.name || '';
-                        document.getElementById('cc-number').value = cardOption.dataset.number || '';
-                        document.getElementById('cc-exp').value = cardOption.dataset.expiry || '';
-                        document.getElementById('cc-cvc').value = '•••';
-                        cardInputs.forEach(input => {
-                            if (input.type !== 'checkbox') { input.setAttribute('readonly', 'readonly'); input.removeAttribute('required'); input.dataset.autofilled = 'true'; }
-                        });
-                    }
-                    const saveCardContainer = document.getElementById('save-card-checkbox-container');
-                    if (saveCardContainer) saveCardContainer.style.display = 'none';
-                }
-            } else {
-                cardDetails.style.display = 'none';
-                cardInputs.forEach(input => { input.removeAttribute('required'); input.removeAttribute('readonly'); });
-            }
-            if (isCardActive && savedCardsSection) { savedCardsSection.style.display = 'block'; }
-            else if (savedCardsSection) { savedCardsSection.style.display = 'none'; }
-        }
-        
-        document.querySelectorAll('input[name="payment"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                updateCardInputRequirements();
-                if (!cardRadio.checked) { cardInputs.forEach(input => { if (input.type !== 'checkbox') input.value = ''; }); }
-                if (khqrRadio.checked) { khqrDetails.style.display = 'block'; } else { khqrDetails.style.display = 'none'; }
-            });
-        });
-
-        document.querySelectorAll('input[name="selected_card_id"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                updateCardInputRequirements();
-                document.querySelectorAll('.saved-card-option').forEach(cardOpt => { cardOpt.classList.remove('border-warning'); });
-                const selectedOption = this.closest('.saved-card-option');
-                if (selectedOption) { selectedOption.classList.add('border-warning'); }
-            });
-        });
-        
-        document.querySelectorAll('.saved-card-option').forEach(cardOpt => {
-            cardOpt.addEventListener('click', function(e) {
-                if (e.target.type !== 'radio') {
-                    const radio = this.querySelector('input[type="radio"]');
-                    if (radio) { radio.checked = true; radio.dispatchEvent(new Event('change')); }
-                }
-            });
-        });
-
-        document.getElementById('btn-mock-scan').addEventListener('click', function() {
+        document.getElementById('btn-mock-scan').addEventListener('click', function () {
             this.classList.remove('btn-outline-warning');
             this.classList.add('btn-success', 'text-white', 'border-success');
             this.innerHTML = '<i class="fa-solid fa-check me-1"></i> Payment Verified!';
             alert('Success! Your payment via KHQR has been verified.');
         });
-        
-        // Initial setup
-        updateCardInputRequirements();
     </script>
     <!-- Theme Toggle JS -->
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 </body>
+
 </html>

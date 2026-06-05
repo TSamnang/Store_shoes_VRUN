@@ -1,0 +1,26 @@
+/* ============================================================
+   reviews.css  –  Styles for the Admin Reviews page
+   ============================================================ */
+
+.avg-rating-star {
+    font-size: 0.7rem;
+}
+
+.filter-header-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--gold);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-star-icon {
+    font-size: 0.65rem;
+}
+
+.review-product-badge {
+    background: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+    border-radius: 8px;
+}

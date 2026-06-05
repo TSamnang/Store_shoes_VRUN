@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/product_detail.css') }}">
     <!-- Early theme apply (prevents flash) -->
     <script>if(localStorage.getItem('vrun-theme')==='light'){document.documentElement.setAttribute('data-theme','light');}else{document.documentElement.removeAttribute('data-theme');}</script>
 </head>
@@ -24,22 +25,20 @@
             <!-- Product Image -->
             <div class="col-md-5">
                 <div class="product-detail-image text-center">
-                    <img id="mainProductImg" src="{{product.image}}" alt="{{ product.name }}" class="img-fluid" style="max-height: 500px;">
+                    <img id="mainProductImg" src="{{product.image}}" alt="{{ product.name }}" class="img-fluid main-product-img-detail">
                 </div>
                 <div class="row g-2 mt-3">
                     <div class="col-3">
-                        <img src="{{product.image}}" alt="Main" class="img-fluid thumb-image"
-                             style="cursor:pointer;border:2px solid #ffc107;border-radius:8px;padding:2px;aspect-ratio:1/1;object-fit:cover;"
-                             onclick="document.getElementById('mainProductImg').src=this.src;document.querySelectorAll('.thumb-image').forEach(t=>t.style.borderColor='var(--border-color)');this.style.borderColor='#ffc107';">
+                        <img src="{{product.image}}" alt="Main" class="img-fluid thumb-image active"
+                             onclick="document.getElementById('mainProductImg').src=this.src;document.querySelectorAll('.thumb-image').forEach(t=>t.classList.remove('active'));this.classList.add('active');">
                     </div>
                     {% if product.color_images %}
                         {% for color, img in product.color_images.items() %}
                         {% if img != product.image %}
                         <div class="col-3">
                             <img src="{{img}}" alt="{{color}}" class="img-fluid thumb-image"
-                                 style="cursor:pointer;border:2px solid var(--border-color);border-radius:8px;padding:2px;aspect-ratio:1/1;object-fit:cover;"
                                  title="{{color}}"
-                                 onclick="document.getElementById('mainProductImg').src=this.src;document.querySelectorAll('.thumb-image').forEach(t=>t.style.borderColor='var(--border-color)');this.style.borderColor='#ffc107';">
+                                 onclick="document.getElementById('mainProductImg').src=this.src;document.querySelectorAll('.thumb-image').forEach(t=>t.classList.remove('active'));this.classList.add('active');">
                         </div>
                         {% endif %}
                         {% endfor %}
@@ -51,11 +50,11 @@
             <div class="col-md-7">
                 <h1 class="text-warning fw-bold mb-2">{{ product.name }}</h1>
                 {% if product.brand %}
-                <p class="text-muted mb-1" style="font-size:.82rem;"><i class="fa-solid fa-tag me-1"></i>{{ product.brand }}</p>
+                <p class="text-muted mb-1 product-brand-detail"><i class="fa-solid fa-tag me-1"></i>{{ product.brand }}</p>
                 {% endif %}
                 <div class="d-flex flex-wrap gap-1 mb-3">
                     {% for cat in product.category %}
-                    <span class="badge" style="background:rgba(255,193,7,.15);color:#ffc107;border-radius:8px;padding:4px 12px;">{{ cat }}</span>
+                    <span class="badge product-cat-badge">{{ cat }}</span>
                     {% endfor %}
                 </div>
 
@@ -72,7 +71,7 @@
                                 {% endif %}
                             {% endfor %}
                         </div>
-                        <a href="#reviews" class="text-muted text-decoration-none" style="font-size:.9rem;">
+                        <a href="#reviews" class="text-muted text-decoration-none product-reviews-link">
                             {% if review_count > 0 %}
                                 {{ avg_rating }}/5 &nbsp;·&nbsp; {{ review_count }} review{{ 's' if review_count != 1 else '' }}
                             {% else %}
@@ -120,19 +119,18 @@
                     <h5 class="text-white mb-3">Color</h5>
                     <div class="d-flex gap-2 flex-wrap">
                         {% for color in unique_colors %}
-                            <button class="btn btn-circle color-btn" type="button"
+                            <button class="btn btn-circle color-btn color-btn-circle" type="button"
                                 title="{{ color }}"
-                                style="background:{{ color }};width:40px;height:40px;border:2px solid #555;border-radius:50%;"
+                                style="background:{{ color }};"
                                 data-color="{{ color }}">
                             </button>
                         {% endfor %}
                     </div>
                 </div>
                 {% endif %}
-
                 <div class="mb-4">
                     <h5 class="text-white mb-3">Quantity</h5>
-                    <div class="input-group" style="max-width: 150px;">
+                    <div class="input-group product-qty-input-group">
                         <button class="btn btn-outline-warning" type="button">-</button>
                         <input type="number" id="qtyInput" class="form-control bg-dark text-white border-warning text-center" value="1" min="1">
                         <button class="btn btn-outline-warning" type="button">+</button>
@@ -151,12 +149,12 @@
                 {% if product.detail %}
                 <div class="border-top border-secondary pt-4">
                     <h5 class="text-white mb-3">Product Detail</h5>
-                    <p class="text-muted" style="white-space:pre-line;">{{ product.detail }}</p>
+                    <p class="text-muted product-detail-text">{{ product.detail }}</p>
                 </div>
                 {% endif %}
                 {% if product.brand %}
                 <div class="mt-3">
-                    <span class="badge" style="background:rgba(255,193,7,.15);color:#ffc107;border-radius:8px;padding:6px 14px;font-size:.8rem;">
+                    <span class="badge product-brand-badge">
                         <i class="fa-solid fa-tag me-1"></i> {{ product.brand }}
                     </span>
                 </div>
@@ -173,13 +171,13 @@
                     <div class="col-6 col-md-3">
                         <div class="arrival-card">
                             <a href="{{ url_for('product_detail', product_id=related.id) }}" class="text-decoration-none">
-                                <div class="arrival-img-box" style="background-color: var(--input-bg);">
+                                <div class="arrival-img-box related-img-box">
                                     <img src="{{related.image}}" class="img-fluid" alt="{{ related.name }}">
                                 </div>
                             </a>
                             <div class="arrival-card-body">
                                 <div class="arrival-meta">
-                                    <a href="{{ url_for('product_detail', product_id=related.id) }}" class="text-decoration-none" style="flex: 1; min-width: 0;">
+                                    <a href="{{ url_for('product_detail', product_id=related.id) }}" class="text-decoration-none related-name-link">
                                         <p class="arrival-name text-truncate m-0" title="{{ related.name }}">{{ related.name }}</p>
                                     </a>
                                 </div>
@@ -224,8 +222,8 @@
                             {% for star in [5, 4, 3, 2, 1] %}
                             {% set count = rating_counts[star] %}
                             {% set pct = ((count / review_count * 100) | int) if review_count > 0 else 0 %}
-                            <div class="rating-bar-row">
-                                <span class="rating-bar-label">{{ star }}<i class="fa-solid fa-star text-warning ms-1" style="font-size:.7rem;"></i></span>
+                             <div class="rating-bar-row">
+                                <span class="rating-bar-label">{{ star }}<i class="fa-solid fa-star text-warning ms-1 rating-star-inline"></i></span>
                                 <div class="rating-bar-track">
                                     <div class="rating-bar-fill" style="width: {{ pct }}%;"></div>
                                 </div>
@@ -270,7 +268,7 @@
                                     <i class="fa-solid fa-paper-plane me-2"></i>{{ 'Update Review' if user_review else 'Submit Review' }}
                                 </button>
                                 {% if user_review %}
-                                <form action="{{ url_for('delete_review', review_id=user_review.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete your review?');">
+                                <form action="{{ url_for('delete_review', review_id=user_review.id) }}" method="POST" class="review-delete-form" onsubmit="return confirm('Delete your review?');">
                                     <button type="submit" class="btn btn-outline-danger px-4">
                                         <i class="fa-solid fa-trash me-2"></i>Delete
                                     </button>
@@ -281,7 +279,7 @@
                     </div>
                     {% else %}
                     <div class="review-form-card d-flex flex-column align-items-center justify-content-center py-4">
-                        <i class="fa-solid fa-lock text-warning mb-3" style="font-size:2.5rem;"></i>
+                        <i class="fa-solid fa-lock text-warning mb-3 lock-icon-review"></i>
                         <p class="text-white mb-3">Log in to leave a review for this product.</p>
                         <a href="{{ url_for('login', next=request.path) }}" class="btn btn-warning fw-bold px-5">
                             <i class="fa-solid fa-right-to-bracket me-2"></i>Log In to Review
@@ -301,7 +299,7 @@
                         <div class="review-meta">
                             <span class="review-username">{{ review.username }}</span>
                             {% if current_user and review.user_id == current_user.id %}
-                            <span class="badge bg-warning text-dark ms-2" style="font-size:.65rem;">You</span>
+                            <span class="badge bg-warning text-dark ms-2 own-review-badge">You</span>
                             {% endif %}
                             <div class="review-stars">
                                 {% for i in range(1, 6) %}

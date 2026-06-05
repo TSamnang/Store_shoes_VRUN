@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/category.css') }}">
     <script>if(localStorage.getItem('vrun-theme')==='light'){document.documentElement.setAttribute('data-theme','light');}else{document.documentElement.removeAttribute('data-theme');}</script>
 </head>
 <body>
@@ -20,12 +21,12 @@
             {% for cat in categories %}
             <div class="col-6 col-md-4">
                 <div class="arrival-card">
-                    <div class="arrival-img-box" style="background-color: var(--input-bg);">
+                    <div class="arrival-img-box category-img-box">
                         {% set cat_img = category_images.get(cat.category, '') %}
                         {% if cat_img %}
                         <img src="{{ cat_img }}" alt="{{ cat.category }}" class="img-fluid">
                         {% else %}
-                        <div class="d-flex align-items-center justify-content-center h-100 text-muted" style="min-height:160px;">
+                        <div class="d-flex align-items-center justify-content-center h-100 text-muted category-empty-icon-box">
                             <i class="fa-solid fa-shoe-prints fs-1"></i>
                         </div>
                         {% endif %}
@@ -35,7 +36,7 @@
                             <p class="arrival-name">{{ cat.category }}</p>
                             <span class="arrival-rating">{{ cat.count }} Products</span>
                         </div>
-                        <a href="{{ url_for('category', category=cat.category) }}" class="btn btn-warning btn-sm mt-1 w-100 rounded-pill">View Category</a>
+                        <a href="{{ url_for('product', category=cat.category) }}" class="btn btn-warning btn-sm mt-1 w-100 rounded-pill">View Category</a>
                     </div>
                 </div>
             </div>
@@ -46,36 +47,7 @@
         </div>
     </section>
 
-    <!-- Featured Products -->
-    <section class="container my-5">
-        <h2 class="text-warning fw-bold mb-4">Featured Products</h2>
-        <div class="row g-3 g-md-4">
-            {% for product in products %}
-                <div class="col-6 col-md-3">
-                    <div class="arrival-card">
-                        <a href="{{ url_for('product_detail', product_id=product.id) }}" class="text-decoration-none">
-                            <div class="arrival-img-box" style="background-color: var(--input-bg);">
-                                <img src="{{product.image}}" class="img-fluid" alt="{{ product.name }}">
-                            </div>
-                        </a>
-                        <div class="arrival-card-body">
-                            <div class="arrival-meta">
-                                <a href="{{ url_for('product_detail', product_id=product.id) }}" class="text-decoration-none" style="flex: 1; min-width: 0;">
-                                    <p class="arrival-name text-truncate m-0" title="{{ product.name }}">{{ product.name }}</p>
-                                </a>
-                            </div>
-                            {% if product.category %}<span class="category-pill">{{ product.category | join(', ') }}</span>{% endif %}
-                            <p class="arrival-price">${{ '%.2f'|format(product.price) }}</p>
-                            <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-warning btn-sm mt-1 w-100 rounded-pill">Add to cart</a>
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
-            {% if products|length == 0 %}
-                <div class="col-12 text-center text-white">No products found.</div>
-            {% endif %}
-        </div>
-    </section>
+
 
 
     <!-- Footer -->

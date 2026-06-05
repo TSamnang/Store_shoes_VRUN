@@ -1,0 +1,12 @@
+/* ============================================================
+   order_index.css  –  Styles for the Order Index / My Orders page
+   ============================================================ */
+
+.empty-orders-icon {
+    font-size: 4rem;
+}
+
+.btn-cancelled-disabled {
+    opacity: 0.65;
+    pointer-events: none;
+}

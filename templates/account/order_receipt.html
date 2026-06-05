@@ -8,22 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <script>if(localStorage.getItem('vrun-theme')==='light'){document.documentElement.setAttribute('data-theme','light');}else{document.documentElement.removeAttribute('data-theme');}</script>
-    <style>
-        .receipt-divider { border: none; border-top: 2px dashed rgba(255,193,7,0.3); margin: 1rem 0; }
-        .item-row { transition: background 0.2s; }
-        .item-row:hover { background: rgba(255,193,7,0.05); }
-        .status-badge-Ordering    { background: #0d6efd; }
-        .status-badge-Processing  { background: #fd7e14; }
-        .status-badge-Shipped     { background: #20c997; }
-        .status-badge-Delivered   { background: #198754; }
-        .status-badge-Cancelled   { background: #dc3545; }
-        @media print {
-            body { background: white !important; color: black !important; }
-            .text-white, .text-warning, .text-muted { color: black !important; }
-            .card, .card-header, .card-body, .bg-dark, .bg-darker { background: white !important; border-color: #ddd !important; box-shadow: none !important; }
-            .badge { border: 1px solid black !important; color: black !important; background: white !important; }
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/order_receipt.css') }}">
 </head>
 <body>
     <div class="d-print-none">
@@ -35,8 +20,8 @@
 
         <!-- ===== Success Banner ===== -->
         <div class="text-center mb-5 d-print-none">
-            <div class="mb-3" style="animation: bounceIn 0.6s ease;">
-                <i class="fa-solid fa-circle-check text-warning" style="font-size: 5rem;"></i>
+            <div class="mb-3 success-banner-bounce">
+                <i class="fa-solid fa-circle-check text-warning success-banner-check"></i>
             </div>
             <h1 class="text-warning fw-bold">Order Confirmed!</h1>
             <p class="text-muted">Thank you for shopping with We Run. Your order is being prepared.</p>
@@ -47,7 +32,7 @@
 
         <!-- ===== Progress Steps ===== -->
         <div class="mb-5 d-print-none">
-            <div class="d-flex align-items-center justify-content-center flex-nowrap mx-auto" style="max-width: 650px;">
+            <div class="d-flex align-items-center justify-content-center flex-nowrap mx-auto receipt-progress-container">
                 
                 <!-- Step 1: Ordering -->
                 <div class="checkout-step active text-center">
@@ -111,13 +96,13 @@
                     <div class="card-body">
                         <div class="row g-3">
                             <div class="col-sm-6">
-                                <div class="p-3 rounded" style="background: rgba(255,193,7,0.06); border: 1px solid rgba(255,193,7,0.15);">
+                                <div class="p-3 rounded receipt-info-card">
                                     <p class="text-muted small mb-1"><i class="fa-solid fa-hashtag me-1"></i>Order Number</p>
                                     <p class="text-white fw-bold mb-0">#{{ order.id }}</p>
                                 </div>
                             </div>
                             <div class="col-sm-6">
-                                <div class="p-3 rounded" style="background: rgba(255,193,7,0.06); border: 1px solid rgba(255,193,7,0.15);">
+                                <div class="p-3 rounded receipt-info-card">
                                     <p class="text-muted small mb-1"><i class="fa-regular fa-calendar me-1"></i>Order Date</p>
                                     <p class="text-white fw-bold mb-0">
                                         {{ order.created_at.strftime('%B %d, %Y at %I:%M %p') if order.created_at else 'N/A' }}
@@ -125,19 +110,19 @@
                                 </div>
                             </div>
                             <div class="col-sm-6">
-                                <div class="p-3 rounded" style="background: rgba(255,193,7,0.06); border: 1px solid rgba(255,193,7,0.15);">
+                                <div class="p-3 rounded receipt-info-card">
                                     <p class="text-muted small mb-1"><i class="fa-solid fa-truck me-1"></i>Shipping Method</p>
                                     <p class="text-white fw-bold mb-0">{{ order.shipping_method }}</p>
                                 </div>
                             </div>
                             <div class="col-sm-6">
-                                <div class="p-3 rounded" style="background: rgba(255,193,7,0.06); border: 1px solid rgba(255,193,7,0.15);">
+                                <div class="p-3 rounded receipt-info-card">
                                     <p class="text-muted small mb-1"><i class="fa-solid fa-box me-1"></i>Total Items</p>
                                     <p class="text-white fw-bold mb-0">{{ item_count }} item{{ 's' if item_count != 1 else '' }}</p>
                                 </div>
                             </div>
                             <div class="col-12">
-                                <div class="p-3 rounded" style="background: rgba(255,193,7,0.06); border: 1px solid rgba(255,193,7,0.15);">
+                                <div class="p-3 rounded receipt-info-card">
                                     <p class="text-muted small mb-1"><i class="fa-solid fa-location-dot text-warning me-1"></i>Shipping Address</p>
                                     <p class="text-white fw-bold mb-0">{{ order.shipping_address }}</p>
                                 </div>
@@ -158,8 +143,7 @@
                         {% for item in items %}
                         <div class="item-row d-flex align-items-center p-3 {% if not loop.last %}border-bottom border-secondary{% endif %}">
                             <div class="flex-shrink-0">
-                                <img src="{{item.image}}" alt="{{ item.product_name }}"
-                                    style="width: 80px; height: 80px; object-fit: contain; background: #1a1a2e; border-radius: 10px; padding: 6px; border: 1px solid rgba(255,193,7,0.2);">
+                                <img src="{{item.image}}" alt="{{ item.product_name }}" class="receipt-item-thumb">
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <p class="text-white fw-bold mb-1">{{ item.product_name }}</p>
@@ -175,7 +159,7 @@
                         </div>
                         {% else %}
                         <div class="p-4 text-center text-muted">
-                            <i class="fa-solid fa-box-open mb-2" style="font-size: 2rem;"></i>
+                            <i class="fa-solid fa-box-open mb-2 receipt-empty-icon"></i>
                             <p class="mb-0">No items found for this order.</p>
                         </div>
                         {% endfor %}
@@ -190,12 +174,14 @@
                     <a href="{{ url_for('order') }}" class="btn btn-outline-warning">
                         <i class="fa-solid fa-list-ul me-2"></i>My Orders
                     </a>
+                    {% if order.status not in ['Cancelled', 'Delivered'] or (g.user and g.user.role == 'admin') %}
                     <form action="{{ url_for('order_delete', order_id=order.id) }}" method="post"
                           onsubmit="return confirm('Cancel order #{{ order.id }}? This cannot be undone.');">
                         <button type="submit" class="btn btn-outline-danger">
                             <i class="fa-solid fa-ban me-2"></i>Cancel Order
                         </button>
                     </form>
+                    {% endif %}
                 </div>
             </div>
 

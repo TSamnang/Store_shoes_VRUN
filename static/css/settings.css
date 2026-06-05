@@ -1,0 +1,20 @@
+.settings-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; padding: 28px; margin-bottom: 24px; }
+.settings-section-title { font-size: 1rem; font-weight: 700; color: var(--primary-yellow); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+.settings-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border-color); }
+.settings-row:last-child { border-bottom: none; padding-bottom: 0; }
+.settings-row:first-child { padding-top: 0; }
+.setting-info .setting-label { font-weight: 600; color: var(--body-text); font-size: 0.95rem; }
+.setting-info .setting-desc { color: var(--muted-text); font-size: 0.8rem; margin-top: 2px; }
+.form-control, .form-select { background-color: var(--input-bg) !important; color: var(--body-text) !important; border-color: var(--border-color) !important; }
+.form-control:focus, .form-select:focus { border-color: var(--primary-yellow) !important; box-shadow: 0 0 0 3px rgba(255,193,7,0.2) !important; }
+.toggle-switch { position: relative; width: 46px; height: 24px; flex-shrink: 0; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; inset: 0; background: #444; border-radius: 24px; cursor: pointer; transition: background 0.3s; }
+.toggle-slider::before { content:''; position:absolute; left:3px; top:3px; width:18px; height:18px; background:#fff; border-radius:50%; transition: transform 0.3s; }
+.toggle-switch input:checked + .toggle-slider { background: var(--primary-yellow); }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(22px); background: #1a1a1a; }
+.side-nav .nav-link { border-radius: 10px; padding: 10px 16px; color: var(--body-text); font-weight: 500; transition: all 0.2s; }
+.side-nav .nav-link:hover, .side-nav .nav-link.active { background: rgba(255,193,7,0.12); color: var(--primary-yellow); }
+.side-nav .nav-link i { width: 20px; }
+.danger-zone { border-color: rgba(220,53,69,0.45) !important; }
+.danger-zone .settings-section-title { color: #dc3545; }

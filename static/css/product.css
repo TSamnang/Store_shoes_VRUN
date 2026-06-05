@@ -1,0 +1,21 @@
+/* ============================================================
+   product.css  –  Styles for the Product Catalog page
+   ============================================================ */
+
+.product-search-input {
+    min-width: 0;
+    flex: 1;
+}
+
+.product-sort-select {
+    max-width: 200px;
+}
+
+.product-img-box {
+    background-color: var(--input-bg);
+}
+
+.product-name-link {
+    flex: 1;
+    min-width: 0;
+}

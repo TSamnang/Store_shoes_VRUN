@@ -8,39 +8,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <script>if(localStorage.getItem('vrun-theme')==='light'){document.documentElement.setAttribute('data-theme','light')}else{document.documentElement.removeAttribute('data-theme')}</script>
-    <style>
-        :root { --gold:#ffc107; --gold-dim:rgba(255,193,7,.12); --gold-glow:rgba(255,193,7,.25); }
-        .dash-wrap { display:grid; grid-template-columns:220px 1fr; min-height:calc(100vh - 60px); }
-        .dash-side  { background:var(--card-bg); border-right:1px solid var(--border-color); padding:24px 12px; }
-        .dash-main  { padding:32px 28px; background:var(--body-bg); }
-        .side-label { font-size:.68rem; font-weight:700; letter-spacing:.12em; color:var(--muted-text); text-transform:uppercase; padding:0 12px; margin:18px 0 6px; }
-        .side-link  { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:10px; color:var(--body-text); font-weight:500; text-decoration:none; transition:.2s; font-size:.88rem; }
-        .side-link:hover, .side-link.active { background:var(--gold-dim); color:var(--gold); }
-        .side-link i { width:18px; text-align:center; }
-        .page-title { font-size:1.6rem; font-weight:800; color:var(--gold); margin:0; }
-        .stat-card { border-radius:16px; padding:20px; border:1px solid var(--border-color); background:var(--card-bg); transition:.25s; text-align: center; }
-        .stat-card:hover { border-color:var(--gold); transform:translateY(-2px); box-shadow:0 8px 24px var(--gold-glow); }
-        .stat-num  { font-size:1.8rem; font-weight:800; color:var(--gold); line-height:1; }
-        .stat-label { font-size:.75rem; color:var(--muted-text); margin-top:8px; text-transform:uppercase; letter-spacing:.06em; }
-        .tbl-card { background:var(--card-bg); border:1px solid var(--border-color); border-radius:18px; overflow:hidden; }
-        .tbl-card .card-header { background:transparent; border-bottom:1px solid var(--border-color); padding:18px 22px; display:flex; align-items:center; justify-content:space-between; }
-        .btn-action { width:32px; height:32px; border-radius:8px; border:none; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:.2s; font-size:.8rem; }
-        .btn-del  { background:rgba(220,53,69,.12); color:#f87171; }
-        .btn-del:hover { background:#dc3545; color:#fff; }
-        .btn-edit { background:rgba(255,193,7,.15); color:#ffc107; }
-        .btn-edit:hover { background:#ffc107; color:#000; }
-        .empty-state { text-align:center; padding:60px 20px; color:var(--muted-text); }
-        .empty-state i { font-size:3rem; color:rgba(255,193,7,.2); display:block; margin-bottom:16px; }
-        .side-badge { margin-left:auto; background:#ef4444; color:#fff; font-size:.62rem; font-weight:800; min-width:20px; height:20px; border-radius:99px; display:inline-flex; align-items:center; justify-content:center; padding:0 5px; animation:badgePulse 2s ease-in-out infinite; }
-        @keyframes badgePulse { 0%,100% { box-shadow:0 0 0 0 rgba(239,68,68,.5); } 50% { box-shadow:0 0 0 5px rgba(239,68,68,0); } }
-        .status-pill { display: inline-block; padding: 0.25em 0.75em; border-radius: 50px; font-size: 0.78rem; font-weight: 600; color: #fff; }
-        .s-Ordering   { background: #0d6efd; }
-        .s-Processing { background: #fd7e14; }
-        .s-Shipped    { background: #20c997; }
-        .s-Delivered  { background: #198754; }
-        .s-Cancelled  { background: #dc3545; }
-        @media (max-width:992px) { .dash-wrap { grid-template-columns:1fr; } .dash-side { border-right:none; border-bottom:1px solid var(--border-color); } .dash-main { padding:20px 16px; } }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_shared.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/inbox.css') }}">
 </head>
 <body>
 {% include 'base/navbar.html' %}
@@ -87,25 +56,25 @@
                 <div class="stat-card"><div class="stat-num">{{ ns.total }}</div><div class="stat-label">Total</div></div>
             </div>
             <div class="col-6 col-md-2">
-                <div class="stat-card" style="border-color:#0d6efd;"><div class="stat-num" style="color:#0d6efd;">{{ ns.received }}</div><div class="stat-label">Ordering</div></div>
+                <div class="stat-card stat-card-received"><div class="stat-num">{{ ns.received }}</div><div class="stat-label">Ordering</div></div>
             </div>
             <div class="col-6 col-md-2">
-                <div class="stat-card" style="border-color:#fd7e14;"><div class="stat-num" style="color:#fd7e14;">{{ ns.processing }}</div><div class="stat-label">Processing</div></div>
+                <div class="stat-card stat-card-processing"><div class="stat-num">{{ ns.processing }}</div><div class="stat-label">Processing</div></div>
             </div>
             <div class="col-6 col-md-2">
-                <div class="stat-card" style="border-color:#20c997;"><div class="stat-num" style="color:#20c997;">{{ ns.shipped }}</div><div class="stat-label">Shipped</div></div>
+                <div class="stat-card stat-card-shipped"><div class="stat-num">{{ ns.shipped }}</div><div class="stat-label">Shipped</div></div>
             </div>
             <div class="col-6 col-md-2">
-                <div class="stat-card" style="border-color:#198754;"><div class="stat-num" style="color:#198754;">{{ ns.delivered }}</div><div class="stat-label">Delivered</div></div>
+                <div class="stat-card stat-card-delivered"><div class="stat-num">{{ ns.delivered }}</div><div class="stat-label">Delivered</div></div>
             </div>
             <div class="col-6 col-md-2">
-                <div class="stat-card" style="border-color:#dc3545;"><div class="stat-num" style="color:#dc3545;">{{ ns.cancelled }}</div><div class="stat-label">Cancelled</div></div>
+                <div class="stat-card stat-card-cancelled"><div class="stat-num">{{ ns.cancelled }}</div><div class="stat-label">Cancelled</div></div>
             </div>
         </div>
 
         <div class="tbl-card">
             <div class="card-header">
-                <div style="font-size:.95rem;font-weight:700;color:var(--gold);display:flex;align-items:center;gap:8px;">
+                <div class="inbox-header-title">
                     <i class="fa-solid fa-list-ul"></i> All Orders
                 </div>
             </div>
@@ -127,8 +96,8 @@
                         <tr>
                             <td class="text-muted small fw-bold">#{{ order.id[:8] }}…</td>
                             <td>
-                                <div style="font-size:.87rem;font-weight:600;">{{ order.username }}</div>
-                                <div class="text-muted" style="font-size:.72rem;">{{ order.email }}</div>
+                                <div class="cust-name">{{ order.username }}</div>
+                                <div class="text-muted cust-email">{{ order.email }}</div>
                             </td>
                             <td class="text-muted small">{{ order.created_at.strftime('%b %d, %Y') if order.created_at else 'N/A' }}</td>
                             <td class="text-muted small">{{ order.shipping_method }}</td>

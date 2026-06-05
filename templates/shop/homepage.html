@@ -12,14 +12,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <!-- Early theme apply (prevents flash) -->
     <script>if(localStorage.getItem('vrun-theme')==='light'){document.documentElement.setAttribute('data-theme','light');}else{document.documentElement.removeAttribute('data-theme');}</script>
-    <style>
-        /* Preloader Animation */
-        @keyframes pulseLogo {
-            0% { transform: scale(0.9); opacity: 0.8; filter: drop-shadow(0 0 0px rgba(255,193,7,0)); }
-            50% { transform: scale(1.1); opacity: 1; filter: drop-shadow(0 0 15px rgba(255,193,7,0.5)); }
-            100% { transform: scale(0.9); opacity: 0.8; filter: drop-shadow(0 0 0px rgba(255,193,7,0)); }
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/homepage.css') }}">
 </head>
 <body>
     <!-- Splash Screen / Preloader -->

@@ -454,6 +454,14 @@ def common_context(active_page=None):
 def goto():
     return redirect(url_for('homepage'))
 
+@app.route('/about')
+def about_us():
+    return render_template('information/about_us.html', **common_context('about'))
+
+@app.route('/contact')
+def contact_us():
+    return render_template('information/contact_us.html', **common_context('contact'))
+
 @app.route('/homepage')
 def homepage():
     featured_products = get_products(limit=4)
@@ -554,21 +562,34 @@ def product_detail(product_id):
 
 @app.route('/category')
 def category():
-    selected_category = request.args.get('category')
-    categories = get_category_counts()
-    products = get_products(category=selected_category) if selected_category else get_products()
     # Build a map of category -> first product image for the category cards
     db = get_db()
+
+    # Get ALL categories from the categories collection (not just those with products)
+    all_cats = get_all_categories()  # [{'id': ..., 'name': ..., '_id': ...}, ...]
+
+    # Get product counts per category (only those that have products)
+    count_map = {item['category']: item['count'] for item in get_category_counts()}
+
+    # Merge: every DB category gets a count (0 if no products yet)
+    categories = [
+        {'category': c['name'], 'count': count_map.get(c['name'], 0)}
+        for c in all_cats
+    ]
+
+    # Build category -> first product image map (handles array-based category field)
     category_images = {}
     for cat in categories:
-        first = db.products.find_one({'category': cat['category']}, {'image': 1})
+        first = db.products.find_one(
+            {'category': {'$in': [cat['category']]}},
+            {'image': 1}
+        )
         if first and first.get('image'):
             category_images[cat['category']] = first['image']
+
     return render_template(
         'shop/category.html',
         categories=categories,
-        products=products,
-        selected_category=selected_category,
         category_images=category_images,
         **common_context('category')
     )
@@ -762,48 +783,7 @@ def checkout():
             })
 
         # Process payment method details
-        if payment_method == 'Card':
-            selected_card_id = request.form.get('selected_card_id', 'new').strip()
-            user = get_db().users.find_one({'_id': ObjectId(str(g.user['id']))})
-            saved_cards = user.get('payment_methods', [])
-
-            if selected_card_id != 'new':
-                # User selected a saved card
-                selected_card = next((c for c in saved_cards if c['id'] == selected_card_id), None)
-                if selected_card:
-                    payment_method_str = f"Card ({selected_card['brand']} {selected_card['number']})"
-                else:
-                    payment_method_str = "Card"
-            else:
-                # User entered a new card
-                cc_name = request.form.get('cc_name', '').strip()
-                cc_number = request.form.get('cc_number', '').strip().replace(' ', '')
-                cc_exp = request.form.get('cc_exp', '').strip()
-                cc_cvv = request.form.get('cc_cvv', '').strip()
-                save_card = request.form.get('save_card') == 'true' or request.form.get('save_card') == 'on'
-
-                brand = detect_card_brand(cc_number)
-                masked_number = f"•••• •••• •••• {cc_number[-4:]}" if len(cc_number) >= 4 else "••••"
-                payment_method_str = f"Card ({brand} {masked_number})"
-
-                if save_card and cc_name and cc_number and cc_exp and cc_cvv:
-                    is_default = not saved_cards
-                    new_method = {
-                        'id': os.urandom(8).hex(),
-                        'brand': brand,
-                        'number': masked_number,
-                        'expiry': cc_exp,
-                        'name': cc_name,
-                        'is_default': is_default,
-                        'created_at': datetime.utcnow().isoformat()
-                    }
-                    if is_default:
-                        for m in saved_cards:
-                            m['is_default'] = False
-                    saved_cards.append(new_method)
-                    get_db().users.update_one({'_id': ObjectId(str(g.user['id']))}, {'$set': {'payment_methods': saved_cards}})
-        else:
-            payment_method_str = payment_method
+        payment_method_str = payment_method
 
         order_id = create_order(g.user['id'], shipping_address, shipping_method, float(shipping_cost), total, embedded_items, payment_method_str, 'Processing')
         session['cart'] = {}
@@ -891,6 +871,10 @@ def order_delete(order_id):
 
     if order['status'] == 'Cancelled':
         flash('Order is already cancelled.', 'warning')
+        return redirect(url_for('order'))
+
+    if order['status'] == 'Delivered' and g.user.get('role') != 'admin':
+        flash('Delivered orders cannot be cancelled.', 'danger')
         return redirect(url_for('order'))
 
     db = get_db()
@@ -1028,87 +1012,7 @@ def settings():
             flash('Your account has been permanently deleted.', 'success')
             return redirect(url_for('login'))
 
-        elif action == 'add_payment_method':
-            cc_name = request.form.get('cc_name', '').strip()
-            cc_number = request.form.get('cc_number', '').strip().replace(' ', '')
-            cc_exp = request.form.get('cc_exp', '').strip()
-            cc_cvv = request.form.get('cc_cvv', '').strip()
-            set_default = request.form.get('set_default') == 'true' or request.form.get('set_default') == 'on'
 
-            if not cc_name or not cc_number or not cc_exp or not cc_cvv:
-                flash('All credit card fields are required.', 'danger')
-            elif not cc_number.isdigit() or len(cc_number) < 13 or len(cc_number) > 19:
-                flash('Please enter a valid credit card number.', 'danger')
-            elif '/' not in cc_exp or len(cc_exp) != 5:
-                flash('Please enter expiration date in MM/YY format.', 'danger')
-            else:
-                brand = detect_card_brand(cc_number)
-                masked_number = f"•••• •••• •••• {cc_number[-4:]}"
-                
-                user = get_db().users.find_one({'_id': ObjectId(str(g.user['id']))})
-                existing_methods = user.get('payment_methods', [])
-                
-                is_default = not existing_methods or set_default
-                
-                new_method = {
-                    'id': os.urandom(8).hex(),
-                    'brand': brand,
-                    'number': masked_number,
-                    'expiry': cc_exp,
-                    'name': cc_name,
-                    'is_default': is_default,
-                    'created_at': datetime.utcnow().isoformat()
-                }
-                
-                if is_default:
-                    for m in existing_methods:
-                        m['is_default'] = False
-                        
-                existing_methods.append(new_method)
-                get_db().users.update_one({'_id': ObjectId(str(g.user['id']))}, {'$set': {'payment_methods': existing_methods}})
-                flash('Payment method added successfully.', 'success')
-            return redirect(url_for('settings'))
-
-        elif action == 'delete_payment_method':
-            pm_id = request.form.get('payment_method_id', '').strip()
-            user = get_db().users.find_one({'_id': ObjectId(str(g.user['id']))})
-            existing_methods = user.get('payment_methods', [])
-            
-            card_to_delete = None
-            for m in existing_methods:
-                if m['id'] == pm_id:
-                    card_to_delete = m
-                    break
-                    
-            if card_to_delete:
-                existing_methods = [m for m in existing_methods if m['id'] != pm_id]
-                if card_to_delete.get('is_default') and existing_methods:
-                    existing_methods[0]['is_default'] = True
-                get_db().users.update_one({'_id': ObjectId(str(g.user['id']))}, {'$set': {'payment_methods': existing_methods}})
-                flash('Payment method removed successfully.', 'success')
-            else:
-                flash('Payment method not found.', 'danger')
-            return redirect(url_for('settings'))
-
-        elif action == 'set_default_payment_method':
-            pm_id = request.form.get('payment_method_id', '').strip()
-            user = get_db().users.find_one({'_id': ObjectId(str(g.user['id']))})
-            existing_methods = user.get('payment_methods', [])
-            
-            card_found = False
-            for m in existing_methods:
-                if m['id'] == pm_id:
-                    m['is_default'] = True
-                    card_found = True
-                else:
-                    m['is_default'] = False
-                    
-            if card_found:
-                get_db().users.update_one({'_id': ObjectId(str(g.user['id']))}, {'$set': {'payment_methods': existing_methods}})
-                flash('Default payment method updated.', 'success')
-            else:
-                flash('Payment method not found.', 'danger')
-            return redirect(url_for('settings'))
 
     return render_template('account/settings.html', **common_context('settings'))
 
@@ -1413,9 +1317,23 @@ def admin_product_new():
         main_b64         = request.form.get('main_image_b64', '').strip()
         image_file       = request.files.get('image_file')
 
+        all_cats = [c['name'] for c in get_all_categories()]
+
         if not name or not categories or not description or not price:
             flash('Please fill all required fields (Name, at least one Category, Description, Price).', 'danger')
-            return redirect(url_for('admin_product_new'))
+            # Re-render with DB categories so the dropdown is still populated and form data is preserved
+            prefill = {
+                'name': name, 'brand': brand, 'description': description,
+                'detail': detail, 'price': price, 'stock': int(stock_total or 0),
+                'discount_percent': int(float(discount_percent or 0)),
+                'category': categories, 'image': main_b64, 'variants': [], 'color_images': {},
+                'id': None  # No ID means form action stays on admin_product_new
+            }
+            return render_template('admin/product_detail.html',
+                                   all_categories=all_cats,
+                                   product=None,
+                                   form_prefill=prefill,
+                                   **common_context('admin'))
 
         try:
             discount_pct_val = max(0.0, min(100.0, float(discount_percent or 0)))
@@ -1457,6 +1375,7 @@ def admin_product_new():
     return render_template('admin/product_detail.html',
                            all_categories=[c['name'] for c in get_all_categories()],
                            product=None,
+                           form_prefill=None,
                            **common_context('admin'))
 
 
@@ -1531,6 +1450,7 @@ def admin_product_detail(product_id):
     return render_template('admin/product_detail.html',
                            all_categories=[c['name'] for c in get_all_categories()],
                            product=product,
+                           form_prefill=None,
                            **common_context('admin'))
 
 

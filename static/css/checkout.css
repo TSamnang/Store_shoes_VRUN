@@ -1,0 +1,40 @@
+/* ============================================================
+   checkout.css  –  Styles for the Checkout page
+   ============================================================ */
+
+.checkout-progress-container {
+    max-width: 650px;
+}
+
+.khqr-code-wrapper {
+    max-width: 300px;
+}
+
+.saved-card-option {
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.saved-card-option:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.saved-card-option--new {
+    min-height: 70px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.checkout-item-thumb {
+    width: 54px;
+    height: 54px;
+    object-fit: contain;
+    background: #1a1a2e;
+    border-radius: 8px;
+    padding: 4px;
+    border: 1px solid rgba(255, 193, 7, 0.2);
+    flex-shrink: 0;
+}

@@ -8,236 +8,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 <script>if(localStorage.getItem('vrun-theme')==='light'){document.documentElement.setAttribute('data-theme','light')}else{document.documentElement.removeAttribute('data-theme')}</script>
-<style>
-    /* Use the global theme variables from main.css */
-    :root {
-        --gold-dim: rgba(255,193,7,.15);
-        --gold-glow: rgba(255,193,7,.3);
-        --input-focus: rgba(255,193,7,0.05);
-    }
-
-    body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
-    /* Top Action Bar */
-    .action-bar {
-        z-index: 100;
-        background: var(--bg-darker);
-        border-bottom: 1px solid var(--border-color);
-        padding: 16px 40px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        transition: var(--transition-theme);
-    }
-    
-    .page-title-wrap { display: flex; flex-direction: column; }
-    .page-title { font-size: 1.4rem; font-weight: 800; color: var(--primary-yellow); margin: 0; letter-spacing: -0.02em; }
-    .breadcrumb-nav { font-size: .85rem; color: var(--muted-text); margin-top: 4px; }
-    .breadcrumb-nav a { color: var(--muted-text); text-decoration: none; transition: .2s; }
-    .breadcrumb-nav a:hover { color: var(--primary-yellow); }
-
-    .btn-save {
-        background: linear-gradient(135deg, #ffc107, #ff9800);
-        color: #000;
-        font-weight: 800;
-        border: none;
-        border-radius: 10px;
-        padding: 10px 28px;
-        font-size: .95rem;
-        transition: all .3s ease;
-        box-shadow: 0 4px 15px rgba(255,152,0,0.3);
-        display: inline-flex; align-items: center; gap: 8px;
-    }
-    .btn-save:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(255,152,0,0.4);
-    }
-
-    /* Layout Grid */
-    .editor-layout {
-        display: grid;
-        grid-template-columns: 1fr 420px;
-        gap: 30px;
-        padding: 40px;
-        max-width: 1500px;
-        margin: 0 auto;
-        align-items: start;
-    }
-
-    /* Editor Panels */
-    .editor-section {
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 16px;
-        padding: 30px;
-        margin-bottom: 24px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-        transition: var(--transition-theme);
-    }
-
-    .sec-title {
-        font-size: .9rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: .05em;
-        color: var(--body-text);
-        margin-bottom: 24px;
-        display: flex; align-items: center; gap: 10px;
-    }
-    .sec-title i { color: var(--primary-yellow); background: var(--gold-dim); padding: 8px; border-radius: 8px; }
-
-    /* Inputs */
-    .form-floating-custom { position: relative; margin-bottom: 16px; }
-    .custom-input {
-        width: 100%;
-        background: var(--input-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 10px;
-        padding: 16px 16px 12px;
-        color: var(--body-text);
-        font-size: .95rem;
-        transition: var(--transition-theme);
-    }
-    .custom-input:focus { outline: none; border-color: var(--primary-yellow); background: var(--input-focus); box-shadow: 0 0 0 3px rgba(255,193,7,0.15); }
-    .custom-label {
-        position: absolute;
-        left: 16px; top: 16px;
-        font-size: .9rem; color: var(--muted-text);
-        transition: .2s; pointer-events: none;
-        background: transparent;
-    }
-    .custom-input:focus ~ .custom-label, .custom-input:not(:placeholder-shown) ~ .custom-label {
-        transform: translateY(-22px) scale(0.85);
-        transform-origin: left top;
-        color: var(--primary-yellow);
-        font-weight: 600;
-    }
-    .custom-input::placeholder { color: transparent; }
-    
-    textarea.custom-input { min-height: 120px; resize: vertical; padding-top: 24px; }
-    textarea.custom-input:focus ~ .custom-label, textarea.custom-input:not(:placeholder-shown) ~ .custom-label { transform: translateY(-16px) scale(0.85); }
-
-    /* Category Dropdown Styling */
-    .cat-wrapper { position: relative; margin-bottom: 16px; }
-    .cat-toggle {
-        background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px;
-        padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;
-        cursor: pointer; transition: var(--transition-theme);
-    }
-    .cat-toggle:hover { border-color: var(--primary-yellow); }
-    .cat-toggle-text { font-size: .95rem; color: var(--muted-text); }
-    .cat-menu {
-        position: absolute; top: 100%; left: 0; right: 0; margin-top: 8px;
-        background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px;
-        padding: 8px 0; z-index: 50; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    }
-    .cat-menu.open { display: block; }
-    .cat-item { padding: 10px 20px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: .2s; color: var(--body-text); }
-    .cat-item:hover { background: var(--gold-dim); }
-    .cat-item input { accent-color: var(--primary-yellow); width: 16px; height: 16px; cursor: pointer; }
-    .cat-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-    .cat-chip { background: var(--gold-dim); border: 1px solid var(--primary-yellow); color: var(--primary-yellow); padding: 4px 12px; border-radius: 20px; font-size: .8rem; font-weight: 600; }
-
-    /* Image Upload Zone */
-    .upload-zone {
-        border: 2px dashed var(--border-color);
-        border-radius: 16px;
-        background: var(--input-bg);
-        padding: 40px; text-align: center; cursor: pointer;
-        transition: var(--transition-theme); position: relative; overflow: hidden;
-    }
-    .upload-zone:hover { border-color: var(--primary-yellow); background: var(--gold-dim); }
-    .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-    .upload-zone i { font-size: 3rem; color: var(--primary-yellow); margin-bottom: 16px; opacity: 0.8; }
-    
-    .current-img-box {
-        position: relative; border-radius: 12px; overflow: hidden;
-        border: 1px solid var(--border-color); display: inline-block; background: var(--input-bg);
-    }
-    .current-img-box img { max-width: 100%; height: 120px; object-fit: contain; padding: 10px; }
-
-    /* Variants */
-    .variant-card {
-        background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 12px;
-        padding: 16px; display: grid; grid-template-columns: 1fr 1fr 80px 60px 40px; gap: 12px;
-        align-items: center; margin-bottom: 12px; transition: var(--transition-theme);
-    }
-    .variant-card:hover { border-color: var(--primary-yellow); }
-    .v-img-upload {
-        width: 50px; height: 50px; border-radius: 10px; border: 1.5px dashed var(--border-color);
-        display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; overflow: hidden;
-        background: var(--card-bg);
-    }
-    .v-img-upload:hover { border-color: var(--primary-yellow); }
-    .v-img-upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-    .v-img-upload img { width: 100%; height: 100%; object-fit: cover; display: none; }
-    .btn-rm-v {
-        width: 38px; height: 38px; border-radius: 10px; border: none; background: rgba(220,53,69,.15);
-        color: #dc3545; display: flex; align-items: center; justify-content: center; transition: .2s; cursor: pointer;
-    }
-    .btn-rm-v:hover { background: #dc3545; color: #fff; transform: scale(1.05); }
-
-    .btn-add-variant {
-        background: transparent; border: 1px dashed var(--primary-yellow); color: var(--primary-yellow); padding: 12px 20px;
-        border-radius: 10px; font-weight: 700; width: 100%; cursor: pointer; transition: .3s; display: flex; align-items: center; justify-content: center; gap: 8px;
-    }
-    .btn-add-variant:hover { background: var(--gold-dim); }
-
-    /* Live Preview (Mobile Device Frame Style) */
-    .preview-sticky { position: static; }
-    .device-frame {
-        background: var(--card-bg);
-        border: 6px solid var(--border-color);
-        border-radius: 36px;
-        overflow: hidden;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-        position: relative;
-        height: 700px;
-        display: flex; flex-direction: column;
-        transition: var(--transition-theme);
-    }
-    .device-island { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 90px; height: 22px; background: var(--border-color); border-radius: 12px; z-index: 10; transition: var(--transition-theme); }
-    
-    .prev-content { flex: 1; overflow-y: auto; padding: 0 0 20px; scrollbar-width: none; }
-    .prev-content::-webkit-scrollbar { display: none; }
-    
-    .prev-img-stage { background: var(--input-bg); padding: 50px 20px 30px; text-align: center; position: relative; border-bottom: 1px solid var(--border-color); transition: var(--transition-theme); }
-    .prev-img-stage img { width: 100%; height: 200px; object-fit: contain; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1)); transition: .3s; }
-    
-    .prev-details { padding: 20px; }
-    .prev-cats-wrap { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
-    .prev-cat-badge { background: var(--gold-dim); color: var(--primary-yellow); font-size: .65rem; font-weight: 700; padding: 4px 10px; border-radius: 12px; text-transform: uppercase; letter-spacing: .05em; }
-    .prev-title { font-size: 1.3rem; font-weight: 800; line-height: 1.2; margin-bottom: 8px; color: var(--body-text); }
-    .prev-price { font-size: 1.4rem; font-weight: 800; color: var(--primary-yellow); margin-bottom: 16px; }
-    .prev-desc { font-size: .85rem; color: var(--muted-text); line-height: 1.5; margin-bottom: 24px; }
-
-    .prev-sec-title { font-size: .75rem; font-weight: 700; color: var(--body-text); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; }
-    
-    .prev-gallery-row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 20px; scrollbar-width: none; }
-    .prev-gallery-item { width: 45px; height: 45px; flex-shrink: 0; background: var(--input-bg); border-radius: 10px; padding: 4px; border: 2px solid transparent; cursor: pointer; transition: .2s; }
-    .prev-gallery-item.active { border-color: var(--primary-yellow); }
-    .prev-gallery-item img { width: 100%; height: 100%; object-fit: contain; }
-
-    .prev-sizes-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
-    .prev-size-box { border: 1.5px solid var(--border-color); border-radius: 8px; padding: 6px 14px; font-size: .8rem; font-weight: 600; color: var(--body-text); transition: var(--transition-theme); }
-
-    .prev-buy-btn { background: var(--primary-yellow); color: #000; font-weight: 700; border-radius: 10px; padding: 14px; text-align: center; width: 100%; margin-top: 10px; box-shadow: 0 4px 10px rgba(255,193,7,0.3); }
-
-    /* Danger Zone */
-    .danger-zone { border: 1px solid rgba(220,53,69,.3); }
-    .danger-zone .sec-title { color: #dc3545; }
-    .danger-zone .sec-title i { color: #dc3545; background: rgba(220,53,69,.15); }
-    .btn-delete { background: rgba(220,53,69,.1); border: 1px solid rgba(220,53,69,.5); color: #dc3545; padding: 10px 24px; border-radius: 10px; font-weight: 700; transition: .3s; }
-    .btn-delete:hover { background: #dc3545; color: #fff; box-shadow: 0 0 15px rgba(220,53,69,.3); }
-
-    @media (max-width: 1100px) {
-        .editor-layout { grid-template-columns: 1fr; }
-        .preview-sticky { display: none; }
-    }
-</style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_product_detail.css') }}">
 </head>
 <body>
 {% include 'base/navbar.html' %}
@@ -259,7 +30,7 @@
         <!-- LEFT: Editor Form -->
         <div class="editor-col">
             <!-- Hidden Fields -->
-            <input type="hidden" name="categories_json" id="categories_json" value="{{ product.category | tojson if product else '[]' }}">
+            <input type="hidden" name="categories_json" id="categories_json" value="{{ (form_prefill.category if form_prefill else (product.category if product else [])) | tojson }}">
             <input type="hidden" name="main_image_b64" id="main_image_b64" value="">
 
             <!-- 1. Media & Images -->
@@ -288,14 +59,14 @@
                 <div class="sec-title"><i class="fa-solid fa-tag"></i> Essential Details</div>
                 
                 <div class="form-floating-custom">
-                    <input type="text" name="name" id="f_name" class="custom-input" placeholder=" " value="{% if product %}{{ product.name }}{% endif %}" required oninput="updatePreview('prevTitle', this.value || 'Awesome Sneaker')">
+                    <input type="text" name="name" id="f_name" class="custom-input" placeholder=" " value="{% if product %}{{ product.name }}{% elif form_prefill %}{{ form_prefill.name }}{% endif %}" required oninput="updatePreview('prevTitle', this.value || 'Awesome Sneaker')">
                     <label class="custom-label">Product Name *</label>
                 </div>
 
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
                         <div class="form-floating-custom mb-0">
-                            <input type="text" name="brand" class="custom-input" placeholder=" " value="{% if product %}{{ product.brand or '' }}{% endif %}">
+                            <input type="text" name="brand" class="custom-input" placeholder=" " value="{% if product %}{{ product.brand or '' }}{% elif form_prefill %}{{ form_prefill.brand }}{% endif %}">
                             <label class="custom-label">Brand</label>
                         </div>
                     </div>
@@ -307,7 +78,7 @@
                                 <i class="fa-solid fa-chevron-down" style="color:var(--primary-yellow);"></i>
                             </div>
                             <div class="cat-menu" id="catMenu">
-                                {% set SEL = product.category if product and product.category else [] %}
+                                {% set SEL = product.category if product and product.category else (form_prefill.category if form_prefill else []) %}
                                 {% for cat in all_categories %}
                                 <label class="cat-item">
                                     <input type="checkbox" value="{{ cat }}" {% if cat in SEL %}checked{% endif %} onchange="updateCategories()">
@@ -324,13 +95,13 @@
                 <div class="row g-3 mt-1">
                     <div class="col-md-6">
                         <div class="form-floating-custom mb-0">
-                            <input type="number" step="0.01" min="0" name="price" class="custom-input" placeholder=" " value="{% if product %}{{ product.price }}{% endif %}" required oninput="updatePreview('prevPrice', '$'+parseFloat(this.value||0).toFixed(2))">
+                            <input type="number" step="0.01" min="0" name="price" class="custom-input" placeholder=" " value="{% if product %}{{ product.price }}{% elif form_prefill %}{{ form_prefill.price }}{% endif %}" required oninput="updatePreview('prevPrice', '$'+parseFloat(this.value||0).toFixed(2))">
                             <label class="custom-label">Price ($) *</label>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-floating-custom mb-0">
-                            <input type="number" min="0" name="stock" class="custom-input" placeholder=" " value="{% if product %}{{ product.stock }}{% endif %}">
+                            <input type="number" min="0" name="stock" class="custom-input" placeholder=" " value="{% if product %}{{ product.stock }}{% elif form_prefill %}{{ form_prefill.stock }}{% endif %}">
                             <label class="custom-label">Total Stock Inventory</label>
                         </div>
                     </div>
@@ -340,7 +111,7 @@
                 <div class="row g-3 mt-1">
                     <div class="col-md-6">
                         <div class="form-floating-custom mb-0" style="position:relative;">
-                            <input type="number" step="1" min="0" max="100" name="discount_percent" id="f_discount" class="custom-input" placeholder=" " value="{% if product %}{{ product.discount_percent | default(0) | int }}{% else %}0{% endif %}" oninput="updateDiscountPreview(this.value)">
+                            <input type="number" step="1" min="0" max="100" name="discount_percent" id="f_discount" class="custom-input" placeholder=" " value="{% if product %}{{ product.discount_percent | default(0) | int }}{% elif form_prefill %}{{ form_prefill.discount_percent | default(0) | int }}{% else %}0{% endif %}" oninput="updateDiscountPreview(this.value)">
                             <label class="custom-label">Discount % (0 = no discount)</label>
                         </div>
                     </div>
@@ -358,12 +129,12 @@
                 <div class="sec-title"><i class="fa-solid fa-pen-nib"></i> Story & Description</div>
                 
                 <div class="form-floating-custom">
-                    <textarea name="description" class="custom-input" placeholder=" " oninput="updatePreview('prevDesc', this.value || 'Short engaging description...')">{% if product %}{{ product.description }}{% endif %}</textarea>
+                    <textarea name="description" class="custom-input" placeholder=" " oninput="updatePreview('prevDesc', this.value || 'Short engaging description...')">{% if product %}{{ product.description }}{% elif form_prefill %}{{ form_prefill.description }}{% endif %}</textarea>
                     <label class="custom-label">Short Summary (Visible on cards & top of page) *</label>
                 </div>
                 
                 <div class="form-floating-custom mb-0">
-                    <textarea name="detail" class="custom-input" placeholder=" " style="min-height: 180px;">{% if product %}{{ product.detail or '' }}{% endif %}</textarea>
+                    <textarea name="detail" class="custom-input" placeholder=" " style="min-height: 180px;">{% if product %}{{ product.detail or '' }}{% elif form_prefill %}{{ form_prefill.detail }}{% endif %}</textarea>
                     <label class="custom-label">Full Product Features & Materials</label>
                 </div>
             </div>

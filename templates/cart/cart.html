@@ -8,47 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <script>if(localStorage.getItem('vrun-theme')==='light'){document.documentElement.setAttribute('data-theme','light');}else{document.documentElement.removeAttribute('data-theme');}</script>
-    <style>
-        /* Delivery option cards */
-        .delivery-option {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: var(--input-bg);
-            border: 1.5px solid var(--border-color);
-            border-radius: 12px;
-            padding: 12px 16px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            user-select: none;
-        }
-        .delivery-option input[type="radio"] { display: none; }
-        .delivery-option:hover { border-color: var(--primary-yellow); background: rgba(255,193,7,.06); }
-        .delivery-option.active {
-            border-color: var(--primary-yellow);
-            background: rgba(255,193,7,.1);
-            box-shadow: 0 0 0 3px rgba(255,193,7,.15);
-        }
-        .delivery-option.active::before {
-            content: '\f058';
-            font-family: 'Font Awesome 6 Free';
-            font-weight: 900;
-            color: var(--primary-yellow);
-            font-size: 1.1rem;
-            flex-shrink: 0;
-        }
-        .delivery-option:not(.active)::before {
-            content: '\f111';
-            font-family: 'Font Awesome 6 Free';
-            font-weight: 400;
-            color: var(--border-color);
-            font-size: 1.1rem;
-            flex-shrink: 0;
-        }
-        .delivery-name { font-weight: 700; color: var(--body-text); font-size: .9rem; }
-        .delivery-desc { color: var(--muted-text); font-size: .78rem; margin-top: 1px; }
-        .delivery-price { font-weight: 700; color: var(--body-text); font-size: .9rem; white-space: nowrap; }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cart.css') }}">
 </head>
 <body>
 

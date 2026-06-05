@@ -1,0 +1,56 @@
+/* ============================================================
+   inbox.css  –  Styles for the Admin Inbox page
+   ============================================================ */
+
+.stat-card-received {
+    border-color: #0d6efd !important;
+}
+.stat-card-received .stat-num {
+    color: #0d6efd !important;
+}
+
+.stat-card-processing {
+    border-color: #fd7e14 !important;
+}
+.stat-card-processing .stat-num {
+    color: #fd7e14 !important;
+}
+
+.stat-card-shipped {
+    border-color: #20c997 !important;
+}
+.stat-card-shipped .stat-num {
+    color: #20c997 !important;
+}
+
+.stat-card-delivered {
+    border-color: #198754 !important;
+}
+.stat-card-delivered .stat-num {
+    color: #198754 !important;
+}
+
+.stat-card-cancelled {
+    border-color: #dc3545 !important;
+}
+.stat-card-cancelled .stat-num {
+    color: #dc3545 !important;
+}
+
+.inbox-header-title {
+    font-size: .95rem;
+    font-weight: 700;
+    color: var(--gold);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cust-name {
+    font-size: .87rem;
+    font-weight: 600;
+}
+
+.cust-email {
+    font-size: .72rem;
+}

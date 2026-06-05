@@ -1,0 +1,83 @@
+/* ============================================================
+   product_detail.css  –  Styles for the Product Detail page
+   ============================================================ */
+
+.main-product-img-detail {
+    max-height: 500px;
+}
+
+.thumb-image {
+    cursor: pointer;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 2px;
+    aspect-ratio: 1/1;
+    object-fit: cover;
+}
+
+.thumb-image.active {
+    border-color: #ffc107 !important;
+}
+
+.product-brand-detail {
+    font-size: 0.82rem;
+}
+
+.product-cat-badge {
+    background: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+    border-radius: 8px;
+    padding: 4px 12px;
+}
+
+.product-reviews-link {
+    font-size: 0.9rem;
+}
+
+.color-btn-circle {
+    width: 40px;
+    height: 40px;
+    border: 2px solid #555;
+    border-radius: 50%;
+}
+
+.product-qty-input-group {
+    max-width: 150px;
+}
+
+.product-detail-text {
+    white-space: pre-line;
+}
+
+.product-brand-badge {
+    background: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+}
+
+.related-img-box {
+    background-color: var(--input-bg);
+}
+
+.related-name-link {
+    flex: 1;
+    min-width: 0;
+}
+
+.rating-star-inline {
+    font-size: 0.7rem;
+}
+
+.review-delete-form {
+    display: inline;
+}
+
+.lock-icon-review {
+    font-size: 2.5rem;
+}
+
+.own-review-badge {
+    font-size: 0.65rem;
+}

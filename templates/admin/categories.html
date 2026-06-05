@@ -8,49 +8,8 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 <script>if(localStorage.getItem('vrun-theme')==='light'){document.documentElement.setAttribute('data-theme','light')}else{document.documentElement.removeAttribute('data-theme')}</script>
-<style>
-    :root { --gold:#ffc107; --gold-dim:rgba(255,193,7,.12); --gold-glow:rgba(255,193,7,.25); }
-
-    .dash-wrap { display:grid; grid-template-columns:220px 1fr; min-height:calc(100vh - 60px); }
-    .dash-side  { background:var(--card-bg); border-right:1px solid var(--border-color); padding:24px 12px; }
-    .dash-main  { padding:32px 28px; background:var(--body-bg); }
-
-    .side-label { font-size:.68rem; font-weight:700; letter-spacing:.12em; color:var(--muted-text); text-transform:uppercase; padding:0 12px; margin:18px 0 6px; }
-    .side-link  { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:10px; color:var(--body-text); font-weight:500; text-decoration:none; transition:.2s; font-size:.88rem; }
-    .side-link:hover, .side-link.active { background:var(--gold-dim); color:var(--gold); }
-    .side-link i { width:18px; text-align:center; }
-
-    .page-title { font-size:1.6rem; font-weight:800; color:var(--gold); margin:0; }
-
-    .btn-add-product { background:linear-gradient(135deg,#ffc107,#e6a800); color:#000; font-weight:700; border:none; border-radius:12px; padding:10px 22px; font-size:.88rem; transition:.2s; box-shadow:0 4px 14px var(--gold-glow); text-decoration:none; display:inline-flex; align-items:center; cursor:pointer;}
-    .btn-add-product:hover { transform:translateY(-2px); box-shadow:0 6px 20px var(--gold-glow); color:#000; }
-
-    .tbl-card { background:var(--card-bg); border:1px solid var(--border-color); border-radius:18px; overflow:hidden; }
-    .tbl-card .card-header { background:transparent; border-bottom:1px solid var(--border-color); padding:18px 22px; display:flex; align-items:center; justify-content:space-between; }
-    .tbl-card table thead th { background:var(--gold-dim); color:var(--gold); font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; padding:12px 16px; border-bottom:1px solid var(--border-color); font-weight:700; }
-    .tbl-card table tbody td { padding:14px 16px; border-bottom:1px solid var(--border-color); vertical-align:middle; font-size:.87rem; color:var(--body-text); }
-    .tbl-card table tbody tr:last-child td { border-bottom:none; }
-    .tbl-card table tbody tr:hover td { background:var(--gold-dim); }
-
-    .btn-action { width:32px; height:32px; border-radius:8px; border:none; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:.2s; font-size:.8rem; }
-    .btn-edit { background:rgba(255,193,7,.15); color:#ffc107; }
-    .btn-edit:hover { background:#ffc107; color:#000; }
-    .btn-del  { background:rgba(220,53,69,.12); color:#f87171; }
-    .btn-del:hover { background:#dc3545; color:#fff; }
-
-    .modal-content { background:var(--card-bg); border:1px solid var(--border-color); border-radius:20px; }
-    .modal-header  { border-bottom:1px solid var(--border-color); padding:20px 24px; }
-    .modal-title   { font-weight:700; color:var(--gold); font-size:1.05rem; }
-    .modal-footer  { border-top:1px solid var(--border-color); padding:16px 24px; }
-    .modal-body    { padding:24px; }
-    .custom-input { background:var(--input-bg); border:1px solid var(--border-color); color:var(--body-text); padding:10px 14px; border-radius:10px; width:100%; transition:.2s; }
-    .custom-input:focus { border-color:var(--gold); outline:none; box-shadow:0 0 0 3px var(--gold-glow); }
-
-    .side-badge { margin-left:auto; background:#ef4444; color:#fff; font-size:.62rem; font-weight:800; min-width:20px; height:20px; border-radius:99px; display:inline-flex; align-items:center; justify-content:center; padding:0 5px; animation:badgePulse 2s ease-in-out infinite; }
-    @keyframes badgePulse { 0%,100% { box-shadow:0 0 0 0 rgba(239,68,68,.5); } 50% { box-shadow:0 0 0 5px rgba(239,68,68,0); } }
-
-    @media (max-width:992px) { .dash-wrap { grid-template-columns:1fr; } .dash-side { border-right:none; border-bottom:1px solid var(--border-color); } .dash-main { padding:20px 16px; } }
-</style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_shared.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/categories.css') }}">
 </head>
 <body>
 {% include 'base/navbar.html' %}
@@ -95,7 +54,7 @@
                 <table class="table table-borderless mb-0">
                     <thead>
                         <tr>
-                            <th style="width: 70%;">Category Name</th>
+                            <th class="col-category-name">Category Name</th>
                             <th class="text-end">Actions</th>
                         </tr>
                     </thead>

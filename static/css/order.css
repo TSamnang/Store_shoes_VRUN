@@ -1,0 +1,9 @@
+/* ============================================================
+   order.css  –  Styles for the Order page
+   ============================================================ */
+
+.order-container {
+    max-width: 1200px;
+    margin-top: 3rem;
+    margin-bottom: 3rem;
+}

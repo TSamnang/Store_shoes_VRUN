@@ -8,28 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <script>if(localStorage.getItem('vrun-theme')==='light'){document.documentElement.setAttribute('data-theme','light');}else{document.documentElement.removeAttribute('data-theme');}</script>
-    <style>
-        .settings-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; padding: 28px; margin-bottom: 24px; }
-        .settings-section-title { font-size: 1rem; font-weight: 700; color: var(--primary-yellow); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-        .settings-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border-color); }
-        .settings-row:last-child { border-bottom: none; padding-bottom: 0; }
-        .settings-row:first-child { padding-top: 0; }
-        .setting-info .setting-label { font-weight: 600; color: var(--body-text); font-size: 0.95rem; }
-        .setting-info .setting-desc { color: var(--muted-text); font-size: 0.8rem; margin-top: 2px; }
-        .form-control, .form-select { background-color: var(--input-bg) !important; color: var(--body-text) !important; border-color: var(--border-color) !important; }
-        .form-control:focus, .form-select:focus { border-color: var(--primary-yellow) !important; box-shadow: 0 0 0 3px rgba(255,193,7,0.2) !important; }
-        .toggle-switch { position: relative; width: 46px; height: 24px; flex-shrink: 0; }
-        .toggle-switch input { opacity: 0; width: 0; height: 0; }
-        .toggle-slider { position: absolute; inset: 0; background: #444; border-radius: 24px; cursor: pointer; transition: background 0.3s; }
-        .toggle-slider::before { content:''; position:absolute; left:3px; top:3px; width:18px; height:18px; background:#fff; border-radius:50%; transition: transform 0.3s; }
-        .toggle-switch input:checked + .toggle-slider { background: var(--primary-yellow); }
-        .toggle-switch input:checked + .toggle-slider::before { transform: translateX(22px); background: #1a1a1a; }
-        .side-nav .nav-link { border-radius: 10px; padding: 10px 16px; color: var(--body-text); font-weight: 500; transition: all 0.2s; }
-        .side-nav .nav-link:hover, .side-nav .nav-link.active { background: rgba(255,193,7,0.12); color: var(--primary-yellow); }
-        .side-nav .nav-link i { width: 20px; }
-        .danger-zone { border-color: rgba(220,53,69,0.45) !important; }
-        .danger-zone .settings-section-title { color: #dc3545; }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
 </head>
 <body>
     {% include 'base/navbar.html' %}
@@ -45,7 +24,6 @@
                     <a href="#appearance" class="nav-link active"><i class="fa-solid fa-palette me-2"></i>Appearance</a>
                     <a href="#notifications" class="nav-link"><i class="fa-solid fa-bell me-2"></i>Notifications</a>
                     <a href="#privacy" class="nav-link"><i class="fa-solid fa-shield me-2"></i>Privacy</a>
-                    <a href="#payment" class="nav-link"><i class="fa-solid fa-credit-card me-2"></i>Payment Methods</a>
                     <a href="#danger" class="nav-link text-danger"><i class="fa-solid fa-triangle-exclamation me-2"></i>Danger Zone</a>
                 </nav>
             </div>
@@ -194,52 +172,7 @@
             </div>
 
 
-            <!-- Payment Methods -->
-            <div class="settings-card" id="payment">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div class="settings-section-title mb-0"><i class="fa-solid fa-credit-card"></i>Payment Methods</div>
-                    <button class="btn btn-warning btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addCardModal"><i class="fa-solid fa-plus me-1"></i>Add Card</button>
-                </div>
-                
-                {% set saved_methods = current_user.get('payment_methods', []) %}
-                {% if not saved_methods %}
-                    <p class="text-muted small my-3 text-center">No payment methods saved yet. Add a card to get started!</p>
-                {% else %}
-                    {% for pm in saved_methods %}
-                    <div class="settings-row align-items-center">
-                        <div class="d-flex align-items-center gap-3">
-                            {% if pm.brand|lower == 'visa' %}
-                                <div style="width:48px;height:32px;background:linear-gradient(135deg,#1a1aff,#0d6efd);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.65rem;font-weight:700;">VISA</div>
-                            {% elif pm.brand|lower in ['mastercard', 'mc'] %}
-                                <div style="width:48px;height:32px;background:linear-gradient(135deg,#ff6b00,#ff8c00);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.6rem;font-weight:700;">MC</div>
-                            {% elif pm.brand|lower == 'amex' %}
-                                <div style="width:48px;height:32px;background:linear-gradient(135deg,#24c1e0,#137385);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.6rem;font-weight:700;">AMEX</div>
-                            {% else %}
-                                <div style="width:48px;height:32px;background:linear-gradient(135deg,#6c757d,#495057);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.6rem;font-weight:700;">CARD</div>
-                            {% endif %}
-                            <div class="setting-info">
-                                <div class="setting-label">{{ pm.number }}</div>
-                                <div class="setting-desc">Expires {{ pm.expiry }} &nbsp;·&nbsp; Cardholder: {{ pm.name }}{% if pm.is_default %} &nbsp;·&nbsp; <span class="text-warning">Default</span>{% endif %}</div>
-                            </div>
-                        </div>
-                        <div class="d-flex gap-2">
-                            {% if not pm.is_default %}
-                            <form method="post" action="{{ url_for('settings') }}" style="display:inline;">
-                                <input type="hidden" name="action" value="set_default_payment_method">
-                                <input type="hidden" name="payment_method_id" value="{{ pm.id }}">
-                                <button type="submit" class="btn btn-outline-warning btn-sm rounded-pill">Set Default</button>
-                            </form>
-                            {% endif %}
-                            <form method="post" action="{{ url_for('settings') }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to remove this payment method?');">
-                                <input type="hidden" name="action" value="delete_payment_method">
-                                <input type="hidden" name="payment_method_id" value="{{ pm.id }}">
-                                <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill"><i class="fa-solid fa-trash"></i></button>
-                            </form>
-                        </div>
-                    </div>
-                    {% endfor %}
-                {% endif %}
-            </div>
+
 
             <!-- Danger Zone -->
             <div class="settings-card danger-zone" id="danger">
@@ -283,53 +216,7 @@
     </div>
 </div>
 
-<!-- Add Card Modal -->
-<div class="modal fade" id="addCardModal" tabindex="-1" aria-labelledby="addCardModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="background:var(--card-bg); border-color:var(--border-color)">
-            <div class="modal-header border-secondary">
-                <h5 class="modal-title text-warning" id="addCardModalLabel"><i class="fa-solid fa-credit-card me-2"></i>Add Payment Method</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="post" action="{{ url_for('settings') }}">
-                <input type="hidden" name="action" value="add_payment_method">
-                <div class="modal-body text-white">
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold" style="color: var(--body-text)">Cardholder Name</label>
-                        <input type="text" name="cc_name" class="form-control" placeholder="John Doe" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold" style="color: var(--body-text)">Card Number</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-dark text-muted border-secondary"><i class="fa-solid fa-credit-card"></i></span>
-                            <input type="text" name="cc_number" class="form-control" placeholder="4242424242424242" pattern="\d{13,19}" maxlength="19" required>
-                        </div>
-                    </div>
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold" style="color: var(--body-text)">Expiry Date</label>
-                            <input type="text" name="cc_exp" class="form-control" placeholder="MM/YY" pattern="\d{2}/\d{2}" maxlength="5" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold" style="color: var(--body-text)">CVV</label>
-                            <input type="password" name="cc_cvv" class="form-control" placeholder="123" pattern="\d{3,4}" maxlength="4" required autocomplete="off">
-                        </div>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="set_default" value="true" id="setDefaultCard" checked>
-                        <label class="form-check-label text-muted" for="setDefaultCard">
-                            Set as default payment method
-                        </label>
-                    </div>
-                </div>
-                <div class="modal-footer border-secondary">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-warning fw-bold"><i class="fa-solid fa-plus me-1"></i>Add Card</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+
 
 <footer class="bg-darker mt-5 py-4">
     <div class="container text-center">

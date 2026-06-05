@@ -1,0 +1,11 @@
+/* ============================================================
+   category.css  –  Styles for the Shop by Category page
+   ============================================================ */
+
+.category-img-box {
+    background-color: var(--input-bg);
+}
+
+.category-empty-icon-box {
+    min-height: 160px;
+}
