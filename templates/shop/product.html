@@ -26,10 +26,11 @@
                     <i class="fa-solid fa-filter me-2"></i>Show / Hide Filters
                 </button>
                 <div class="collapse d-md-block" id="filterCollapse">
-                <form class="filter-card" method="get" action="{{ url_for('product') }}">
+                <form class="filter-card" method="get" action="{{ url_for('product') }}" id="filterForm">
                     <h5 class="text-warning mb-4">Filters</h5>
                     <input type="hidden" name="q" value="{{ q }}">
-                    
+                    <input type="hidden" name="sort" value="{{ selected_sort }}">
+
                     <!-- Price Range -->
                     <div class="mb-4">
                         <h6 class="text-white mb-3">Price Range</h6>
@@ -49,21 +50,6 @@
                                 <label class="form-check-label text-muted" for="cat{{ loop.index }}">{{ cat.name }}</label>
                             </div>
                         {% endfor %}
-                    </div>
-
-                    <!-- Size -->
-                    <div class="mb-4">
-                        <h6 class="text-white mb-3">Size</h6>
-                        <div class="d-flex flex-wrap gap-2">
-                            <input type="checkbox" class="btn-check" id="sz35" name="size" value="35" autocomplete="off"><label class="btn btn-outline-warning btn-sm" for="sz35">35</label>
-                            <input type="checkbox" class="btn-check" id="sz36" name="size" value="36" autocomplete="off"><label class="btn btn-outline-warning btn-sm" for="sz36">36</label>
-                            <input type="checkbox" class="btn-check" id="sz37" name="size" value="37" autocomplete="off"><label class="btn btn-outline-warning btn-sm" for="sz37">37</label>
-                            <input type="checkbox" class="btn-check" id="sz38" name="size" value="38" autocomplete="off"><label class="btn btn-outline-warning btn-sm" for="sz38">38</label>
-                            <input type="checkbox" class="btn-check" id="sz39" name="size" value="39" autocomplete="off"><label class="btn btn-outline-warning btn-sm" for="sz39">39</label>
-                            <input type="checkbox" class="btn-check" id="sz40" name="size" value="40" autocomplete="off"><label class="btn btn-outline-warning btn-sm" for="sz40">40</label>
-                            <input type="checkbox" class="btn-check" id="sz41" name="size" value="41" autocomplete="off"><label class="btn btn-outline-warning btn-sm" for="sz41">41</label>
-                            <input type="checkbox" class="btn-check" id="sz42" name="size" value="42" autocomplete="off"><label class="btn btn-outline-warning btn-sm" for="sz42">42</label>
-                        </div>
                     </div>
 
                     <!-- Rating -->
@@ -89,6 +75,17 @@
                         </div>
                     </div>
 
+                    <!-- Discount Filter -->
+                    <div class="mb-4">
+                        <h6 class="text-white mb-3">Discount</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="discountOnly" name="discount_only" value="1" {% if selected_discount %}checked{% endif %}>
+                            <label class="form-check-label text-muted" for="discountOnly">
+                                <i class="fa-solid fa-tag text-warning me-1"></i> On Sale
+                            </label>
+                        </div>
+                    </div>
+
                     <button type="submit" class="btn btn-warning w-100">Apply Filters</button>
                 </form>
                 </div>
@@ -97,27 +94,48 @@
             <!-- Products Grid -->
             <div class="col-md-9">
                 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-                    <h4 class="text-warning">All Products</h4>
-                    <form class="d-flex align-items-center gap-2 flex-grow-1 flex-md-grow-0" method="get" action="{{ url_for('product') }}">
-                        {% if selected_categories %}
-                            {% for cat in selected_categories %}
-                                <input type="hidden" name="category" value="{{ cat }}">
-                            {% endfor %}
-                        {% endif %}
+                    <div>
+                        <h4 class="text-warning mb-0" id="productsHeading">All Products</h4>
+                        <small class="text-muted" id="searchStatusText" style="display:none"></small>
+                    </div>
+                    <!-- Live Search -->
+                    <div class="live-search-wrapper position-relative flex-grow-1 flex-md-grow-0" style="min-width:220px;max-width:360px;">
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark border-secondary text-warning">
+                                <i class="fa-solid fa-magnifying-glass" id="searchIcon"></i>
+                            </span>
+                            <input type="search" id="liveSearchInput"
+                                   class="form-control bg-dark text-white border-secondary product-search-input"
+                                   placeholder="Search products…"
+                                   value="{{ q }}"
+                                   autocomplete="off">
+                            <button type="button" id="clearSearchBtn"
+                                    class="btn btn-outline-secondary border-secondary"
+                                    style="display:{% if q %}flex{% else %}none{% endif %};align-items:center;"
+                                    title="Clear search">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                        <!-- Dropdown results -->
+                        <div id="liveSearchDropdown" class="live-search-dropdown" style="display:none;"></div>
+                    </div>
+                    <form id="sortForm" method="get" action="{{ url_for('product') }}" style="display:none;">
+                        {% for cat in selected_categories %}<input type="hidden" name="category" value="{{ cat }}">{% endfor %}
                         <input type="hidden" name="max_price" value="{{ selected_max_price }}">
-                        <input type="search" name="q" class="form-control form-control-sm bg-dark text-white border-secondary product-search-input" placeholder="Search products" value="{{ q }}">
-                        <button type="submit" class="btn btn-warning btn-sm">Search</button>
+                        <input type="hidden" name="q" value="{{ q }}">
+                        {% if selected_discount %}<input type="hidden" name="discount_only" value="1">{% endif %}
+                        <input type="hidden" name="sort" id="sortInput" value="{{ selected_sort }}">
                     </form>
-                    <select class="form-select form-select-sm bg-dark text-white border-secondary w-100 w-md-auto product-sort-select">
-                        <option>Sort by: Newest</option>
-                        <option>Price: Low to High</option>
-                        <option>Price: High to Low</option>
-                        <option>Best Sellers</option>
-                        <option>Rating</option>
+                    <select id="sortSelect" class="form-select form-select-sm bg-dark text-white border-secondary w-100 w-md-auto product-sort-select">
+                        <option value="newest" {% if selected_sort == 'newest' %}selected{% endif %}>Sort by: Newest</option>
+                        <option value="price_asc" {% if selected_sort == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+                        <option value="price_desc" {% if selected_sort == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+                        <option value="discount" {% if selected_sort == 'discount' %}selected{% endif %}>Biggest Discount</option>
                     </select>
                 </div>
 
-                <div class="row g-3 g-md-4">
+                <!-- Server-rendered product grid (shown when no live search active) -->
+                <div id="ssrProductGrid" class="row g-3 g-md-4">
                     {% for product in products %}
                         <div class="col-6 col-md-4">
                             <div class="arrival-card">
@@ -134,7 +152,15 @@
                                     </div>
                                     {% if product.category %}<span class="category-pill">{{ product.category | join(', ') }}</span>{% endif %}
                                     <small class="text-muted">{{ product.description }}</small>
+                                    {% if product.discounted_price %}
+                                    <p class="arrival-price mb-0">
+                                        <span class="text-warning fw-bold">${{ '%.2f'|format(product.discounted_price) }}</span>
+                                        <span class="text-muted text-decoration-line-through ms-1" style="font-size:0.85em">${{ '%.2f'|format(product.price) }}</span>
+                                        <span class="badge bg-danger ms-1" style="font-size:0.7em">-{{ product.discount_percent | int }}%</span>
+                                    </p>
+                                    {% else %}
                                     <p class="arrival-price">${{ '%.2f'|format(product.price) }}</p>
+                                    {% endif %}
                                     <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-warning btn-sm mt-1 w-100 rounded-pill">Add to cart</a>
                                 </div>
                             </div>
@@ -145,23 +171,26 @@
                     {% endif %}
                 </div>
 
+                <!-- Live search results grid (shown when typing) -->
+                <div id="liveProductGrid" class="row g-3 g-md-4" style="display:none;"></div>
+
                 <!-- Pagination -->
                 {% if total_pages > 1 %}
                 <div class="d-flex justify-content-center mt-5">
                     <nav>
                         <ul class="pagination">
                             <li class="page-item {% if page == 1 %}disabled{% endif %}">
-                                <a class="page-link bg-dark text-warning border-secondary" href="?page={{ page - 1 }}&q={{ q }}&max_price={{ selected_max_price }}{% for cat in selected_categories %}&category={{ cat }}{% endfor %}" {% if page == 1 %}tabindex="-1" aria-disabled="true"{% endif %}>Previous</a>
+                <a class="page-link bg-dark text-warning border-secondary" href="?page={{ page - 1 }}&q={{ q }}&max_price={{ selected_max_price }}&sort={{ selected_sort }}{% for cat in selected_categories %}&category={{ cat }}{% endfor %}{% if selected_discount %}&discount_only=1{% endif %}" {% if page == 1 %}tabindex="-1" aria-disabled="true"{% endif %}>Previous</a>
                             </li>
                             
                             {% for p in range(1, total_pages + 1) %}
                             <li class="page-item {% if p == page %}active{% endif %}">
-                                <a class="page-link {% if p == page %}bg-warning text-dark border-warning{% else %}bg-dark text-warning border-secondary{% endif %}" href="?page={{ p }}&q={{ q }}&max_price={{ selected_max_price }}{% for cat in selected_categories %}&category={{ cat }}{% endfor %}">{{ p }}</a>
+                                <a class="page-link {% if p == page %}bg-warning text-dark border-warning{% else %}bg-dark text-warning border-secondary{% endif %}" href="?page={{ p }}&q={{ q }}&max_price={{ selected_max_price }}&sort={{ selected_sort }}{% for cat in selected_categories %}&category={{ cat }}{% endfor %}{% if selected_discount %}&discount_only=1{% endif %}">{{ p }}</a>
                             </li>
                             {% endfor %}
                             
                             <li class="page-item {% if page == total_pages %}disabled{% endif %}">
-                                <a class="page-link bg-dark text-warning border-secondary" href="?page={{ page + 1 }}&q={{ q }}&max_price={{ selected_max_price }}{% for cat in selected_categories %}&category={{ cat }}{% endfor %}" {% if page == total_pages %}tabindex="-1" aria-disabled="true"{% endif %}>Next</a>
+                                <a class="page-link bg-dark text-warning border-secondary" href="?page={{ page + 1 }}&q={{ q }}&max_price={{ selected_max_price }}&sort={{ selected_sort }}{% for cat in selected_categories %}&category={{ cat }}{% endfor %}{% if selected_discount %}&discount_only=1{% endif %}" {% if page == total_pages %}tabindex="-1" aria-disabled="true"{% endif %}>Next</a>
                             </li>
                         </ul>
                     </nav>
@@ -230,5 +259,353 @@
     </script>
     <!-- Theme Toggle JS -->
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+
+    <!-- ============================================================
+         LIVE SEARCH
+    ============================================================ -->
+    <style>
+        .live-search-dropdown {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
+            background: #1a1a2e;
+            border: 1px solid #ffc107;
+            border-radius: 10px;
+            z-index: 9999;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+        .live-search-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            transition: background 0.15s;
+            text-decoration: none;
+            color: #fff;
+        }
+        .live-search-item:last-child { border-bottom: none; }
+        .live-search-item:hover { background: rgba(255,193,7,0.1); }
+        .live-search-item img {
+            width: 48px;
+            height: 48px;
+            object-fit: cover;
+            border-radius: 8px;
+            flex-shrink: 0;
+            background: #222;
+        }
+        .live-search-item .ls-name {
+            font-weight: 600;
+            font-size: 0.92rem;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .live-search-item .ls-cat {
+            font-size: 0.75rem;
+            color: #aaa;
+        }
+        .live-search-item .ls-price {
+            margin-left: auto;
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .live-search-item .ls-price .ls-new-price { color: #ffc107; font-weight: 700; }
+        .live-search-item .ls-price .ls-old-price { color: #888; text-decoration: line-through; font-size: 0.78rem; }
+        .live-search-empty {
+            padding: 18px;
+            text-align: center;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+        .ls-spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            color: #ffc107;
+        }
+        #liveSearchInput:focus { border-color: #ffc107 !important; box-shadow: 0 0 0 0.2rem rgba(255,193,7,0.18); }
+        .search-highlight { color: #ffc107; font-weight: 700; }
+    </style>
+
+    <script>
+    (function() {
+        const input       = document.getElementById('liveSearchInput');
+        const dropdown    = document.getElementById('liveSearchDropdown');
+        const clearBtn    = document.getElementById('clearSearchBtn');
+        const searchIcon  = document.getElementById('searchIcon');
+        const ssrGrid     = document.getElementById('ssrProductGrid');
+        const liveGrid    = document.getElementById('liveProductGrid');
+        const heading     = document.getElementById('productsHeading');
+        const statusText  = document.getElementById('searchStatusText');
+        const pagination  = document.querySelector('.d-flex.justify-content-center.mt-5');
+
+        let debounceTimer = null;
+        let activeQuery   = '';
+        let abortCtrl     = null;
+
+        // Keep hidden search inputs in sync across filter and sort forms
+        function updateHiddenQ(q) {
+            const filterQ = document.querySelector('#filterForm input[name="q"]');
+            if (filterQ) filterQ.value = q;
+            const sortQ = document.querySelector('#sortForm input[name="q"]');
+            if (sortQ) sortQ.value = q;
+        }
+
+        // Collect current filter params from DOM inputs
+        function getFilterParams() {
+            const params = new URLSearchParams();
+            
+            // Categories
+            const categories = document.querySelectorAll('#filterForm input[name="category"]:checked');
+            categories.forEach(c => params.append('category', c.value));
+            
+            // Max Price
+            const maxPriceEl = document.getElementById('priceRange');
+            if (maxPriceEl) {
+                params.set('max_price', maxPriceEl.value);
+            }
+            
+            // Discount Only
+            const discountOnlyEl = document.getElementById('discountOnly');
+            if (discountOnlyEl && discountOnlyEl.checked) {
+                params.set('discount_only', '1');
+            }
+            
+            // Sort
+            const sortEl = document.getElementById('sortSelect');
+            if (sortEl && sortEl.value && sortEl.value !== 'newest') {
+                params.set('sort', sortEl.value);
+            }
+            
+            return params;
+        }
+
+        function highlight(text, q) {
+            if (!q) return escHtml(text);
+            const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            return escHtml(text).replace(re, '<span class="search-highlight">$1</span>');
+        }
+
+        function escHtml(s) {
+            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        function buildProductCard(p) {
+            const priceHtml = p.discounted_price
+                ? `<span class="text-warning fw-bold">$${p.discounted_price.toFixed(2)}</span>
+                   <span class="text-muted text-decoration-line-through ms-1" style="font-size:0.82em">$${p.price.toFixed(2)}</span>
+                   <span class="badge bg-danger ms-1" style="font-size:0.68em">-${p.discount_percent}%</span>`
+                : `<span class="text-warning fw-bold">$${p.price.toFixed(2)}</span>`;
+
+            const cats = Array.isArray(p.category) ? p.category.join(', ') : (p.category || '');
+
+            return `<div class="col-6 col-md-4">
+                <div class="arrival-card">
+                    <a href="/product-detail/${p.id}" class="text-decoration-none">
+                        <div class="arrival-img-box position-relative product-img-box">
+                            <img src="${escHtml(p.image)}" alt="${escHtml(p.name)}" class="img-fluid">
+                        </div>
+                    </a>
+                    <div class="arrival-card-body">
+                        <div class="arrival-meta">
+                            <a href="/product-detail/${p.id}" class="text-decoration-none product-name-link">
+                                <p class="arrival-name text-truncate m-0" title="${escHtml(p.name)}">${escHtml(p.name)}</p>
+                            </a>
+                        </div>
+                        ${cats ? `<span class="category-pill">${escHtml(cats)}</span>` : ''}
+                        <small class="text-muted">${escHtml(p.description)}</small>
+                        <p class="arrival-price mb-0">${priceHtml}</p>
+                        <a href="/add-to-cart/${p.id}" class="btn btn-warning btn-sm mt-1 w-100 rounded-pill">Add to cart</a>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function buildDropdownItem(p, q) {
+            const priceHtml = p.discounted_price
+                ? `<div class="ls-new-price">$${p.discounted_price.toFixed(2)}</div>
+                   <div class="ls-old-price">$${p.price.toFixed(2)}</div>`
+                : `<div class="ls-new-price">$${p.price.toFixed(2)}</div>`;
+
+            const cats = Array.isArray(p.category) ? p.category.join(', ') : (p.category || '');
+
+            return `<a href="/product-detail/${p.id}" class="live-search-item">
+                <img src="${escHtml(p.image)}" alt="${escHtml(p.name)}" loading="lazy">
+                <div style="min-width:0;flex:1">
+                    <div class="ls-name">${highlight(p.name, q)}</div>
+                    <div class="ls-cat">${escHtml(cats)}</div>
+                </div>
+                <div class="ls-price">${priceHtml}</div>
+            </a>`;
+        }
+
+        function showSpinner() {
+            dropdown.innerHTML = '<div class="ls-spinner"><span class="spinner-border spinner-border-sm me-2"></span> Searching…</div>';
+            dropdown.style.display = 'block';
+        }
+
+        function setLoading(on) {
+            searchIcon.className = on ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-magnifying-glass';
+        }
+
+        function doSearch(q) {
+            activeQuery = q;
+
+            if (!q.trim()) {
+                // Reset to SSR state
+                dropdown.style.display = 'none';
+                liveGrid.style.display = 'none';
+                liveGrid.innerHTML = '';
+                ssrGrid.style.display = '';
+                if (pagination) pagination.style.display = '';
+                heading.textContent = 'All Products';
+                statusText.style.display = 'none';
+                clearBtn.style.display = 'none';
+                setLoading(false);
+                return;
+            }
+
+            clearBtn.style.display = 'flex';
+            showSpinner();
+            setLoading(true);
+
+            if (abortCtrl) abortCtrl.abort();
+            abortCtrl = new AbortController();
+
+            const params = getFilterParams();
+            params.set('q', q);
+            params.set('limit', 30);
+
+            fetch(`/api/search-products?${params.toString()}`, { signal: abortCtrl.signal })
+                .then(r => r.json())
+                .then(data => {
+                    setLoading(false);
+                    const products = data.products || [];
+
+                    // Dropdown
+                    if (products.length === 0) {
+                        dropdown.innerHTML = `<div class="live-search-empty"><i class="fa-regular fa-face-sad-tear me-2"></i>No results for "<strong>${escHtml(q)}</strong>"</div>`;
+                    } else {
+                        const max = Math.min(products.length, 6);
+                        let html = products.slice(0, max).map(p => buildDropdownItem(p, q)).join('');
+                        if (products.length > max) {
+                            html += `<div class="live-search-empty" style="font-size:0.82rem">+ ${products.length - max} more results below</div>`;
+                        }
+                        dropdown.innerHTML = html;
+                    }
+                    dropdown.style.display = 'block';
+
+                    // Main grid
+                    ssrGrid.style.display = 'none';
+                    if (pagination) pagination.style.display = 'none';
+
+                    if (products.length === 0) {
+                        liveGrid.innerHTML = '<div class="col-12 text-center text-white py-5"><i class="fa-regular fa-face-sad-tear fs-1 mb-3 d-block text-muted"></i>No products found for "<strong>' + escHtml(q) + '".</strong></div>';
+                    } else {
+                        liveGrid.innerHTML = products.map(p => buildProductCard(p)).join('');
+                    }
+                    liveGrid.style.display = '';
+
+                    heading.textContent = 'Search Results';
+                    statusText.textContent = `${products.length} result${products.length !== 1 ? 's' : ''} for "${q}"`;
+                    statusText.style.display = '';
+                })
+                .catch(err => {
+                    if (err.name === 'AbortError') return;
+                    setLoading(false);
+                    dropdown.style.display = 'none';
+                    liveGrid.style.display = 'none';
+                    ssrGrid.style.display = '';
+                    if (pagination) pagination.style.display = '';
+                });
+        }
+
+        // Debounced input handler
+        input.addEventListener('input', function() {
+            const q = this.value.trim();
+            updateHiddenQ(this.value); // Sync hidden inputs instantly so submissions carry the new query
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => doSearch(q), 300);
+        });
+
+        // Close dropdown on outside click
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.live-search-wrapper')) {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        // Re-open dropdown when input is focused and has value
+        input.addEventListener('focus', function() {
+            if (this.value.trim() && dropdown.innerHTML) {
+                dropdown.style.display = 'block';
+            }
+        });
+
+        // Clear search: Redirect to clear the query from the URL if it was a server-rendered query, otherwise clear locally.
+        clearBtn.addEventListener('click', function() {
+            input.value = '';
+            updateHiddenQ('');
+            
+            const url = new URL(window.location.href);
+            if (url.searchParams.has('q')) {
+                url.searchParams.delete('q');
+                window.location.href = url.toString();
+            } else {
+                doSearch('');
+                input.focus();
+            }
+        });
+
+        // Search icon click: submit current filter form with search query
+        if (searchIcon) {
+            searchIcon.style.cursor = 'pointer';
+            searchIcon.addEventListener('click', function() {
+                updateHiddenQ(input.value.trim());
+                document.getElementById('filterForm').submit();
+            });
+        }
+
+        // Sort select change: submit current filter form with sort select state
+        const sortSelect = document.getElementById('sortSelect');
+        if (sortSelect) {
+            sortSelect.addEventListener('change', function() {
+                const filterSort = document.querySelector('#filterForm input[name="sort"]');
+                if (filterSort) {
+                    filterSort.value = this.value;
+                }
+                updateHiddenQ(input.value.trim());
+                document.getElementById('filterForm').submit();
+            });
+        }
+
+        // Handle Enter key — navigate to full results page
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                dropdown.style.display = 'none';
+                updateHiddenQ(this.value.trim());
+                document.getElementById('filterForm').submit();
+            }
+            if (e.key === 'Escape') {
+                dropdown.style.display = 'none';
+                input.blur();
+            }
+        });
+
+        // If page loaded with a query (from URL), trigger live search immediately
+        const initialQ = input.value.trim();
+        if (initialQ) {
+            doSearch(initialQ);
+        }
+    })();
+    </script>
 </body>
 </html>

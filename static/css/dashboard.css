@@ -14,7 +14,7 @@
 .discount-pill { background:rgba(239,68,68,.12); color:#f87171; border-radius:20px; padding:4px 12px; font-size:.75rem; font-weight:700; display:inline-flex; align-items:center; gap:5px; }
 .discount-section-header { font-size:.95rem; font-weight:700; color:#f97316; display:flex; align-items:center; gap:8px; }
 
-.filter-bar { display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:12px 22px; border-bottom:1px solid var(--border-color); background:var(--body-bg); }
+.filter-bar { display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:12px 22px; border-bottom:1px solid var(--border-color); background:var(--card-bg); }
 .filter-bar-label { font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--muted-text); margin-right:4px; white-space:nowrap; }
 .cat-chip { display:inline-flex; align-items:center; gap:5px; padding:5px 14px; border-radius:20px; border:1px solid var(--border-color); background:transparent; color:var(--body-text); font-size:.75rem; font-weight:600; cursor:pointer; transition:.18s; white-space:nowrap; }
 .cat-chip:hover { border-color:var(--gold); color:var(--gold); background:var(--gold-dim); }

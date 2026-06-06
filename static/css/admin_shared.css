@@ -1,4 +1,6 @@
-:root { --gold:#ffc107; --gold-dim:rgba(255,193,7,.12); --gold-glow:rgba(255,193,7,.25); }
+:root { --gold:#ffc107; --gold-dim:rgba(255,193,7,.12); --gold-glow:rgba(255,193,7,.25); --body-bg:#070707; }
+[data-theme="light"] { --body-bg:#f0f2f5; }
+
 
 .dash-wrap { display:grid; grid-template-columns:220px 1fr; min-height:calc(100vh - 60px); }
 .dash-side  { background:var(--card-bg); border-right:1px solid var(--border-color); padding:24px 12px; }
@@ -20,9 +22,15 @@
 .tbl-card { background:var(--card-bg); border:1px solid var(--border-color); border-radius:18px; overflow:hidden; }
 .tbl-card .card-header { background:transparent; border-bottom:1px solid var(--border-color); padding:18px 22px; display:flex; align-items:center; justify-content:space-between; }
 .tbl-card table thead th { background:var(--gold-dim); color:var(--gold); font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; padding:12px 16px; border-bottom:1px solid var(--border-color); font-weight:700; }
-.tbl-card table tbody td { padding:14px 16px; border-bottom:1px solid var(--border-color); vertical-align:middle; font-size:.87rem; color:var(--body-text); }
+/* Force transparent bg so card-bg shows through — Bootstrap sets --bs-table-bg:white by default */
+.tbl-card table tbody tr { background-color: transparent !important; --bs-table-bg: transparent; --bs-table-striped-bg: transparent; --bs-table-hover-bg: transparent; }
+.tbl-card table tbody td { padding:14px 16px; border-bottom:1px solid var(--border-color); vertical-align:middle; font-size:.87rem; color:var(--body-text); background-color: transparent !important; }
 .tbl-card table tbody tr:last-child td { border-bottom:none; }
-.tbl-card table tbody tr:hover td { background:var(--gold-dim); }
+.tbl-card table tbody tr:hover td { background:var(--gold-dim) !important; }
+/* Product name / brand divs inside td — override Bootstrap .text-white inheritance */
+.tbl-card table tbody td > div > div,
+.tbl-card table tbody td div[style] { color: var(--body-text) !important; }
+
 
 .btn-action { width:32px; height:32px; border-radius:8px; border:none; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:.2s; font-size:.8rem; }
 .btn-edit  { background:rgba(255,193,7,.15); color:#ffc107; }

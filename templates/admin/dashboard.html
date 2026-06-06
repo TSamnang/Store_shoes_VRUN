@@ -55,7 +55,7 @@
         </div>
 
         <!-- Stats -->
-        <div class="row g-3 mb-4">
+        <div class="row g-3 mb-2">
             <div class="col-6 col-md-3">
                 <div class="stat-card">
                     <div class="d-flex justify-content-between align-items-start">
@@ -96,6 +96,54 @@
                     <div class="d-flex justify-content-between align-items-start">
                         <div><div class="stat-num" style="color:#f97316;">{{ discounted_products|length }}</div><div class="stat-label">On Sale</div></div>
                         <i class="fa-solid fa-tag stat-icon" style="color:#f97316;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenue Banner -->
+        <div class="revenue-banner mb-4">
+            <div class="revenue-banner-header">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-chart-line" style="color:#4ade80;"></i>
+                    <span style="font-weight:700;font-size:.9rem;">Revenue &amp; Income</span>
+                    <span class="live-dot" id="liveDot" title="Auto-refreshes every 30 seconds"></span>
+                </div>
+                <span class="last-updated" id="lastUpdated">Updated just now</span>
+            </div>
+            <div class="row g-3">
+                <!-- Total Revenue -->
+                <div class="col-12 col-md-4">
+                    <div class="revenue-card revenue-card-total">
+                        <div class="revenue-icon"><i class="fa-solid fa-sack-dollar"></i></div>
+                        <div class="revenue-body">
+                            <div class="revenue-value" id="rv-total">${{ '%.2f'|format(total_revenue) }}</div>
+                            <div class="revenue-label">Total Revenue</div>
+                            <div class="revenue-sub" id="rv-total-orders">{{ month_orders }} orders this month</div>
+                        </div>
+                        <div class="revenue-trend" id="rv-total-trend"></div>
+                    </div>
+                </div>
+                <!-- This Month -->
+                <div class="col-12 col-md-4">
+                    <div class="revenue-card revenue-card-month">
+                        <div class="revenue-icon"><i class="fa-solid fa-calendar-check"></i></div>
+                        <div class="revenue-body">
+                            <div class="revenue-value" id="rv-month">${{ '%.2f'|format(month_revenue) }}</div>
+                            <div class="revenue-label">This Month</div>
+                            <div class="revenue-sub" id="rv-month-orders">{{ month_orders }} order(s)</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Today -->
+                <div class="col-12 col-md-4">
+                    <div class="revenue-card revenue-card-today">
+                        <div class="revenue-icon"><i class="fa-solid fa-bolt"></i></div>
+                        <div class="revenue-body">
+                            <div class="revenue-value" id="rv-today">${{ '%.2f'|format(today_revenue) }}</div>
+                            <div class="revenue-label">Today</div>
+                            <div class="revenue-sub">Non-cancelled orders</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -306,6 +354,105 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+
+<style>
+/* ── Revenue Banner ── */
+.revenue-banner { background:var(--card-bg); border:1px solid var(--border-color); border-radius:18px; padding:20px 22px; }
+.revenue-banner-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.last-updated { font-size:.72rem; color:var(--muted-text); }
+
+.live-dot { width:9px; height:9px; border-radius:50%; background:#4ade80; display:inline-block;
+            box-shadow:0 0 0 0 rgba(74,222,128,.5); animation:livePulse 2s ease-in-out infinite; }
+.live-dot.fetching { background:#ffc107; animation:none; }
+.live-dot.error    { background:#f87171; animation:none; }
+@keyframes livePulse { 0%,100%{box-shadow:0 0 0 0 rgba(74,222,128,.45)} 50%{box-shadow:0 0 0 7px rgba(74,222,128,0)} }
+
+.revenue-card { display:flex; align-items:center; gap:16px; padding:18px 20px; border-radius:14px; border:1px solid var(--border-color); position:relative; overflow:hidden; transition:.25s; }
+.revenue-card:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(0,0,0,.18); }
+.revenue-card-total { background:linear-gradient(135deg,rgba(74,222,128,.08),rgba(74,222,128,.02)); border-color:rgba(74,222,128,.25); }
+.revenue-card-month { background:linear-gradient(135deg,rgba(99,102,241,.08),rgba(99,102,241,.02)); border-color:rgba(99,102,241,.25); }
+.revenue-card-today { background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(251,191,36,.02)); border-color:rgba(251,191,36,.25); }
+
+.revenue-icon { width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0; }
+.revenue-card-total .revenue-icon { background:rgba(74,222,128,.12); color:#4ade80; }
+.revenue-card-month .revenue-icon { background:rgba(99,102,241,.12); color:#818cf8; }
+.revenue-card-today .revenue-icon { background:rgba(251,191,36,.12); color:#fbbf24; }
+
+.revenue-body { flex:1; min-width:0; }
+.revenue-value { font-size:1.55rem; font-weight:800; line-height:1.1; color:var(--body-text); transition:color .3s; }
+.revenue-label { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--muted-text); margin-top:3px; }
+.revenue-sub   { font-size:.72rem; color:var(--muted-text); margin-top:4px; }
+.revenue-card-total .revenue-value { color:#4ade80; }
+.revenue-card-month .revenue-value { color:#818cf8; }
+.revenue-card-today .revenue-value { color:#fbbf24; }
+
+/* number flash animation */
+@keyframes numFlash { 0%{opacity:.4;transform:scale(.96)} 50%{opacity:1;transform:scale(1.03)} 100%{opacity:1;transform:scale(1)} }
+.num-flash { animation:numFlash .45s ease; }
+
+/* Light mode overrides */
+[data-theme="light"] .revenue-banner { background:#ffffff; }
+[data-theme="light"] .revenue-value  { color:var(--body-text); }
+[data-theme="light"] .revenue-card-total .revenue-value { color:#16a34a; }
+[data-theme="light"] .revenue-card-month .revenue-value { color:#4f46e5; }
+[data-theme="light"] .revenue-card-today .revenue-value { color:#b45309; }
+</style>
+
+<script>
+(function(){
+    const API = '/api/admin/revenue';
+    const INTERVAL = 30000; // 30 s
+
+    const dot     = document.getElementById('liveDot');
+    const updated = document.getElementById('lastUpdated');
+
+    function fmt(n){ return '$' + n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+    function flash(el, newVal){
+        if (!el || el.textContent === newVal) return;
+        el.textContent = newVal;
+        el.classList.remove('num-flash');
+        void el.offsetWidth; // reflow
+        el.classList.add('num-flash');
+    }
+
+    function timeAgo(d){
+        const s = Math.round((Date.now() - d) / 1000);
+        if (s < 5)  return 'Updated just now';
+        if (s < 60) return `Updated ${s}s ago`;
+        return `Updated ${Math.round(s/60)}m ago`;
+    }
+
+    let lastFetch = Date.now();
+
+    function refresh(){
+        dot.className = 'live-dot fetching';
+        fetch(API)
+            .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+            .then(data => {
+                flash(document.getElementById('rv-total'),  fmt(data.total_revenue));
+                flash(document.getElementById('rv-month'),  fmt(data.month_revenue));
+                flash(document.getElementById('rv-today'),  fmt(data.today_revenue));
+                flash(document.getElementById('rv-total-orders'), data.month_orders + ' orders this month');
+                flash(document.getElementById('rv-month-orders'), data.month_orders + ' order(s)');
+                dot.className = 'live-dot';
+                lastFetch = Date.now();
+            })
+            .catch(() => { dot.className = 'live-dot error'; });
+    }
+
+    // Update "X ago" label every 10 s
+    setInterval(() => { updated.textContent = timeAgo(lastFetch); }, 10000);
+    // Poll revenue every 30 s
+    setInterval(refresh, INTERVAL);
+
+    // Manual refresh on dot click
+    dot.style.cursor = 'pointer';
+    dot.title = 'Click to refresh now';
+    dot.addEventListener('click', refresh);
+})();
+</script>
+
 <script>
     const uploadZone = document.getElementById('uploadZone');
     const previewBox = document.getElementById('previewBox');

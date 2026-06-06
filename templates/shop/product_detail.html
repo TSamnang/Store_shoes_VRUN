@@ -82,7 +82,15 @@
                 </div>
 
                 <div class="mb-4">
+                    {% if product.discounted_price %}
+                    <div class="d-flex align-items-center gap-3 mb-1">
+                        <h2 class="text-warning fw-bold mb-0">${{ '%.2f'|format(product.discounted_price) }}</h2>
+                        <span class="text-muted text-decoration-line-through fs-5">${{ '%.2f'|format(product.price) }}</span>
+                        <span class="badge bg-danger fs-6">-{{ product.discount_percent | int }}% OFF</span>
+                    </div>
+                    {% else %}
                     <h2 class="text-warning fw-bold">${{ '%.2f'|format(product.price) }}</h2>
+                    {% endif %}
                     <p class="text-muted">{{ product.description }}</p>
                     {% if product.detail %}
                     <p class="text-muted">{{ product.detail }}</p>

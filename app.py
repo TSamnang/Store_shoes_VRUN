@@ -175,10 +175,11 @@ def authenticate_user(email, password):
 #  PRODUCT HELPERS
 # =============================================================================
 
-def get_products(category=None, limit=None, max_price=None, search=None, page=1, per_page=10, return_count=False):
+def get_products(category=None, limit=None, max_price=None, search=None, page=1, per_page=10, return_count=False, discount_only=False, sort='newest'):
     """
     Fetches products from the database, optionally filtered by category,
-    max price, search string, or limited to a specific number of items.
+    max price, search string, discount, or limited to a specific number of items.
+    sort options: 'newest', 'price_asc', 'price_desc', 'discount'
     """
     db = get_db()
     query = {}
@@ -197,6 +198,9 @@ def get_products(category=None, limit=None, max_price=None, search=None, page=1,
         except ValueError:
             pass
 
+    if discount_only:
+        query['discount_percent'] = {'$gt': 0}
+
     if search:
         search_value = search.strip()
         query['$or'] = [
@@ -210,14 +214,39 @@ def get_products(category=None, limit=None, max_price=None, search=None, page=1,
     if return_count:
         total_count = db.products.count_documents(query)
 
-    cursor = db.products.find(query).sort('created_at', -1)
+    # Build sort spec
+    sort_map = {
+        'price_asc':  ('price', 1),
+        'price_desc': ('price', -1),
+        'discount':   ('discount_percent', -1),
+        'newest':     ('created_at', -1),
+    }
+    sort_field, sort_dir = sort_map.get(sort, ('created_at', -1))
+    cursor = db.products.find(query).sort(sort_field, sort_dir)
+
     if limit:
         cursor = cursor.limit(int(limit))
     else:
         skip = (page - 1) * per_page
         cursor = cursor.skip(skip).limit(per_page)
-        
+
     products = [format_doc(doc) for doc in cursor]
+    # Compute discounted_price for every product
+    for p in products:
+        pct = float(p.get('discount_percent', 0) or 0)
+        p['discount_percent'] = pct
+        if pct > 0:
+            p['discounted_price'] = round(float(p['price']) * (1 - pct / 100), 2)
+        else:
+            p['discounted_price'] = None
+
+    # When sorting by price we want effective (discounted) price order.
+    # MongoDB sorts on raw `price`, so re-sort in Python for discount cases.
+    if sort == 'price_asc':
+        products.sort(key=lambda p: p['discounted_price'] if p['discounted_price'] else p['price'])
+    elif sort == 'price_desc':
+        products.sort(key=lambda p: p['discounted_price'] if p['discounted_price'] else p['price'], reverse=True)
+
     if return_count:
         return products, total_count
     return products
@@ -566,14 +595,18 @@ def product():
     selected_categories = request.args.getlist('category')
     max_price = request.args.get('max_price', '').strip()
     search_query = request.args.get('q', '').strip()
-    
+    discount_only = request.args.get('discount_only') == '1'
+    sort = request.args.get('sort', 'newest')
+    if sort not in ('newest', 'price_asc', 'price_desc', 'discount'):
+        sort = 'newest'
+
     try:
         page = int(request.args.get('page', 1))
     except ValueError:
         page = 1
-        
+
     per_page = 10
-    
+
     categories = get_category_counts()
     products, total_count = get_products(
         category=selected_categories or None,
@@ -581,11 +614,13 @@ def product():
         search=search_query,
         page=page,
         per_page=per_page,
-        return_count=True
+        return_count=True,
+        discount_only=discount_only,
+        sort=sort
     )
-    
+
     total_pages = (total_count + per_page - 1) // per_page
-        
+
     return render_template(
         'shop/product.html',
         products=products,
@@ -596,6 +631,8 @@ def product():
         q=search_query,
         page=page,
         total_pages=total_pages,
+        selected_discount=discount_only,
+        selected_sort=sort,
         **common_context('product')
     )
 
@@ -604,12 +641,20 @@ def product_detail(product_id):
     product = get_product_by_id(product_id)
     if not product:
         return redirect(url_for('product'))
-        
+
+    # Compute discounted price for the detail page
+    pct = float(product.get('discount_percent', 0) or 0)
+    product['discount_percent'] = pct
+    if pct > 0:
+        product['discounted_price'] = round(float(product['price']) * (1 - pct / 100), 2)
+    else:
+        product['discounted_price'] = None
+
     related_products = [
-        p for p in get_products(product['category'], limit=4) 
+        p for p in get_products(product['category'], limit=4)
         if p['id'] != product['id']
     ]
-    
+
     reviews = get_reviews(product_id)
     avg_rating, review_count = get_product_avg_rating(product_id)
 
@@ -624,7 +669,7 @@ def product_detail(product_id):
     rating_counts = {i: 0 for i in range(1, 6)}
     for r in reviews:
         rating_counts[r.get('rating', 0)] = rating_counts.get(r.get('rating', 0), 0) + 1
-    
+
     return render_template(
         'shop/product_detail.html',
         product=product,
@@ -670,6 +715,47 @@ def category():
         category_images=category_images,
         **common_context('category')
     )
+
+# =============================================================================
+#  LIVE SEARCH API
+# =============================================================================
+
+@app.route('/api/search-products')
+def api_search_products():
+    from flask import jsonify
+    q = request.args.get('q', '').strip()
+    max_price = request.args.get('max_price', '').strip()
+    categories = request.args.getlist('category')
+    discount_only = request.args.get('discount_only') == '1'
+    limit = int(request.args.get('limit', 20))
+    sort = request.args.get('sort', 'newest')
+    if sort not in ('newest', 'price_asc', 'price_desc', 'discount'):
+        sort = 'newest'
+
+    products = get_products(
+        category=categories or None,
+        max_price=max_price or None,
+        search=q or None,
+        limit=limit,
+        discount_only=discount_only,
+        sort=sort
+    )
+
+    results = []
+    for p in products:
+        results.append({
+            'id': p['id'],
+            'name': p['name'],
+            'image': p.get('image', ''),
+            'category': p.get('category', []),
+            'brand': p.get('brand', ''),
+            'description': p.get('description', ''),
+            'price': float(p['price']),
+            'discounted_price': float(p['discounted_price']) if p.get('discounted_price') else None,
+            'discount_percent': int(p.get('discount_percent', 0)),
+        })
+
+    return jsonify({'products': results, 'count': len(results)})
 
 # =============================================================================
 #  CART & CHECKOUT ROUTES
@@ -1379,11 +1465,114 @@ def admin_categories():
 @app.route('/admin', methods=['GET'])
 def admin():
     require_admin()
+    db = get_db()
     products = get_products(limit=100)
     discounted_products = get_discounted_products(limit=100)
     categories = get_all_categories()
-    return render_template('admin/dashboard.html', products=products, discounted_products=discounted_products, categories=categories, **common_context('admin'))
 
+    # --- Revenue stats ---
+    from datetime import datetime as dt, timezone
+
+    def _as_utc(val):
+        """Safely coerce a created_at value to a UTC-aware datetime, or None."""
+        if val is None:
+            return None
+        if isinstance(val, dt):
+            # Already datetime — just attach UTC if naive
+            return val if val.tzinfo else val.replace(tzinfo=timezone.utc)
+        if isinstance(val, str):
+            try:
+                from dateutil import parser as dparser
+                parsed = dparser.parse(val)
+                return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+            except Exception:
+                return None
+        return None  # unknown type — skip
+
+    now = dt.now(timezone.utc)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    all_orders = list(db.orders.find({'status': {'$ne': 'Cancelled'}}))
+    total_revenue = sum(float(o.get('total', 0)) for o in all_orders)
+    today_revenue = sum(
+        float(o.get('total', 0)) for o in all_orders
+        if _as_utc(o.get('created_at')) is not None and _as_utc(o['created_at']) >= today_start
+    )
+    month_revenue = sum(
+        float(o.get('total', 0)) for o in all_orders
+        if _as_utc(o.get('created_at')) is not None and _as_utc(o['created_at']) >= month_start
+    )
+    month_orders = sum(
+        1 for o in all_orders
+        if _as_utc(o.get('created_at')) is not None and _as_utc(o['created_at']) >= month_start
+    )
+    inbox_count = db.orders.count_documents({'status': 'Ordering', 'is_read': {'$ne': True}})
+
+    return render_template(
+        'admin/dashboard.html',
+        products=products,
+        discounted_products=discounted_products,
+        categories=categories,
+        total_revenue=total_revenue,
+        today_revenue=today_revenue,
+        month_revenue=month_revenue,
+        month_orders=month_orders,
+        **common_context('admin')
+    )
+
+
+@app.route('/api/admin/revenue')
+def api_admin_revenue():
+    """Live revenue stats endpoint — polled every 30 s by the dashboard."""
+    from flask import jsonify
+    require_admin()
+    db = get_db()
+    from datetime import datetime as dt, timezone
+
+    def _as_utc(val):
+        if val is None:
+            return None
+        if isinstance(val, dt):
+            return val if val.tzinfo else val.replace(tzinfo=timezone.utc)
+        if isinstance(val, str):
+            try:
+                from dateutil import parser as dparser
+                parsed = dparser.parse(val)
+                return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+            except Exception:
+                return None
+        return None
+
+    now = dt.now(timezone.utc)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    all_orders   = list(db.orders.find({'status': {'$ne': 'Cancelled'}}))
+    total_revenue = sum(float(o.get('total', 0)) for o in all_orders)
+    today_revenue = sum(
+        float(o.get('total', 0)) for o in all_orders
+        if _as_utc(o.get('created_at')) is not None and _as_utc(o['created_at']) >= today_start
+    )
+    month_revenue = sum(
+        float(o.get('total', 0)) for o in all_orders
+        if _as_utc(o.get('created_at')) is not None and _as_utc(o['created_at']) >= month_start
+    )
+    month_orders  = sum(
+        1 for o in all_orders
+        if _as_utc(o.get('created_at')) is not None and _as_utc(o['created_at']) >= month_start
+    )
+    total_orders  = len(all_orders)
+    inbox_count   = db.orders.count_documents({'status': 'Ordering', 'is_read': {'$ne': True}})
+
+    return jsonify({
+        'total_revenue': round(total_revenue, 2),
+        'today_revenue': round(today_revenue, 2),
+        'month_revenue': round(month_revenue, 2),
+        'month_orders':  month_orders,
+        'total_orders':  total_orders,
+        'inbox_count':   inbox_count,
+    })
 
 
 @app.route('/admin/product/new', methods=['GET', 'POST'])
