@@ -175,10 +175,10 @@ def authenticate_user(email, password):
 #  PRODUCT HELPERS
 # =============================================================================
 
-def get_products(category=None, limit=None, max_price=None, search=None, page=1, per_page=10, return_count=False, discount_only=False, sort='newest'):
+def get_products(category=None, limit=None, min_price=None, max_price=None, search=None, page=1, per_page=10, return_count=False, discount_only=False, sort='newest'):
     """
     Fetches products from the database, optionally filtered by category,
-    max price, search string, discount, or limited to a specific number of items.
+    min price, max price, search string, discount, or limited to a specific number of items.
     sort options: 'newest', 'price_asc', 'price_desc', 'discount'
     """
     db = get_db()
@@ -191,12 +191,21 @@ def get_products(category=None, limit=None, max_price=None, search=None, page=1,
         else:
             query['category'] = category  # MongoDB matches string OR array-containing-value
 
-    if max_price is not None and str(max_price).strip() != '':
+    price_filter = {}
+    if min_price is not None and str(min_price).strip() != '':
         try:
-            max_price_value = float(max_price)
-            query['price'] = {'$lte': max_price_value}
+            price_filter['$gte'] = float(min_price)
         except ValueError:
             pass
+
+    if max_price is not None and str(max_price).strip() != '':
+        try:
+            price_filter['$lte'] = float(max_price)
+        except ValueError:
+            pass
+
+    if price_filter:
+        query['price'] = price_filter
 
     if discount_only:
         query['discount_percent'] = {'$gt': 0}
@@ -593,6 +602,7 @@ def homepage():
 @app.route('/product')
 def product():
     selected_categories = request.args.getlist('category')
+    min_price = request.args.get('min_price', '').strip()
     max_price = request.args.get('max_price', '').strip()
     search_query = request.args.get('q', '').strip()
     discount_only = request.args.get('discount_only') == '1'
@@ -610,6 +620,7 @@ def product():
     categories = get_category_counts()
     products, total_count = get_products(
         category=selected_categories or None,
+        min_price=min_price,
         max_price=max_price,
         search=search_query,
         page=page,
@@ -627,7 +638,8 @@ def product():
         categories=categories,
         all_categories=get_all_categories(),
         selected_categories=selected_categories,
-        selected_max_price=max_price or '500',
+        selected_min_price=min_price or '0',
+        selected_max_price=max_price or '999999',
         q=search_query,
         page=page,
         total_pages=total_pages,
@@ -724,6 +736,7 @@ def category():
 def api_search_products():
     from flask import jsonify
     q = request.args.get('q', '').strip()
+    min_price = request.args.get('min_price', '').strip()
     max_price = request.args.get('max_price', '').strip()
     categories = request.args.getlist('category')
     discount_only = request.args.get('discount_only') == '1'
@@ -734,6 +747,7 @@ def api_search_products():
 
     products = get_products(
         category=categories or None,
+        min_price=min_price or None,
         max_price=max_price or None,
         search=q or None,
         limit=limit,
