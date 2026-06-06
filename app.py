@@ -543,7 +543,20 @@ def init_db():
 def load_current_user():
     g.user = None
     if session.get('user_id'):
-        g.user = get_user_by_id(session['user_id'])
+        user = get_user_by_id(session['user_id'])
+        if user:
+            if user.get('banned'):
+                session.clear()
+                flash('Your account has been banned. Please contact support.', 'danger')
+                if request.endpoint and request.endpoint not in ('login', 'logout', 'static'):
+                    return redirect(url_for('login'))
+            elif user.get('disabled'):
+                session.clear()
+                flash('Your account has been disabled. Please contact support.', 'danger')
+                if request.endpoint and request.endpoint not in ('login', 'logout', 'static'):
+                    return redirect(url_for('login'))
+            else:
+                g.user = user
 
 def common_context(active_page=None):
     inbox_count = 0
@@ -882,6 +895,14 @@ def cart_remove(product_id):
     cart_data.pop(str(product_id), None)
     session['cart'] = cart_data
     flash('Item removed from cart.', 'success')
+    return redirect(url_for('cart'))
+
+@app.route('/cart/clear')
+def cart_clear():
+    session['cart'] = {}
+    session.pop('coupon', None)
+    session.modified = True
+    flash('Cart has been cleared.', 'success')
     return redirect(url_for('cart'))
 
 @app.route('/cart/update/<product_id>', methods=['POST'])
@@ -1347,6 +1368,14 @@ def admin_users():
             db.users.update_one({'_id': oid}, {'$unset': {'banned': ''}})
             flash('User has been unbanned.', 'success')
 
+        elif action == 'disable':
+            db.users.update_one({'_id': oid}, {'$set': {'disabled': True}})
+            flash('User has been disabled.', 'warning')
+
+        elif action == 'enable':
+            db.users.update_one({'_id': oid}, {'$unset': {'disabled': ''}})
+            flash('User has been enabled.', 'success')
+
         elif action == 'delete_user':
             db.users.delete_one({'_id': oid})
             db.orders.delete_many({'user_id': target_id})
@@ -1387,6 +1416,12 @@ def login():
         
         user = authenticate_user(email, password)
         if user:
+            if user.get('banned'):
+                flash('Your account has been banned. Please contact support.', 'danger')
+                return render_template('auth/login.html', **common_context())
+            elif user.get('disabled'):
+                flash('Your account has been disabled. Please contact support.', 'danger')
+                return render_template('auth/login.html', **common_context())
             session['user_id'] = str(user['id'])
             flash('Logged in successfully.', 'success')
             if next_url and next_url.startswith('/'):

@@ -91,3 +91,31 @@
 .user-unban-form {
     display: inline;
 }
+
+.badge-disabled {
+    background: rgba(108, 117, 125, 0.12);
+    color: #adb5bd;
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: .72rem;
+    font-weight: 700;
+    border: 1px solid rgba(108, 117, 125, 0.25);
+}
+
+.btn-disable {
+    background: rgba(108, 117, 125, 0.12);
+    color: #adb5bd;
+}
+.btn-disable:hover {
+    background: #6c757d;
+    color: #fff;
+}
+
+.btn-enable {
+    background: rgba(25, 135, 84, 0.12);
+    color: #198754;
+}
+.btn-enable:hover {
+    background: #198754;
+    color: #fff;
+}
