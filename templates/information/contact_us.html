@@ -71,68 +71,12 @@
         </div>
     </div>
 
-    <!-- ── Contact Form + Sidebar ── -->
-    <div class="row g-5 align-items-start">
+    <!-- ── Contact Information Cards ── -->
+    <div class="row g-4 justify-content-center">
 
-        <!-- Form -->
-        <div class="col-lg-7">
-            <div class="form-panel">
-                <h2 class="fw-bold mb-2" style="color:var(--body-text);">Send Us a <span style="color:#ffc107;">Message</span></h2>
-                <p class="mb-4" style="color:var(--muted-text);font-size:.9rem;">Fill in the form below and we'll get back to you as soon as possible.</p>
-                <form id="contactForm" novalidate>
-                    <div class="row g-3">
-                        <div class="col-sm-6">
-                            <div class="form-group-custom">
-                                <label class="form-label-custom" for="cf_name">Full Name *</label>
-                                <input type="text" id="cf_name" class="form-control-custom" placeholder="Your full name" required>
-                            </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="form-group-custom">
-                                <label class="form-label-custom" for="cf_email">Email Address *</label>
-                                <input type="email" id="cf_email" class="form-control-custom" placeholder="your@email.com" required>
-                            </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="form-group-custom">
-                                <label class="form-label-custom" for="cf_phone">Phone (optional)</label>
-                                <input type="tel" id="cf_phone" class="form-control-custom" placeholder="+855 xxx xxx xxx">
-                            </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="form-group-custom">
-                                <label class="form-label-custom" for="cf_topic">Topic *</label>
-                                <select id="cf_topic" class="form-control-custom" required>
-                                    <option value="" disabled selected>Select a topic…</option>
-                                    <option>Order Inquiry</option>
-                                    <option>Product Question</option>
-                                    <option>Return / Exchange</option>
-                                    <option>Shipping Info</option>
-                                    <option>Partnership</option>
-                                    <option>Other</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="form-group-custom">
-                                <label class="form-label-custom" for="cf_message">Message *</label>
-                                <textarea id="cf_message" class="form-control-custom" placeholder="Tell us how we can help…" required></textarea>
-                            </div>
-                        </div>
-                        <div class="col-12 mt-2">
-                            <button type="submit" class="btn-submit" id="submitBtn">
-                                <i class="fa-solid fa-paper-plane"></i> Send Message
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Sidebar -->
-        <div class="col-lg-5">
-            <!-- Hours -->
-            <div class="info-card mb-4">
+        <!-- Business Hours -->
+        <div class="col-md-6 col-lg-5">
+            <div class="info-card h-100">
                 <div class="info-icon"><i class="fa-solid fa-clock"></i></div>
                 <div class="info-title mb-3">Business Hours</div>
                 <div style="font-size:.9rem;">
@@ -150,8 +94,11 @@
                     </div>
                 </div>
             </div>
-            <!-- Social -->
-            <div class="info-card">
+        </div>
+
+        <!-- Social Media Links -->
+        <div class="col-md-6 col-lg-5">
+            <div class="info-card h-100">
                 <div class="info-icon"><i class="fa-solid fa-share-nodes"></i></div>
                 <div class="info-title mb-3">Follow VRUN</div>
                 <div class="d-flex flex-column gap-3">
@@ -251,10 +198,7 @@
     </div>
 </footer>
 
-<!-- ── Success Toast ── -->
-<div class="toast-success" id="successToast">
-    <i class="fa-solid fa-circle-check"></i> Message sent! We'll reply within 24 hours.
-</div>
+
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
@@ -270,29 +214,7 @@ function toggleFaq(item) {
     if (!isOpen) { q.classList.add('open'); a.classList.add('open'); }
 }
 
-// Contact form submit (front-end demo — wire to backend if needed)
-document.getElementById('contactForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const name  = document.getElementById('cf_name').value.trim();
-    const email = document.getElementById('cf_email').value.trim();
-    const topic = document.getElementById('cf_topic').value;
-    const msg   = document.getElementById('cf_message').value.trim();
-    if (!name || !email || !topic || !msg) {
-        alert('Please fill in all required fields.');
-        return;
-    }
-    const btn = document.getElementById('submitBtn');
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending…';
-    btn.disabled = true;
-    setTimeout(() => {
-        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send Message';
-        btn.disabled = false;
-        this.reset();
-        const toast = document.getElementById('successToast');
-        toast.style.display = 'flex';
-        setTimeout(() => { toast.style.display = 'none'; }, 4000);
-    }, 1200);
-});
+
 </script>
 </body>
 </html>

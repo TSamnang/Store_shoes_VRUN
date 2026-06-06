@@ -76,15 +76,16 @@
         <div class="container">
             <div class="row align-items-center g-5">
                 <div class="col-lg-5">
-                    <div class="story-img-wrap">
-                        <img src="{{ url_for('static', filename='images/penaldo.jpg') }}" alt="VRUN store"
+                    <div class="story-img-wrap" style="position:relative; height:420px; background:linear-gradient(135deg,rgba(255,193,7,.15),rgba(255,152,0,.05)); border:1px solid rgba(255,193,7,.2); border-radius:24px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                        <img src="{{ url_for('static', filename='images/penaldo.jpg') }}" alt="Cristiano Ronaldo"
+                            style="max-width:100%; max-height:100%; object-fit:contain; padding:20px; filter:drop-shadow(0 20px 40px rgba(255,193,7,.2));"
                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
                         <div
-                            style="display:none;height:420px;background:linear-gradient(135deg,rgba(255,193,7,.1),rgba(255,152,0,.05));border-radius:24px;align-items:center;justify-content:center;flex-direction:column;gap:16px;">
+                            style="display:none;height:100%;width:100%;background:linear-gradient(135deg,rgba(255,193,7,.1),rgba(255,152,0,.05));border-radius:24px;align-items:center;justify-content:center;flex-direction:column;gap:16px;">
                             <i class="fa-solid fa-shoe-prints" style="font-size:4rem;color:rgba(255,193,7,.3);"></i>
                             <span style="color:var(--muted-text);font-size:.9rem;">VRUN Store</span>
                         </div>
-                        <div class="story-badge"><i class="fa-solid fa-award me-2"></i>Est. 2022</div>
+                        <div class="story-badge" style="z-index: 2;"><i class="fa-solid fa-award me-2"></i>Est. 2022</div>
                     </div>
                 </div>
                 <div class="col-lg-7">

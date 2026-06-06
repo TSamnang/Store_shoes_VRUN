@@ -1334,25 +1334,35 @@ textarea.form-control:focus {
 
 /* ==================== TABLES ==================== */
 .table {
-    background-color: var(--card-bg);
+    background-color: var(--card-bg) !important;
     border-color: var(--border-color);
     margin-bottom: 0;
+    --bs-table-bg: transparent !important;
+    --bs-table-striped-bg: transparent !important;
+    --bs-table-hover-bg: transparent !important;
 }
 
 .table thead th {
     border-color: var(--border-color);
-    background-color: var(--input-bg);
+    background-color: var(--input-bg) !important;
     font-weight: 700;
     color: var(--primary-yellow);
+    --bs-table-bg: var(--input-bg) !important;
 }
 
 .table tbody tr {
     border-bottom-color: var(--border-color);
     transition: background-color 0.3s ease;
+    background-color: transparent !important;
 }
 
-.table tbody tr:hover {
-    background-color: rgba(255, 193, 7, 0.05);
+.table tbody tr td {
+    background-color: transparent !important;
+    color: var(--body-text) !important;
+}
+
+.table tbody tr:hover td {
+    background-color: rgba(255, 193, 7, 0.05) !important;
 }
 
 .table-responsive {
